@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  Design tokens (TailwindCSS v4 @theme)                              */
+/*  Editing a token here regenerates the matching utilities            */
+/*  (e.g. --color-emerald -> bg-emerald / text-emerald / border-emerald)*/
+/* ------------------------------------------------------------------ */
+@theme {
+  /* Palette --------------------------------------------------------- */
+  --color-emerald: #0b3a2b; /* Deep Emerald — primary brand (refined, richer) */
+  --color-emerald-deep: #05231a; /* Near-black pine — for tonal depth/gradients */
+  --color-emerald-light: #12513c; /* Lifted emerald — top of gradients / highlights */
+  --color-gold: #c6a666; /* Warm Gold — accent (slightly brighter, more lustrous) */
+  --color-gold-soft: #d8c08a; /* Champagne gold — for subtle glows */
+  --color-cream: #f6f2e9; /* Cream White — light surface */
+  --color-charcoal: #1c1b18; /* Charcoal — ink / dark surface */
+  --color-stone: #e4ddd0; /* Light Stone — alt light surface */
+
+  /* Typography ------------------------------------------------------ */
+  /* Font family CSS vars are injected by next/font in app/layout.tsx. */
+  --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  /* High-contrast display serif reserved for the hero statement. */
+  --font-display: var(--font-bodoni), "Didot", Georgia, serif;
+  /* Monospace for technical spec-sheet labels. */
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* Motion ---------------------------------------------------------- */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Base layer                                                         */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    /* Lenis controls scroll; disable native smooth to avoid double easing. */
+    scroll-behavior: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    /* Prevent horizontal shift from off-screen animated elements. */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background-color: var(--color-emerald);
+    color: var(--color-cream);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Lenis smooth scroll — required base styles                         */
+/*  (Lenis toggles these classes on <html>; without them native and    */
+/*   smoothed scrolling fight each other.)                             */
+/* ------------------------------------------------------------------ */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Utilities                                                          */
+/* ------------------------------------------------------------------ */
+@layer utilities {
+  /* Hairline divider used throughout the editorial layout. */
+  .rule {
+    border-color: color-mix(in srgb, currentColor 15%, transparent);
+  }
+
+  /* Rich emerald SURFACE (opaque) — replaces flat green fills.
+     Layered: faint champagne-gold glow at top, tonal emerald gradient, and a
+     soft edge vignette. Reads as deep, dimensional velvet rather than flat. */
+  .surface-emerald {
+    background-color: var(--color-emerald);
+    background-image:
+      radial-gradient(
+        85% 55% at 50% -5%,
+        color-mix(in srgb, var(--color-gold-soft) 12%, transparent) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        120% 130% at 50% 42%,
+        transparent 52%,
+        color-mix(in srgb, var(--color-emerald-deep) 55%, transparent) 100%
+      ),
+      linear-gradient(
+        168deg,
+        var(--color-emerald-light) 0%,
+        var(--color-emerald) 42%,
+        var(--color-emerald-deep) 100%
+      );
+  }
+
+  /* Rich emerald OVERLAY (translucent) — for tinting over imagery. */
+  .overlay-emerald {
+    background-image:
+      radial-gradient(
+        115% 95% at 50% 0%,
+        color-mix(in srgb, var(--color-emerald) 84%, transparent) 0%,
+        color-mix(in srgb, var(--color-emerald-deep) 95%, transparent) 100%
+      );
+  }
+
+  /* Infinite horizontal marquee (two duplicated tracks, translate -50%). */
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee var(--marquee-duration, 34s) linear infinite;
+  }
+
+  /* Infinite moving cards: track is duplicated, so travel -50% - half the gap. */
+  @keyframes scroll {
+    to {
+      transform: translateX(calc(-50% - 0.75rem));
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll var(--animation-duration, 60s) linear infinite;
+    animation-direction: var(--animation-direction, forwards);
+  }
+
+  /* Pause on hover for a considered, interactive feel. */
+  .marquee-group:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+}
+
+/* Respect users who prefer reduced motion.
+   TODO: also short-circuit Lenis + GSAP entrance animations in JS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
