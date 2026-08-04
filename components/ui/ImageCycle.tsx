@@ -67,12 +67,18 @@ interface ImageCycleProps {
  *
  * Every scale is multiplied by `--frame-zoom` (see `PORTRAIT_ZOOM`), which only
  * ever adds headroom.
+ *
+ * The amplitude is tuned against the cycle length, not chosen in isolation: the
+ * whole move plays out in `holdMs + fadeMs`, so at the hero's 2.5s cadence a
+ * 12-point scale swing reads as a restless push-in rather than a camera
+ * breathing. An 8-point swing over the same 2.5s is slow enough to feel
+ * deliberate and still enough to keep the frame from looking like a still.
  */
 const DRIFTS = [
-  { from: "scale(1.06)", to: "scale(1.18) translate3d(-2%, -1.2%, 0)" },
-  { from: "scale(1.18) translate3d(1.8%, 1%, 0)", to: "scale(1.06)" },
-  { from: "scale(1.07) translate3d(1.6%, -0.6%, 0)", to: "scale(1.19) translate3d(-1.4%, 1%, 0)" },
-  { from: "scale(1.19) translate3d(-1.6%, 1.2%, 0)", to: "scale(1.07) translate3d(1.4%, -0.8%, 0)" },
+  { from: "scale(1.05)", to: "scale(1.13) translate3d(-1.4%, -0.8%, 0)" },
+  { from: "scale(1.13) translate3d(1.2%, 0.7%, 0)", to: "scale(1.05)" },
+  { from: "scale(1.05) translate3d(1.1%, -0.5%, 0)", to: "scale(1.13) translate3d(-1%, 0.7%, 0)" },
+  { from: "scale(1.13) translate3d(-1.1%, 0.8%, 0)", to: "scale(1.05) translate3d(1%, -0.5%, 0)" },
 ] as const;
 
 /** Rewrites `scale(n)` as `scale(calc(n * var(--frame-zoom)))`. */

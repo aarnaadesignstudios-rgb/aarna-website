@@ -4,7 +4,6 @@ import LoadingScreen from "@/components/sections/LoadingScreen";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/sections/Hero";
-import Achievements from "@/components/sections/Achievements";
 import Practice from "@/components/sections/Practice";
 import WhyUs from "@/components/sections/WhyUs";
 import Services from "@/components/sections/Services";
@@ -32,8 +31,6 @@ const Testimonials = dynamic(
 const SelectedWorks = dynamic(
   () => import("@/components/sections/SelectedWorks")
 );
-// Ruled accordion index — interactive, six lazy images, so code-split.
-const Disciplines = dynamic(() => import("@/components/sections/Disciplines"));
 // Founder portrait + philosophy — scroll-driven, well below the fold.
 const Founder = dynamic(() => import("@/components/sections/Founder"));
 
@@ -47,13 +44,13 @@ export default function Home() {
 
       <main>
         <Hero />
-        {/* A short credibility band catches the eye on the way out of the hero,
-            before the narrative proper begins. */}
-        <Achievements />
-        {/* The practice opens the page's narrative, carrying the brand statement. */}
+        {/* The practice opens the page's narrative, carrying the brand statement.
+            The credibility figures that used to sit here in their own dark band
+            are now the gold strip across the top of <Practice /> — same place in
+            the page, but markup inside that section rather than a section of its
+            own, so it takes no sheet number and the 01…07 run is unaffected. */}
         <Practice />
         <SelectedWorks />
-        <Disciplines />
         <Testimonials />
         <Process />
         <Founder />

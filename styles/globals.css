@@ -7,11 +7,15 @@
 /* ------------------------------------------------------------------ */
 @theme {
   /* Palette --------------------------------------------------------- */
-  --color-emerald: #0b3a2b; /* Deep Emerald — primary brand (refined, richer) */
-  --color-emerald-deep: #05231a; /* Near-black pine — for tonal depth/gradients */
-  --color-emerald-light: #12513c; /* Lifted emerald — top of gradients / highlights */
-  --color-gold: #c6a666; /* Warm Gold — accent (slightly brighter, more lustrous) */
-  --color-gold-soft: #d8c08a; /* Champagne gold — for subtle glows */
+  --color-emerald: #0c402d; /* Deep Emerald — primary brand, sampled from the logo */
+  --color-emerald-deep: #06291c; /* Near-black pine — for tonal depth/gradients */
+  --color-emerald-light: #13573e; /* Lifted emerald — top of gradients / highlights */
+  /* Sampled pixel-exact from the phoenix mark + wordmark in
+     public/images/aarnaa-mark.png — the single most common gold pixel in the
+     logo is #c9a932 (hsl 47.3 60.2% 49.2%). Every gold on the site derives
+     from this one value so nothing drifts off-brand. */
+  --color-gold: #c9a932; /* Warm Gold — accent, sampled from the logo */
+  --color-gold-soft: #dac36c; /* Champagne gold — same hue/sat, lifted to 64% L */
   --color-cream: #f6f2e9; /* Cream White — light surface */
   --color-charcoal: #1c1b18; /* Charcoal — ink / dark surface */
   --color-stone: #e4ddd0; /* Light Stone — alt light surface */

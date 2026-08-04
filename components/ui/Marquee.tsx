@@ -57,7 +57,7 @@ export default function Marquee({
                   {item}
                 </span>
                 {/* Gold phoenix mark as the separator. */}
-                <Mark size={22} className="opacity-90" />
+                <Mark size={32} className="opacity-90" />
               </li>
             ))}
           </ul>

@@ -80,8 +80,19 @@ export default function Hero() {
         >
           {/* The imagery begins as the intro curtain starts to lift, so the
               hero is already in motion the moment it is uncovered — and the
-              opening frame gets its full time on screen. */}
-          <ImageCycle frames={HERO_SLIDES} startDelayMs={INTRO.holdMs} />
+              opening frame gets its full time on screen.
+
+              Cadence: hold + dissolve = 1750 + 750 = 2.5s, so a new frame
+              lands every 2.5 seconds. The dissolve is kept to under a third of
+              the cycle — any longer and two frames are blended for most of the
+              time a visitor is looking, which reads as mush rather than as a
+              deliberate cut between projects. */}
+          <ImageCycle
+            frames={HERO_SLIDES}
+            startDelayMs={INTRO.holdMs}
+            holdMs={1750}
+            fadeMs={750}
+          />
         </motion.div>
       </div>
 
@@ -99,7 +110,9 @@ export default function Hero() {
       {/* Editorial meta — top corners, quiet and confident. The soft shadow
           keeps it readable when a frame is bright behind it. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 hidden md:block">
-        <PageContainer className="flex items-center justify-between pt-36 font-mono text-[10px] uppercase tracking-[0.24em] text-cream/75 [text-shadow:0_1px_14px_rgba(9,22,16,0.7)]">
+        {/* pt clears the navbar's resting height (~92px: a 52px lockup inside
+            py-5), with enough left over that the meta row doesn't crowd it. */}
+        <PageContainer className="flex items-center justify-between pt-32 font-mono text-[10px] uppercase tracking-[0.24em] text-cream/75 [text-shadow:0_1px_14px_rgba(6,41,28,0.7)]">
           <span>Est. 2008</span>
           <span>Gurugram · India</span>
         </PageContainer>
@@ -116,7 +129,7 @@ export default function Hero() {
         transition={{ delay: 1, duration: 0.8 }}
       >
         <motion.span
-          className="flex flex-col items-center gap-2 text-cream/90 [text-shadow:0_1px_14px_rgba(9,22,16,0.7)]"
+          className="flex flex-col items-center gap-2 text-cream/90 [text-shadow:0_1px_14px_rgba(6,41,28,0.7)]"
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >

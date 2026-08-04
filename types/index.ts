@@ -79,16 +79,6 @@ export interface Work {
   width: string;
 }
 
-/** A row in the ruled "Disciplines" accordion index. */
-export interface Discipline {
-  id: string;
-  title: string;
-  /** Short right-aligned qualifier, e.g. "Villas · Estates". */
-  meta: string;
-  description: string;
-  image: string;
-}
-
 /**
  * A single frame in the hero's cross-dissolving image cycle.
  *

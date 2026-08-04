@@ -43,7 +43,7 @@ export default function SpotlightCard({
   };
 
   // Gold radial glow positioned at the cursor.
-  const background = useMotionTemplate`radial-gradient(${radius}px circle at ${mouseX}px ${mouseY}px, rgba(194,161,90,0.16), transparent 75%)`;
+  const background = useMotionTemplate`radial-gradient(${radius}px circle at ${mouseX}px ${mouseY}px, color-mix(in srgb, var(--color-gold) 16%, transparent), transparent 75%)`;
 
   return (
     <div

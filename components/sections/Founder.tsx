@@ -62,7 +62,7 @@ export default function Founder() {
                   />
                 </div>
                 {/* Lower veil — settles the portrait into the emerald ground. */}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,35,26,0)_45%,rgba(5,35,26,0.55)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,41,28,0)_45%,rgba(6,41,28,0.55)_100%)]" />
               </div>
               <figcaption className="mt-4 flex items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-cream/50">
                 <span>{SITE.name}, Gurugram</span>
@@ -74,7 +74,7 @@ export default function Founder() {
           {/* Biography + signed philosophy */}
           <div className="lg:col-span-7">
             <SectionHeading
-              index="06"
+              index="04"
               eyebrow="The Founder"
               title="Annapurna Kinha"
               tone="dark"

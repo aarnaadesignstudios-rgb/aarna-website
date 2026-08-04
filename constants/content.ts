@@ -19,7 +19,6 @@ import {
 import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
 
 import type {
-  Discipline,
   Feature,
   HeroSlide,
   NavLink,
@@ -397,67 +396,6 @@ export const WORKS: Work[] = [
     image:
       "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=1800&q=85",
     width: "min(48vw, 600px)",
-  },
-];
-
-/**
- * Disciplines — rows of the ruled accordion index. Order is the display order;
- * the leading number is derived from the index, not stored.
- */
-export const DISCIPLINES: Discipline[] = [
-  {
-    id: "luxury-residential",
-    title: "Luxury Residential",
-    meta: "Villas · Estates",
-    description:
-      "Single houses for people who intend to die in them. Long briefs, long drawings, one contractor we have used for a decade.",
-    image:
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1400&q=82",
-  },
-  {
-    id: "commercial-architecture",
-    title: "Commercial Architecture",
-    meta: "HQ · Workplace",
-    description:
-      "Buildings that a company can grow inside without renovating. Planned around shade, air and arrival.",
-    image:
-      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400&q=82",
-  },
-  {
-    id: "hospitality",
-    title: "Hospitality",
-    meta: "Resorts · Retreats",
-    description:
-      "Small-key properties where the architecture is the amenity. We design the walk from the car before we design the suite.",
-    image:
-      "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=1400&q=82",
-  },
-  {
-    id: "boutique-interiors",
-    title: "Boutique Interiors",
-    meta: "Bespoke · Furniture",
-    description:
-      "Interiors drawn to the millimetre and made within sixty kilometres of site. Nothing is bought that can be made.",
-    image:
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1400&q=82",
-  },
-  {
-    id: "sustainable-architecture",
-    title: "Sustainable Architecture",
-    meta: "Passive · Local",
-    description:
-      "Thermal mass, cross-ventilation, deep reveals. The cheapest cooling is a wall in the right place. Vastu orientation where it is asked for.",
-    image:
-      "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=1400&q=82",
-  },
-  {
-    id: "bespoke-spatial",
-    title: "Bespoke Spatial Experiences",
-    meta: "Galleries · Pavilions",
-    description:
-      "One-off rooms: a private gallery, a meditation pavilion, a stair that takes four minutes to climb on purpose.",
-    image:
-      "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1400&q=82",
   },
 ];
 

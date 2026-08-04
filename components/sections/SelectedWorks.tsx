@@ -154,7 +154,7 @@ export default function SelectedWorks() {
                 className="scale-[1.03] transition-transform duration-[1600ms] ease-editorial group-hover:scale-110"
               />
               {/* Gradient for legibility */}
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,18,12,0.30)_0%,rgba(9,18,12,0)_42%,rgba(9,18,12,0.82)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,41,28,0.30)_0%,rgba(6,41,28,0)_42%,rgba(6,41,28,0.82)_100%)]" />
 
               {/* Content */}
               <div className="relative flex h-full flex-col justify-end p-6 text-cream md:p-10">

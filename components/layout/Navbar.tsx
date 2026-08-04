@@ -1,11 +1,26 @@
 "use client";
 
 /**
- * Navbar — floating, rounded "pill" with a symmetric editorial layout.
+ * Navbar — a symmetric editorial masthead: the brand lockup centred and given
+ * real scale, with the six links split evenly to either side of it.
  *
- * The bar detaches from the top edge and floats as a glassy, blurred pill.
- * Links split evenly around a centred brand emblem. Glass-dark over the hero,
- * frosted cream once scrolled.
+ *      ABOUT  WHY US  SERVICES        [emblem] Aarnaa        PROJECTS  PROCESS  CONTACT
+ *                                              DESIGN STUDIOS
+ *
+ * The lockup is the focal point rather than one item competing in a row, which
+ * is why it is centred and set two to three times the size of the links: at
+ * this scale the emblem and the name read as the studio's signature, the way a
+ * masthead does on a printed cover.
+ *
+ * Bulk is avoided in the chrome, not in the brand. There is no pill, no border
+ * box, no shadow and no inset margin — over the hero the bar is pure content on
+ * the hero's own top scrim, and the only rule appears once it has frosted to
+ * cream. On scroll the whole lockup eases down to 84% and the bar's padding
+ * tightens with it, so the masthead has full presence at rest and gets out of
+ * the way while reading.
+ *
+ * Colour: the wordmark is the logo gold over the hero and emerald once the bar
+ * frosts — gold on cream is far too low-contrast to read.
  *
  * Link hover = vertical text-roll: the label slides up and out while a gold
  * copy rolls in from below (mask via overflow-hidden). The active section's
@@ -24,9 +39,10 @@ import { Mark } from "@/components/ui";
 import { useIsomorphicLayoutEffect } from "@/hooks";
 import { cn } from "@/utils/cn";
 
-// Split the six links symmetrically around the centred emblem.
-const LEFT_LINKS = NAV_LINKS.slice(0, 3);
-const RIGHT_LINKS = NAV_LINKS.slice(3);
+// Split the six links evenly so the centred lockup sits on the page's axis.
+const HALF = Math.ceil(NAV_LINKS.length / 2);
+const LEFT_LINKS = NAV_LINKS.slice(0, HALF);
+const RIGHT_LINKS = NAV_LINKS.slice(HALF);
 
 /** Nav link with a vertical text-roll on hover (gold copy rolls up from below). */
 function NavItem({
@@ -41,13 +57,13 @@ function NavItem({
   return (
     <a
       href={href}
-      className="group relative block overflow-hidden py-1 text-[0.78rem] uppercase tracking-[0.2em] whitespace-nowrap"
+      className="group relative block overflow-hidden py-1 font-mono text-[0.62rem] uppercase tracking-[0.2em] whitespace-nowrap md:text-[0.68rem]"
     >
       {/* Outgoing label (rolls up on hover). */}
       <span
         className={cn(
           "block transition-transform duration-500 ease-editorial group-hover:-translate-y-[130%]",
-          active ? "text-gold" : "opacity-80"
+          active ? "text-gold" : "opacity-70"
         )}
       >
         {label}
@@ -60,6 +76,77 @@ function NavItem({
         {label}
       </span>
     </a>
+  );
+}
+
+/** Emblem height in the resting bar, in px. `compact` scales down from this. */
+const MARK_SIZE = 56;
+/** How much the lockup shrinks once the bar has frosted. */
+const COMPACT_SCALE = 0.78;
+
+/**
+ * The brand lockup: emblem beside a stacked wordmark, mirroring the logo file's
+ * own composition. Shared by the bar and the mobile overlay so the two can
+ * never drift apart.
+ *
+ * `compact` is the scrolled state. It does two things at once, and needs both:
+ *
+ *  - a transform scale on the lockup, because that is the only way to *animate*
+ *    the change (the emblem's size is a pixel dimension, not a length that
+ *    transitions), and
+ *  - a height on the wrapper, because a transform doesn't touch layout — scaling
+ *    alone left a full-size box behind and the "compact" bar was barely shorter
+ *    than the resting one.
+ *
+ * The scaled lockup is a couple of px taller than the compact wrapper; it is
+ * centred and nothing clips it, so that slack just reads as breathing room.
+ */
+function BrandLockup({
+  scrolled,
+  compact = false,
+  onClick,
+}: {
+  scrolled: boolean;
+  compact?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center transition-[height] duration-700 ease-editorial",
+        compact ? "h-11" : "h-14"
+      )}
+    >
+      <a
+        href="#hero"
+        onClick={onClick}
+        aria-label={`${SITE.name} — back to top`}
+        className="flex origin-center items-center gap-3.5 transition-transform duration-700 ease-editorial md:gap-4"
+        style={compact ? { transform: `scale(${COMPACT_SCALE})` } : undefined}
+      >
+        <Mark size={MARK_SIZE} priority className="shrink-0" />
+        <span className="flex flex-col items-start justify-center leading-none">
+          <span
+            className={cn(
+              "font-serif text-[1.75rem] font-semibold leading-[0.95] tracking-tight transition-colors duration-500 md:text-[2.1rem]",
+              scrolled
+                ? "text-emerald"
+                : "text-gold [text-shadow:0_1px_18px_rgba(6,41,28,0.8)]"
+            )}
+          >
+            {SITE.shortName}
+          </span>
+          <span
+            className={cn(
+              "mt-[0.42rem] font-mono text-[8px] uppercase leading-none tracking-[0.38em] transition-colors duration-500 md:text-[9px]",
+              scrolled ? "text-charcoal/50" : "text-cream/75"
+            )}
+          >
+            Design Studios
+          </span>
+        </span>
+      </a>
+    </div>
   );
 }
 
@@ -104,74 +191,57 @@ export default function Navbar() {
       transition={{ delay: 2.1, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-x-0 top-0 z-50"
     >
-      {/* Floating rounded pill */}
       <nav
         className={cn(
-          "mx-auto mt-4 flex w-[calc(100%-1.5rem)] max-w-[1400px] items-center justify-between rounded-full border px-6 py-4 backdrop-blur-md transition-colors duration-500 md:mt-5 md:px-10 md:py-5 lg:grid lg:grid-cols-3",
+          "relative flex w-full items-center justify-center border-b px-6 transition-all duration-500 ease-editorial md:px-10 lg:px-16",
           scrolled
-            ? "border-charcoal/10 bg-cream/80 text-charcoal shadow-[0_12px_45px_-18px_rgba(20,20,18,0.5)]"
-            // Slightly deeper tint than the rest of the glass: the wordmark is
-            // gold here, which needs more backdrop than cream did to hold up
-            // against a bright frame behind it.
-            : "border-cream/15 bg-charcoal/35 text-cream shadow-[0_12px_45px_-22px_rgba(0,0,0,0.55)]"
+            ? "border-charcoal/10 bg-cream/85 py-2.5 text-charcoal backdrop-blur-xl"
+            : "border-transparent py-4 text-cream md:py-5"
         )}
       >
-        {/* Left links */}
-        <ul className="hidden items-center justify-start gap-8 lg:flex">
-          {LEFT_LINKS.map((link) => (
-            <li key={link.href}>
-              <NavItem label={link.label} href={link.href} active={isActive(link.href)} />
-            </li>
-          ))}
-        </ul>
-
-        {/* Center: brand emblem. The name carries the palette — gold to match
-            the emblem over the hero, emerald once the bar turns cream, since
-            gold on cream is far too low-contrast to read. */}
-        <a
-          href="#hero"
-          className="flex items-center gap-3.5 lg:justify-self-center"
-        >
-          <Mark size={40} priority />
-          <span className="font-serif text-xl font-semibold tracking-tight md:text-2xl">
-            <span
-              className={cn(
-                "transition-colors duration-500",
-                scrolled
-                  ? "text-emerald"
-                  : "text-gold-soft [text-shadow:0_1px_16px_rgba(9,22,16,0.75)]"
-              )}
-            >
-              {SITE.shortName}
-            </span>
-            <span
-              className={cn(
-                "hidden font-medium transition-colors duration-500 xl:inline",
-                scrolled ? "text-charcoal/65" : "text-cream/75"
-              )}
-            >
-              {" "}
-              Design Studios
-            </span>
-          </span>
-        </a>
-
-        {/* Right links (desktop) + menu trigger (mobile) */}
-        <div className="flex items-center justify-end gap-8">
-          <ul className="hidden items-center gap-8 lg:flex">
-            {RIGHT_LINKS.map((link) => (
+        {/* Desktop: links | lockup | links on three tracks, so the lockup lands
+            on the page's centre line regardless of how wide the link groups
+            are. The outer tracks are equal-width, which is what keeps it
+            optically centred rather than merely between the two groups. */}
+        <div className="hidden w-full max-w-360 grid-cols-[1fr_auto_1fr] items-center gap-10 lg:grid">
+          <ul className="flex list-none items-center justify-start gap-7 p-0 xl:gap-9">
+            {LEFT_LINKS.map((link) => (
               <li key={link.href}>
-                <NavItem label={link.label} href={link.href} active={isActive(link.href)} />
+                <NavItem
+                  label={link.label}
+                  href={link.href}
+                  active={isActive(link.href)}
+                />
               </li>
             ))}
           </ul>
+
+          <BrandLockup scrolled={scrolled} compact={scrolled} />
+
+          <ul className="flex list-none items-center justify-end gap-7 p-0 xl:gap-9">
+            {RIGHT_LINKS.map((link) => (
+              <li key={link.href}>
+                <NavItem
+                  label={link.label}
+                  href={link.href}
+                  active={isActive(link.href)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Mobile / tablet: the lockup stays centred and the trigger is taken
+            out of flow, so the brand is on the axis here too. */}
+        <div className="flex w-full items-center justify-center lg:hidden">
+          <BrandLockup scrolled={scrolled} compact={scrolled} />
           <button
             type="button"
             aria-label="Open menu"
-            className="lg:hidden"
+            className="absolute right-6 md:right-10"
             onClick={() => setMenuOpen(true)}
           >
-            <FiMenu size={26} />
+            <FiMenu size={22} />
           </button>
         </div>
       </nav>
@@ -186,24 +256,21 @@ export default function Navbar() {
             exit={{ x: "100%" }}
             transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
           >
-            <div className="flex items-center justify-between px-6 py-4">
-              <span className="flex items-center gap-3.5">
-                <Mark size={40} />
-                <span className="font-serif text-xl font-semibold tracking-tight">
-                  <span className="text-gold-soft">{SITE.shortName}</span>
-                  <span className="font-medium text-cream/75"> Design Studios</span>
-                </span>
-              </span>
+            <div className="relative flex items-center justify-center px-6 py-4">
+              {/* `scrolled={false}` on purpose: the overlay is a dark surface, so
+                  the lockup keeps its gold-on-emerald treatment here. */}
+              <BrandLockup scrolled={false} onClick={() => setMenuOpen(false)} />
               <button
                 type="button"
                 aria-label="Close menu"
+                className="absolute right-6"
                 onClick={() => setMenuOpen(false)}
               >
-                <FiX size={24} />
+                <FiX size={22} />
               </button>
             </div>
             <motion.ul
-              className="flex flex-1 flex-col justify-center gap-6 px-6"
+              className="flex flex-1 list-none flex-col justify-center gap-6 p-0 px-6 text-center"
               initial="hidden"
               animate="visible"
               variants={{
@@ -226,11 +293,11 @@ export default function Navbar() {
               ))}
             </motion.ul>
 
-            <div className="px-6 pb-10">
+            <div className="flex justify-center px-6 pb-10">
               <a
                 href="#contact"
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex border border-cream/40 px-6 py-3 text-xs uppercase tracking-[0.2em] transition-colors hover:bg-gold hover:text-emerald"
+                className="inline-flex border border-cream/40 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors hover:bg-gold hover:text-emerald"
               >
                 Enquire
               </a>

@@ -25,10 +25,11 @@ interface SpotlightProps {
 }
 
 export default function Spotlight({
-  // Warm gold light (hsl ~41,45%). Kept faint for an elegant wash.
-  gradientFirst = "radial-gradient(68.54% 68.72% at 55.02% 31.46%, hsla(41, 55%, 70%, 0.10) 0, hsla(41, 45%, 55%, 0.04) 50%, hsla(41, 45%, 45%, 0) 80%)",
-  gradientSecond = "radial-gradient(50% 50% at 50% 50%, hsla(41, 55%, 70%, 0.08) 0, hsla(41, 45%, 55%, 0.03) 80%, transparent 100%)",
-  gradientThird = "radial-gradient(50% 50% at 50% 50%, hsla(41, 55%, 70%, 0.06) 0, hsla(41, 45%, 45%, 0.03) 80%, transparent 100%)",
+  // Warm gold light, mixed straight out of --color-gold (the logo gold) so the
+  // wash can never drift off the brand hue. Kept faint for an elegant wash.
+  gradientFirst = "radial-gradient(68.54% 68.72% at 55.02% 31.46%, color-mix(in srgb, var(--color-gold-soft) 10%, transparent) 0, color-mix(in srgb, var(--color-gold) 4%, transparent) 50%, transparent 80%)",
+  gradientSecond = "radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--color-gold-soft) 8%, transparent) 0, color-mix(in srgb, var(--color-gold) 3%, transparent) 80%, transparent 100%)",
+  gradientThird = "radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--color-gold-soft) 6%, transparent) 0, color-mix(in srgb, var(--color-gold) 3%, transparent) 80%, transparent 100%)",
   translateY = -350,
   width = 560,
   height = 1380,
