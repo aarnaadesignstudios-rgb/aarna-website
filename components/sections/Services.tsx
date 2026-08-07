@@ -24,7 +24,7 @@ export default function Services() {
     >
       <PageContainer>
         <SectionHeading
-          index="06"
+          index="07"
           eyebrow="Services"
           title="What we do"
           description="Four disciplines, one continuous idea — carried from the ground plane to the smallest detail."

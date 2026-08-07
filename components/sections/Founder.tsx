@@ -57,7 +57,7 @@ export default function Founder() {
                 <div ref={portraitRef} className="absolute inset-0 scale-110">
                   <Media
                     src="/images/founder/annapurna.jpg"
-                    alt="Annapurna Kinha, founder and principal architect"
+                    alt="Annpurna Kinha, founder and principal architect"
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>
@@ -74,9 +74,9 @@ export default function Founder() {
           {/* Biography + signed philosophy */}
           <div className="lg:col-span-7">
             <SectionHeading
-              index="04"
+              index="05"
               eyebrow="The Founder"
-              title="Annapurna Kinha"
+              title="Annpurna Kinha"
               tone="dark"
             />
 
@@ -114,7 +114,7 @@ export default function Founder() {
                 <footer className="mt-6 flex items-center gap-3.5">
                   <span className="block h-px w-8 bg-gold" />
                   <span className="font-serif text-lg italic text-cream/75">
-                    Annapurna Kinha
+                    Annpurna Kinha
                   </span>
                 </footer>
               </blockquote>

@@ -3,20 +3,71 @@
  * Editing brand copy here propagates everywhere.
  */
 /**
- * Loading-screen timing, shared so a section can hand off from the intro instead
- * of re-hard-coding the same numbers. <LoadingScreen> owns these; the hero uses
- * them to begin its imagery exactly as the curtain starts to lift.
+ * Loading-screen choreography, shared so a section can hand off from the intro
+ * instead of re-hard-coding the same numbers. <LoadingScreen> owns these; the
+ * hero uses them to begin its imagery exactly as the curtain starts to tear,
+ * and the navbar times its entrance to the moment the bird leaves frame.
+ *
+ * The intro is a single beat — "the phoenix takes flight" — cut like this:
+ *
+ *   0.00  the mark fades up and settles on the emerald void
+ *   0.85  a gold glint sweeps across it, tracing its own silhouette
+ *   1.35  the bird SEPARATES: raster mark cross-dissolves to vector under a
+ *         bloom, so one object appears to come loose from the letterform
+ *   1.60  it crouches, then beats its wings twice
+ *   2.18  it arcs up and to the right and leaves the frame
+ *   2.35  the emerald curtain tears open along that same vector, carrying the
+ *         wordmark away with it
+ *   3.15  the page below is fully uncovered
+ *
+ * Seconds are the authoring unit (they match the GSAP timeline); the exported
+ * values are ms because that is what the consumers want.
  */
-const INTRO_HOLD_MS = 1900;
-const INTRO_LIFT_MS = 900;
+const CUE = {
+  /** Mark fades up + settles. */
+  settle: 0,
+  /** Gold glint sweeps the silhouette. */
+  glint: 0.85,
+  /** Raster mark → vector phoenix, hidden under a bloom. */
+  separate: 1.35,
+  /** Anticipation crouch, then two wing-beats. */
+  flap: 1.6,
+  /** Arc up-right and out of frame. */
+  flight: 2.18,
+  /**
+   * Curtain peels away along the flight vector.
+   *
+   * This deliberately overlaps the flight rather than following it. Starting
+   * the tear once the bird had fully left leaves a ~180ms beat of empty
+   * emerald, and the peel then reads as a separate event instead of as
+   * something the bird pulled open on its way out.
+   */
+  tear: 2.28,
+} as const;
+
+/** How long the curtain takes to clear the viewport once the tear begins. */
+const TEAR_DURATION = 0.8;
 
 export const INTRO = {
-  /** How long the brand overlay is held before it lifts away. */
-  holdMs: INTRO_HOLD_MS,
-  /** How long the curtain takes to clear the viewport. */
-  liftMs: INTRO_LIFT_MS,
-  /** When the page below is fully uncovered. */
-  clearedMs: INTRO_HOLD_MS + INTRO_LIFT_MS,
+  /** Cue sheet, in seconds — consumed by the intro timeline. */
+  cue: CUE,
+  /** Duration of the curtain tear, in seconds. */
+  tearDuration: TEAR_DURATION,
+
+  /**
+   * When the reveal begins, in ms. Anything that should already be in motion
+   * by the time it is uncovered (the hero's imagery) starts here.
+   */
+  holdMs: CUE.tear * 1000,
+  /** How long the curtain takes to clear the viewport, in ms. */
+  liftMs: TEAR_DURATION * 1000,
+  /** When the page below is fully uncovered, in ms. */
+  clearedMs: (CUE.tear + TEAR_DURATION) * 1000,
+  /**
+   * When the bird has left the frame, in ms. The navbar's emblem arrives here,
+   * so it reads as the same bird landing rather than a new element fading in.
+   */
+  landedMs: (CUE.flight + 0.57) * 1000,
 } as const;
 
 export const SITE = {

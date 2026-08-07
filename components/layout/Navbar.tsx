@@ -34,7 +34,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
 
-import { NAV_LINKS, SITE } from "@/constants";
+import { INTRO, NAV_LINKS, SITE } from "@/constants";
 import { Mark } from "@/components/ui";
 import { useIsomorphicLayoutEffect } from "@/hooks";
 import { cn } from "@/utils/cn";
@@ -188,7 +188,14 @@ export default function Navbar() {
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 2.1, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      /* Timed to `INTRO.landedMs` — the moment the intro's phoenix leaves the
+         frame — so the emblem arriving up here reads as the same bird landing
+         rather than as a new element fading in. */
+      transition={{
+        delay: INTRO.landedMs / 1000,
+        duration: 0.9,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className="fixed inset-x-0 top-0 z-50"
     >
       <nav

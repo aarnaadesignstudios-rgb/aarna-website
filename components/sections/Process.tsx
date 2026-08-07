@@ -22,7 +22,7 @@ export default function Process() {
     <section id="process" className="bg-cream py-24 text-charcoal md:py-32 lg:py-40">
       <PageContainer>
         <SectionHeading
-          index="03"
+          index="04"
           eyebrow="Process"
           title="How we work"
           meta="Four stages"

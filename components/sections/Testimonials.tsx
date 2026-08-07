@@ -1,21 +1,30 @@
 /**
- * Testimonials — one full-bleed line of client quotes, and nothing else.
+ * Testimonials — the client wall.
  *
- * This used to be a numbered section: a "04 — Testimonials / In their words"
- * heading block stacked above the moving ribbon, inside 24-40 units of vertical
- * padding. That made it two bands of content for one idea, and the heading
- * announced quotes that already announce themselves.
+ * This was a single full-bleed ticker: one line of italic text sliding past
+ * between two cream sections. The idea was that quotes announce themselves and
+ * do not need a heading — but stripped of a heading, a number and any card to
+ * sit in, they stopped reading as testimonials at all and started reading as a
+ * decorative strip, indistinguishable from the brand-values marquee further
+ * down the page.
  *
- * Now it is a single premium ribbon — a deep emerald plinth between the two
- * cream sections either side of it, in the same `surface-emerald` +
- * `border-gold/15` language as <Achievements /> and <Founder />, so it reads as
- * a considered divider carrying proof rather than as a section that got cut
- * short. Because it no longer takes an index, the page's sheet numbering closes
- * up behind it (see the 01…07 run across the other sections).
+ * So it is a full section again, and it takes its sheet number back: the run is
+ * 01…08 with this at 03. Client proof earns a place in the document's index.
  *
- * Server component — the ribbon itself owns the only client behaviour.
+ * The emerald ground is doing real work here. Both neighbours (<SelectedWorks />
+ * and <Process />) are light, so this lands as a dark plinth in the middle of
+ * the page — the same treatment <Founder /> gets — and the gold-on-emerald
+ * cards read as the brand rather than as a generic testimonial grid.
+ *
+ * One row, carrying all eight quotes. It was briefly two opposed rows, which
+ * filled the section but asked the eye to track two things at once and made the
+ * band feel like machinery. A single line is calmer and lets each card be read
+ * as it passes — and with every quote in the one row, none is ever on screen
+ * twice.
+ *
+ * Server component — <InfiniteMovingCards /> owns the only client behaviour.
  */
-import { InfiniteMovingCards } from "@/components/ui";
+import { InfiniteMovingCards, PageContainer, SectionHeading } from "@/components/ui";
 import { TESTIMONIALS } from "@/constants";
 
 export default function Testimonials() {
@@ -23,9 +32,29 @@ export default function Testimonials() {
     <section
       id="testimonials"
       aria-label="What our clients say"
-      className="overflow-hidden"
+      className="surface-emerald overflow-hidden border-y border-gold/15 py-24 text-cream md:py-32 lg:py-40"
     >
-      <InfiniteMovingCards items={TESTIMONIALS} tone="dark" speed="slow" />
+      <PageContainer>
+        <SectionHeading
+          index="03"
+          eyebrow="Testimonials"
+          title="In their words"
+          description="Houses and workplaces are lived in long after they are handed over. These are the people who live in ours."
+          meta={`${TESTIMONIALS.length} clients`}
+          tone="dark"
+          className="max-w-full"
+        />
+      </PageContainer>
+
+      {/* Full-bleed on purpose: the row should run off both edges of the page
+          so the wall feels continuous rather than boxed into the container. */}
+      <div className="mt-14 md:mt-20">
+        <InfiniteMovingCards
+          items={TESTIMONIALS}
+          direction="left"
+          speed="normal"
+        />
+      </div>
     </section>
   );
 }

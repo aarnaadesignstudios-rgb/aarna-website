@@ -149,9 +149,14 @@ html.lenis body {
   }
 
   /* Infinite moving cards: track is duplicated, so travel -50% - half the gap. */
+  /* Half the track, plus half the gap that sits between the two copies —
+     land there and copy two is exactly where copy one started, so the loop
+     has no seam. The gap is a variable because the keyframe and the track's
+     own `gap` have to agree to the pixel; <InfiniteMovingCards /> sets both
+     from one constant. */
   @keyframes scroll {
     to {
-      transform: translateX(calc(-50% - 0.75rem));
+      transform: translateX(calc(-50% - var(--marquee-gap, 1.5rem) / 2));
     }
   }
 

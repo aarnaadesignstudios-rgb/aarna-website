@@ -48,7 +48,7 @@ export default function Home() {
             The credibility figures that used to sit here in their own dark band
             are now the gold strip across the top of <Practice /> — same place in
             the page, but markup inside that section rather than a section of its
-            own, so it takes no sheet number and the 01…07 run is unaffected. */}
+            own, so it takes no sheet number and the 01…08 run is unaffected. */}
         <Practice />
         <SelectedWorks />
         <Testimonials />

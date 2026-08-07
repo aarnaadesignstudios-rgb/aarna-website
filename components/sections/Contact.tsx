@@ -50,7 +50,7 @@ export default function Contact() {
           {/* Left: heading + details */}
           <div className="flex flex-col justify-center">
             <SectionHeading
-              index="07"
+              index="08"
               eyebrow="Contact"
               title={"Let’s design\nsomething lasting"}
               tone="dark"

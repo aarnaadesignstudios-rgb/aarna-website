@@ -22,7 +22,7 @@ export default function WhyUs() {
     <section id="why-us" className="bg-stone py-24 text-charcoal md:py-32 lg:py-40">
       <PageContainer>
         <SectionHeading
-          index="05"
+          index="06"
           eyebrow="Why Us"
           title="Six reasons clients trust the studio"
           meta="Six principles"

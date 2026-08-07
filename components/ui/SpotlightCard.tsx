@@ -23,6 +23,17 @@ interface SpotlightCardProps {
   radius?: number;
   /** Base surface tone. */
   surface?: string;
+  /**
+   * Border classes, resting and hover.
+   *
+   * A prop rather than something the caller layers on through `className`,
+   * because `cn()` is a plain joiner with no conflict resolution: passing a
+   * second border colour would leave both classes on the element and let CSS
+   * source order pick the winner. The default suits a card on a light surface;
+   * on a dark brand ground a faint tint of the text colour disappears, so those
+   * callers pass a gold hairline instead.
+   */
+  border?: string;
 }
 
 export default function SpotlightCard({
@@ -30,6 +41,7 @@ export default function SpotlightCard({
   className,
   radius = 260,
   surface = "bg-cream",
+  border = "border-current/10 hover:border-gold/40",
 }: SpotlightCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(-radius);
@@ -50,7 +62,8 @@ export default function SpotlightCard({
       ref={ref}
       onMouseMove={handleMouseMove}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-current/10 transition-colors duration-500 hover:border-gold/40",
+        "group relative overflow-hidden rounded-2xl border transition-colors duration-500",
+        border,
         surface,
         className
       )}
