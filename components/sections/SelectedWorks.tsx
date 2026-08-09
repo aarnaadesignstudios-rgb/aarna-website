@@ -175,10 +175,14 @@ export default function SelectedWorks() {
                   src={work.image}
                   alt={work.title}
                   sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="scale-[1.03] transition-transform duration-[1600ms] ease-editorial group-hover:scale-110"
+                  className="scale-[1.03] transition-transform duration-1600 ease-editorial group-hover:scale-110"
                 />
-                {/* Gradient for legibility */}
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,41,28,0.30)_0%,rgba(6,41,28,0)_42%,rgba(6,41,28,0.82)_100%)]" />
+                {/* Legibility scrim — neutral, not green.
+                    This used to be built from emerald-deep at 82%, which tinted
+                    the bottom half of every project photograph green. The panels
+                    now darken without colouring, so nine photographs shot by
+                    different people at least share a neutral ground. */}
+                <div className="scrim-b absolute inset-0" />
 
                 {/* Content */}
                 <div className="relative flex h-full flex-col justify-end p-6 text-cream md:p-10">

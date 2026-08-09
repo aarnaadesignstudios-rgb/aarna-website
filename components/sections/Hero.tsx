@@ -29,7 +29,7 @@ import { useCallback, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FiArrowDown } from "react-icons/fi";
 
-import { ImageCycle, PageContainer, Spotlight } from "@/components/ui";
+import { ImageCycle, PageContainer } from "@/components/ui";
 import { fadeScale } from "@/animations/variants";
 import { HERO_SLIDES, INTRO, SITE } from "@/constants";
 import { gsap } from "@/lib/gsap";
@@ -72,7 +72,7 @@ export default function Hero() {
     <section
       id="hero"
       ref={heroRef}
-      className="relative flex h-screen min-h-[640px] w-full items-end overflow-hidden bg-emerald-deep text-cream"
+      className="relative flex h-screen min-h-[640px] w-full items-end overflow-hidden bg-ink text-cream"
     >
       {/* Background imagery.
           Outer div = GSAP scroll parallax target (transform).
@@ -102,17 +102,28 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Bottom legibility scrim, for the meta row and the scroll cue. The old
-          top scrim is gone — the masthead has its own panel now. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-64 bg-linear-to-t from-emerald-deep/80 via-emerald-deep/25 to-transparent" />
+      {/* ── Legibility, and nothing else ──────────────────────────────────
+          This was a GREEN gradient (`from-emerald-deep/80`) plus an animated
+          gold <Spotlight /> wash. Together they put a green cast over the
+          lower half of every hero frame and a gold haze over the rest, so a
+          daylit interior arrived looking like it had been shot through a
+          bottle. That tint was doing more to cheapen the opening screen than
+          any layout decision on the page.
 
-      {/* Animated gold spotlight wash for depth. */}
-      <Spotlight />
+          A scrim exists to darken, not to colour. This one is neutral ink,
+          and the gold wash is gone entirely — the photograph now supplies all
+          of the colour in the hero, which is the whole argument of the
+          section. */}
+      <div className="scrim-hero pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[62vh]" />
+      {/* A short top scrim as well: the masthead floats inset now rather than
+          sitting on a full-width bar, so the page edge behind it is live
+          photograph again and needs settling. */}
+      <div className="scrim-t pointer-events-none absolute inset-x-0 top-0 z-10 h-44" />
 
       {/* Editorial meta — top corners, below the masthead panel. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 hidden md:block">
         {/* pt clears the masthead's resting height with room to spare. */}
-        <PageContainer className="flex items-center justify-between pt-28 font-label text-[12px] uppercase tracking-[0.18em] text-cream/80 [text-shadow:0_1px_14px_rgba(6,41,28,0.7)]">
+        <PageContainer className="flex items-center justify-between pt-28 font-label text-[12px] uppercase tracking-[0.18em] text-cream/80 [text-shadow:0_1px_16px_rgba(10,10,9,0.75)]">
           <span>Est. {SITE.founded}</span>
           <span>Gurugram · India</span>
         </PageContainer>
@@ -132,10 +143,10 @@ export default function Hero() {
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-md"
         >
-          <span className="block font-label text-[12px] uppercase tracking-[0.18em] text-gold [text-shadow:0_1px_14px_rgba(6,41,28,0.8)]">
+          <span className="block font-label text-[12px] uppercase tracking-[0.18em] text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
             Selected work
           </span>
-          <span className="mt-2.5 block font-serif text-3xl leading-none tracking-tight text-cream [text-shadow:0_1px_18px_rgba(6,41,28,0.8)] md:text-4xl">
+          <span className="mt-2.5 block font-serif text-3xl leading-none tracking-tight text-cream [text-shadow:0_1px_20px_rgba(10,10,9,0.8)] md:text-4xl">
             {current?.title}
           </span>
         </motion.div>
@@ -152,7 +163,7 @@ export default function Hero() {
         transition={{ delay: INTRO.clearedMs / 1000, duration: 0.8 }}
       >
         <motion.span
-          className="flex flex-col items-center gap-2 text-cream/90 [text-shadow:0_1px_14px_rgba(6,41,28,0.7)]"
+          className="flex flex-col items-center gap-2 text-cream/90 [text-shadow:0_1px_16px_rgba(10,10,9,0.75)]"
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >

@@ -6,19 +6,12 @@
  * every photograph is a stock stand-in, and the per-project location / area /
  * year are marked TODO rather than invented. See the note on WORKS.
  */
-import {
-  FiCompass,
-  FiFeather,
-  FiLayers,
-  FiSun,
-  FiHome,
-  FiAward,
-} from "react-icons/fi";
 import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
 
 import type {
   Faq,
   Feature,
+  PhotoFrame,
   HeroSlide,
   NavLink,
   Project,
@@ -81,42 +74,36 @@ export const HERO_SLIDES: HeroSlide[] = [
 export const FEATURES: Feature[] = [
   {
     id: "vision",
-    icon: FiCompass,
     title: "Considered Vision",
     description:
       "Every project begins with a singular idea, refined until nothing unnecessary remains.",
   },
   {
     id: "craft",
-    icon: FiFeather,
     title: "Material Craft",
     description:
       "We honour natural stone, timber and light — detailing them with quiet precision.",
   },
   {
     id: "space",
-    icon: FiLayers,
     title: "Spatial Clarity",
     description:
       "Proportion and flow are choreographed so that each space breathes with intention.",
   },
   {
     id: "light",
-    icon: FiSun,
     title: "Light as Material",
     description:
       "Daylight is treated as a building block, shaping mood across the hours of a day.",
   },
   {
     id: "living",
-    icon: FiHome,
     title: "Human Living",
     description:
       "Spaces are designed around ritual and comfort, not just form and photograph.",
   },
   {
     id: "legacy",
-    icon: FiAward,
     title: "Enduring Legacy",
     description:
       "We build for permanence — architecture meant to age gracefully across generations.",
@@ -477,4 +464,56 @@ export const SOCIAL_LINKS: SocialLink[] = [
   { label: "LinkedIn", href: "https://linkedin.com", icon: FaLinkedinIn },
   { label: "Behance", href: "https://behance.net", icon: FaBehance },
   { label: "Pinterest", href: "https://pinterest.com", icon: FaPinterestP },
+];
+
+/**
+ * Architectural Photography — the portfolio shown on /photography.
+ *
+ * The discipline and its lead (Ar. Divyank Sirohi | Postcard of Life) are the
+ * studio's own copy. The FRAMES below are placeholders: aspect ratios and grid
+ * spans are real design decisions and should be kept, but every `image` is a
+ * stock stand-in.
+ *
+ * TODO (needs the studio): 8–12 photographs, plus a caption and the project
+ *       each belongs to. See public/images/README.md for where to put them.
+ */
+export const PHOTOGRAPHY_FRAMES: PhotoFrame[] = [
+  { id: "p1", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80", span: "md:col-span-7", aspect: "aspect-4/3", caption: "" },
+  { id: "p2", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&q=80", span: "md:col-span-5", aspect: "aspect-3/4", caption: "" },
+  { id: "p3", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80", span: "md:col-span-5", aspect: "aspect-3/4", caption: "" },
+  { id: "p4", image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80", span: "md:col-span-7", aspect: "aspect-4/3", caption: "" },
+  { id: "p5", image: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=1800&q=80", span: "md:col-span-12", aspect: "aspect-21/9", caption: "" },
+  { id: "p6", image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=80", span: "md:col-span-6", aspect: "aspect-4/5", caption: "" },
+  { id: "p7", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80", span: "md:col-span-6", aspect: "aspect-4/5", caption: "" },
+];
+
+/**
+ * What the photography discipline actually delivers. Written from the studio's
+ * own one-line description of the service; not invented credentials.
+ */
+export const PHOTOGRAPHY_SCOPE = [
+  {
+    id: "light",
+    index: "01",
+    title: "Light",
+    body: "Each space is shot at the hour it was designed for, not the hour the shoot was booked. Where that means returning, we return.",
+  },
+  {
+    id: "composition",
+    index: "02",
+    title: "Composition",
+    body: "Frames are built on the building's own geometry — its lines, thresholds and sight-lines — rather than imposed on it.",
+  },
+  {
+    id: "materiality",
+    index: "03",
+    title: "Materiality",
+    body: "Stone, timber, lime and metal photographed so their texture survives the screen, which is where most of them are seen.",
+  },
+  {
+    id: "storytelling",
+    index: "04",
+    title: "Storytelling",
+    body: "A set that reads in sequence: approach, threshold, room, detail. A building explained, not merely recorded.",
+  },
 ];

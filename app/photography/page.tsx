@@ -2,139 +2,158 @@ import type { Metadata } from "next";
 
 import Navbar from "@/components/layout/Navbar";
 import Contact from "@/components/sections/Contact";
+import PhotoGrid from "@/components/sections/PhotoGrid";
 import { Media, PageContainer, Reveal, SectionHeading } from "@/components/ui";
-import { SITE } from "@/constants";
+import { PHOTOGRAPHY_FRAMES, PHOTOGRAPHY_SCOPE, SITE } from "@/constants";
 
 export const metadata: Metadata = {
   title: "Architectural Photography",
   description:
-    "Architectural photography by Ar. Divyank Sirohi | Postcard of Life — capturing architecture through light, composition, materiality and architectural storytelling.",
+    "Architectural photography led by Ar. Divyank Sirohi | Postcard of Life — capturing architecture through light, composition, materiality and architectural storytelling.",
 };
 
 /**
- * /photography — the profile page for the studio's fifth discipline.
+ * /photography — the profile and portfolio for the studio's fifth discipline.
  *
- * Requested in the client review: "05. Photography to open a different page
- * showcasing its profile." The Services card for this discipline is therefore
- * a link rather than an expanding panel.
+ * Requested in the client review ("05. Photography to open a different page
+ * showcasing its profile"), so the Services card for this discipline is a link
+ * rather than an expanding panel.
  *
- * ── What is real here and what is not ─────────────────────────────────────
+ * ── What is real here, and what is not ────────────────────────────────────
  *
- * The practitioner (Ar. Divyank Sirohi | Postcard of Life) and the discipline
- * description are the studio's own copy. Everything else on this page is
- * STRUCTURE ONLY — the portfolio grid below uses placeholder imagery, and
- * there is no biography, no client list and no contact route specific to the
- * photography practice, because none was supplied.
+ * REAL: the discipline, its lead (Ar. Divyank Sirohi | Postcard of Life), and
+ * the one-line description — all supplied by the studio.
  *
- * It is built this way on purpose rather than padded out with invented
- * credentials: the page exists, the link works, and the shape is ready for
- * real content to drop into. See the TODO block below for exactly what is
- * needed.
+ * NOT REAL: every photograph, and there is no biography. Nothing has been
+ * invented to fill the gap — no awards, no client list, no years of
+ * experience. A fabricated credential on a named real person is the one
+ * mistake on this page that would actually cost the studio something.
+ *
+ * The four "scope" entries ARE written rather than supplied, but they are
+ * expansions of the studio's own four words — light, composition, materiality,
+ * storytelling — and describe method, not credentials.
  *
  * TODO (needs the studio):
  *   · a short biography for Ar. Divyank Sirohi
- *   · 6–12 photographs for the grid, with captions
+ *   · 8–12 photographs with captions (see public/images/README.md)
  *   · whether enquiries route to the studio or direct to the photographer
  */
-
-/** Placeholder frames. Replace with the photographer's own work. */
-const FRAMES = [
-  {
-    id: "f1",
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80",
-    span: "md:col-span-7",
-    aspect: "aspect-4/3",
-  },
-  {
-    id: "f2",
-    image:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&q=80",
-    span: "md:col-span-5",
-    aspect: "aspect-3/4",
-  },
-  {
-    id: "f3",
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80",
-    span: "md:col-span-5",
-    aspect: "aspect-3/4",
-  },
-  {
-    id: "f4",
-    image:
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1400&q=80",
-    span: "md:col-span-7",
-    aspect: "aspect-4/3",
-  },
-];
-
 export default function PhotographyPage() {
   return (
     <>
       <Navbar />
 
       <main>
-        {/* pt clears the fixed masthead — no hero on this page to sit under it. */}
-        <section className="bg-cream pt-36 pb-20 text-charcoal md:pt-44 md:pb-24">
-          <PageContainer>
-            <SectionHeading
-              index="05"
-              eyebrow="Architectural Photography"
-              title={"Photographed as it\nis meant to be seen"}
-              meta="A discipline of the studio"
-              className="max-w-full"
+        {/* ── Opening frame ───────────────────────────────────────────────
+            A full-bleed photograph is the right opening for a page about
+            photography — the discipline argues for itself before any copy
+            does. Neutral scrim, never green: see --color-ink. */}
+        <section className="relative flex h-[78vh] min-h-[520px] items-end overflow-hidden bg-ink text-cream">
+          <div className="absolute inset-0">
+            <Media
+              src={PHOTOGRAPHY_FRAMES[0]?.image ?? ""}
+              alt=""
+              sizes="100vw"
+              priority
+              className="scale-105"
             />
+          </div>
+          <div className="scrim-hero pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[70vh]" />
+          <div className="scrim-t pointer-events-none absolute inset-x-0 top-0 z-10 h-40" />
 
-            <div className="mt-14 grid gap-y-10 md:mt-20 lg:grid-cols-[1.4fr_1fr] lg:gap-x-20">
-              <p className="font-serif text-[1.6rem] leading-[1.35] tracking-tight text-emerald xl:text-[1.9rem]">
-                Led by Ar. Divyank Sirohi | Postcard of Life, capturing
-                architecture through light, composition, materiality and
-                architectural storytelling.
-              </p>
+          <PageContainer className="relative z-20 pb-16 md:pb-20">
+            <Reveal>
+              <span className="block font-label text-[12px] tracking-[0.18em] uppercase text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
+                05 — A discipline of {SITE.name}
+              </span>
+              <h1 className="mt-5 max-w-[16ch] font-serif text-[2.6rem] leading-[1.02] font-light tracking-tight text-cream [text-shadow:0_1px_24px_rgba(10,10,9,0.7)] md:text-[4rem] lg:text-[4.75rem]">
+                Architectural Photography
+              </h1>
+            </Reveal>
+          </PageContainer>
+        </section>
 
-              <div className="lg:pt-3">
-                <span aria-hidden className="block h-px w-16 bg-gold" />
-                <p className="mt-6 text-base leading-[1.8] text-charcoal/70">
+        {/* ── The lead ────────────────────────────────────────────────────── */}
+        <section className="bg-cream py-20 text-charcoal md:py-24 lg:py-28">
+          <PageContainer>
+            <div className="grid gap-y-12 lg:grid-cols-[1.35fr_1fr] lg:gap-x-20">
+              <div>
+                <span aria-hidden className="mb-8 block h-px w-16 bg-gold" />
+                <p className="font-serif text-[1.7rem] leading-[1.3] tracking-tight text-emerald xl:text-[2.1rem]">
+                  Led by Ar. Divyank Sirohi | Postcard of Life, capturing
+                  architecture through light, composition, materiality and
+                  architectural storytelling.
+                </p>
+              </div>
+
+              <div className="lg:pt-4">
+                <p className="text-base leading-[1.85] text-charcoal/70">
                   A building is photographed twice — once when it is handed
                   over, and once by everyone who visits it afterwards. This
                   discipline exists so the first of those is done properly:
                   with the light the architecture was designed around, and at
                   the hour it was designed for.
                 </p>
+                <p className="mt-5 text-base leading-[1.85] text-charcoal/70">
+                  The work is commissioned both alongside the studio&rsquo;s own
+                  projects and independently, for other practices and their
+                  clients.
+                </p>
               </div>
             </div>
           </PageContainer>
         </section>
 
-        {/* Portfolio grid — placeholder imagery. */}
-        <section className="bg-stone py-20 text-charcoal md:py-24">
+        {/* ── Method ──────────────────────────────────────────────────────── */}
+        <section className="surface-emerald border-y border-gold/15 py-20 text-cream md:py-24">
           <PageContainer>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:gap-8">
-              {FRAMES.map((frame, i) => (
+            <SectionHeading
+              eyebrow="Approach"
+              title="Four things every frame has to do"
+              tone="dark"
+              meta="Method"
+              className="max-w-full"
+            />
+
+            <div className="mt-14 grid grid-cols-1 gap-y-12 border-t border-cream/15 pt-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
+              {PHOTOGRAPHY_SCOPE.map((item, i) => (
                 <Reveal
-                  key={frame.id}
-                  variant="fadeScale"
+                  key={item.id}
                   delay={i * 0.08}
-                  className={frame.span}
+                  className={
+                    // One continuous set of verticals at 4-up, a single rule
+                    // between the pair at 2-up — the same bay treatment the
+                    // Process section uses, so the two read as one system.
+                    (i % 2 === 1 ? "sm:border-l " : "") +
+                    (i === 0 ? "lg:border-l-0 lg:pl-0 " : "lg:border-l ") +
+                    "border-cream/15 sm:px-7 lg:px-8"
+                  }
                 >
-                  <div
-                    className={`relative w-full overflow-hidden rounded-2xl bg-emerald-deep ${frame.aspect}`}
-                  >
-                    <Media
-                      src={frame.image}
-                      alt=""
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="transition-transform duration-[1600ms] ease-editorial hover:scale-105"
-                    />
-                  </div>
+                  <span className="font-label text-[12px] tracking-[0.16em] uppercase text-gold">
+                    {item.index}
+                  </span>
+                  <h3 className="mt-4 font-serif text-2xl font-light md:text-[1.7rem]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-3 max-w-[34ch] text-[15px] leading-[1.8] text-cream/70">
+                    {item.body}
+                  </p>
                 </Reveal>
               ))}
             </div>
+          </PageContainer>
+        </section>
 
-            <p className="mt-10 font-label text-[12px] uppercase tracking-[0.16em] text-charcoal/40">
-              Portfolio — images to follow from {SITE.shortName}
-            </p>
+        {/* ── Portfolio ───────────────────────────────────────────────────── */}
+        <section className="bg-stone py-20 text-charcoal md:py-24 lg:py-28">
+          <PageContainer>
+            <SectionHeading
+              eyebrow="Portfolio"
+              title="Selected frames"
+              meta={`${PHOTOGRAPHY_FRAMES.length} images`}
+              className="max-w-full"
+            />
+            <PhotoGrid frames={PHOTOGRAPHY_FRAMES} className="mt-14 md:mt-20" />
           </PageContainer>
         </section>
 

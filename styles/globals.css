@@ -20,6 +20,20 @@
   --color-charcoal: #1c1b18; /* Charcoal — ink / dark surface */
   --color-stone: #e4ddd0; /* Light Stone — alt light surface */
 
+  /* ── The neutral the palette was missing ──────────────────────────
+     Every scrim, overlay and gradient on this site used to be built from
+     `--color-emerald-deep`. That is a GREEN, so every one of them tinted
+     the photograph underneath it green — the hero's lower third, the
+     project panels, the contact backdrop. Photography shot in daylight
+     came out looking like it had been filmed through a bottle, which is
+     most of what read as cheap.
+
+     Scrims exist to darken, not to colour. This is a true neutral with
+     the faintest warm cast, so type gains its contrast and the imagery
+     keeps its own colour. Brand green stays a SURFACE colour; it is no
+     longer allowed on top of a photograph. */
+  --color-ink: #0a0a09;
+
   /* Typography ------------------------------------------------------ */
   /* Font family CSS vars are injected by next/font in app/layout.tsx.
      ONE typeface family carries the whole site. The client's note was
@@ -140,6 +154,40 @@ html.lenis body {
 }
 
 @layer utilities {
+  /* ── Scrims ───────────────────────────────────────────────────────
+     Neutral, never green. See the note on --color-ink.
+
+     `.scrim-b` is sized for type sitting in the lower third of a frame;
+     `.scrim-hero` is longer and deeper because the hero carries a caption,
+     a meta row and a scroll cue at once. Both stop well short of opaque —
+     a scrim that reaches black kills the photograph it is protecting. */
+  .scrim-b {
+    background-image: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-ink) 82%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 42%, transparent) 34%,
+      transparent 72%
+    );
+  }
+
+  .scrim-hero {
+    background-image: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-ink) 88%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 55%, transparent) 26%,
+      color-mix(in srgb, var(--color-ink) 18%, transparent) 58%,
+      transparent 100%
+    );
+  }
+
+  .scrim-t {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-ink) 55%, transparent) 0%,
+      transparent 100%
+    );
+  }
+
   /* Hairline divider used throughout the editorial layout. */
   .rule {
     border-color: color-mix(in srgb, currentColor 15%, transparent);
@@ -180,13 +228,17 @@ html.lenis body {
   }
 
   /* Rich emerald OVERLAY (translucent) — for tinting over imagery. */
+  /* Translucent veil for tinting over imagery.
+     Now neutral, with only a trace of emerald left in the centre so the
+     brand is still present without the photograph turning green. At 84%
+     emerald it was not a veil at all — it was a green fill with a picture
+     faintly visible behind it. */
   .overlay-emerald {
-    background-image:
-      radial-gradient(
-        115% 95% at 50% 0%,
-        color-mix(in srgb, var(--color-emerald) 84%, transparent) 0%,
-        color-mix(in srgb, var(--color-emerald-deep) 95%, transparent) 100%
-      );
+    background-image: radial-gradient(
+      120% 100% at 50% 0%,
+      color-mix(in srgb, var(--color-emerald) 55%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 88%, transparent) 100%
+    );
   }
 
   /* Infinite horizontal marquee (two duplicated tracks, translate -50%). */

@@ -11,10 +11,16 @@ export interface NavLink {
   href: string;
 }
 
-/** A single "Why choose us" value proposition card. */
+/**
+ * A single principle in the "Why Us" index.
+ *
+ * No icon field. These carried a Feather glyph each until the section was
+ * rebuilt as hairline bays — a stock icon set is the fastest way to make a
+ * bespoke studio site look assembled from parts, and the six glyphs
+ * illustrated nothing the four words beside them did not already say.
+ */
 export interface Feature {
   id: string;
-  icon: IconType;
   title: string;
   description: string;
 }
@@ -107,6 +113,25 @@ export interface HeroSlide {
    * Only set it where centring loses the subject on narrow viewports.
    */
   position?: string;
+}
+
+/**
+ * One photograph in the /photography portfolio grid.
+ *
+ * `span` and `aspect` are Tailwind classes rather than numbers on purpose: the
+ * grid is deliberately irregular — a full-bleed panorama between two portrait
+ * pairs, and so on — and that rhythm is a design decision per frame, not
+ * something worth deriving from image dimensions.
+ */
+export interface PhotoFrame {
+  id: string;
+  image: string;
+  /** Column span at md+, e.g. "md:col-span-7". */
+  span: string;
+  /** Aspect-ratio utility, e.g. "aspect-4/3". */
+  aspect: string;
+  /** Optional caption. Empty until the studio supplies them. */
+  caption?: string;
 }
 
 /** A question and answer on the FAQ page. */
