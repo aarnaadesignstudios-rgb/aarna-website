@@ -1,22 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Bodoni_Moda, Inter, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, Bodoni_Moda, Inter } from "next/font/google";
 
 import "@/styles/globals.css";
 import { SITE } from "@/constants";
 import SmoothScrollProvider from "@/lib/SmoothScrollProvider";
-import { GrainOverlay } from "@/components/ui";
+import { GrainOverlay, Cursor } from "@/components/ui";
 
-/* Elegant serif for section headings. Exposed as --font-cormorant. */
+/* The studio's voice. Section headings, and — since the client's review —
+   every small uppercase label on the site as well, so the label row and the
+   title above it share one family. Exposed as --font-cormorant. */
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
   variable: "--font-cormorant",
   display: "swap",
 });
 
-/* High-contrast "fashion" display serif for the hero statement. Exposed as
-   --font-bodoni. Bodoni Moda's dramatic thin/thick contrast reads as couture,
-   editorial luxury; its italic is glamorous for the flipping word. */
+/* High-contrast "fashion" display serif for the hero statement and the
+   flipping emphasis word. Exposed as --font-bodoni. */
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
@@ -25,19 +27,14 @@ const bodoni = Bodoni_Moda({
   display: "swap",
 });
 
-/* Modern sans for body. Exposed as --font-inter. */
+/* Modern sans for body copy. Exposed as --font-inter.
+   Deliberately kept: the client asked for the LABEL font to change to the
+   serif, not for running paragraphs to become serif. Long body copy set in
+   Cormorant at 16px is noticeably harder to read, so the sans stays where it
+   earns its place and nowhere else. */
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-});
-
-/* Monospace for technical "spec-sheet" labels (areas, years, indices) — an
-   architectural drawing cue. Exposed as --font-jetbrains. */
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -72,12 +69,15 @@ export default function RootLayout({
     // these two nodes ONLY — real mismatches inside the app still surface.
     <html
       lang="en"
-      className={`${cormorant.variable} ${bodoni.variable} ${inter.variable} ${jetbrains.variable}`}
+      className={`${cormorant.variable} ${bodoni.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
       <body suppressHydrationWarning>
         {/* Subtle film-grain texture across the whole page. */}
         <GrainOverlay />
+        {/* The gold dot that replaces the pointer. Hides the native cursor
+            from JS, not from CSS — see the note in the component. */}
+        <Cursor />
         {/* SmoothScrollProvider initialises Lenis + GSAP once for the whole app. */}
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>

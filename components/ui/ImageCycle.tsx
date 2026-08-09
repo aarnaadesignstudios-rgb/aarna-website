@@ -53,6 +53,14 @@ interface ImageCycleProps {
    * frame isn't spent behind something covering it.
    */
   startDelayMs?: number;
+  /**
+   * Fires with the index of the frame that has just become current, so a
+   * caller can caption the work on screen (see <Hero />).
+   *
+   * Read through a ref inside the cycle effect, so passing an inline arrow
+   * does not tear down and rebuild the interval on every parent render.
+   */
+  onFrameChange?: (index: number) => void;
   className?: string;
 }
 
@@ -112,9 +120,17 @@ export default function ImageCycle({
   // 160vw on phones so the zoomed crop still resolves sharply.
   sizes = "(max-width: 639px) 160vw, 100vw",
   startDelayMs = 0,
+  onFrameChange,
   className,
 }: ImageCycleProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Held in a ref so the cycle effect below does not list the callback as a
+  // dependency — an inline arrow from the parent would otherwise clear and
+  // restart the interval on every one of its renders, and the frame that was
+  // mid-hold would silently get a full extra turn on screen.
+  const onFrameChangeRef = useRef(onFrameChange);
+  onFrameChangeRef.current = onFrameChange;
 
   /**
    * `current` is what's on screen, `outgoing` is the frame still holding
@@ -209,6 +225,18 @@ export default function ImageCycle({
       document.removeEventListener("visibilitychange", sync);
     };
   }, [started, frames.length, holdMs, fadeMs]);
+
+  /**
+   * Announce the frame on screen.
+   *
+   * Deliberately an effect keyed on `current` rather than a call inside the
+   * state updater: React may invoke an updater more than once for the same
+   * transition (StrictMode does it on purpose), so notifying from in there
+   * would double-fire. An effect runs once per committed value.
+   */
+  useEffect(() => {
+    onFrameChangeRef.current?.(current);
+  }, [current]);
 
   return (
     <div ref={rootRef} className={cn("absolute inset-0", PORTRAIT_ZOOM, className)}>

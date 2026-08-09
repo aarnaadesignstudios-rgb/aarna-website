@@ -2,23 +2,29 @@
  * Global site metadata and shared, section-agnostic constants.
  * Editing brand copy here propagates everywhere.
  */
+
 /**
  * Loading-screen choreography, shared so a section can hand off from the intro
- * instead of re-hard-coding the same numbers. <LoadingScreen> owns these; the
- * hero uses them to begin its imagery exactly as the curtain starts to tear,
- * and the navbar times its entrance to the moment the bird leaves frame.
+ * instead of re-hard-coding the same numbers.
  *
- * The intro is a single beat — "the phoenix takes flight" — cut like this:
+ * ── Why this is now three beats instead of eight ──────────────────────────
  *
- *   0.00  the mark fades up and settles on the emerald void
- *   0.85  a gold glint sweeps across it, tracing its own silhouette
- *   1.35  the bird SEPARATES: raster mark cross-dissolves to vector under a
- *         bloom, so one object appears to come loose from the letterform
- *   1.60  it crouches, then beats its wings twice
- *   2.18  it arcs up and to the right and leaves the frame
- *   2.35  the emerald curtain tears open along that same vector, carrying the
- *         wordmark away with it
- *   3.15  the page below is fully uncovered
+ * The previous intro was a full set-piece: the phoenix separated from the
+ * letterform, beat its wings, flew out of frame, tore the emerald curtain away
+ * along its flight path, and the "A" then flew back to land in the masthead.
+ * The client's verdict was blunt — "this animation is very bad" — so it is
+ * gone, along with the machinery that supported it (the vector silhouette, the
+ * FLIP landing, the masked curtain tear).
+ *
+ * What replaces it is deliberately unshowy. A logo, a name, a pause, a
+ * dissolve. Nothing to dislike, and it is over in under three seconds instead
+ * of nearly five:
+ *
+ *   0.00  the mark fades up and settles
+ *   0.45  the name fades in beneath it, on ONE line
+ *   1.20  a held beat — the lockup simply sits there
+ *   2.00  the whole screen dissolves into the page
+ *   2.90  done
  *
  * Seconds are the authoring unit (they match the GSAP timeline); the exported
  * values are ms because that is what the consumers want.
@@ -26,64 +32,37 @@
 const CUE = {
   /** Mark fades up + settles. */
   settle: 0,
-  /** Gold glint sweeps the silhouette. */
-  glint: 1.15,
-  /** Raster mark → vector bird + letter, hidden under a bloom. */
-  separate: 1.85,
-  /** Anticipation crouch, then three wing-beats. */
-  flap: 2.1,
-  /** Arc up-right and out of frame. */
-  flight: 2.95,
-  /**
-   * Curtain peels away along the flight vector.
-   *
-   * This deliberately overlaps the flight rather than following it. Starting
-   * the tear once the bird had fully left leaves a beat of empty emerald, and
-   * the peel then reads as a separate event instead of as something the bird
-   * pulled open on its way out.
-   */
-  tear: 3.45,
-  /**
-   * The "A" lifts out of the middle of the screen and settles into the navbar's
-   * emblem slot, arriving just as the curtain finishes clearing.
-   */
-  letter: 3.55,
+  /** Wordmark fades in beneath it. */
+  name: 0.45,
+  /** The screen begins to dissolve. */
+  dissolve: 2.0,
 } as const;
 
-/** How long the curtain takes to clear the viewport once the tear begins. */
-const TEAR_DURATION = 1.05;
-
-/** How long the letterform takes to travel to the masthead. */
-const LETTER_DURATION = 1.15;
+/** How long the dissolve takes. */
+const DISSOLVE_DURATION = 0.9;
 
 export const INTRO = {
   /** Cue sheet, in seconds — consumed by the intro timeline. */
   cue: CUE,
-  /** Duration of the curtain tear, in seconds. */
-  tearDuration: TEAR_DURATION,
-  /** Duration of the letterform's travel to the masthead, in seconds. */
-  letterDuration: LETTER_DURATION,
+  /** Duration of the closing dissolve, in seconds. */
+  dissolveDuration: DISSOLVE_DURATION,
 
   /**
    * When the reveal begins, in ms. Anything that should already be in motion
    * by the time it is uncovered (the hero's imagery) starts here.
    */
-  holdMs: CUE.tear * 1000,
-  /** How long the curtain takes to clear the viewport, in ms. */
-  liftMs: TEAR_DURATION * 1000,
+  holdMs: CUE.dissolve * 1000,
+  /** How long the dissolve takes, in ms. */
+  liftMs: DISSOLVE_DURATION * 1000,
   /** When the whole intro is over, in ms. */
-  clearedMs: (CUE.letter + LETTER_DURATION) * 1000,
+  clearedMs: (CUE.dissolve + DISSOLVE_DURATION) * 1000,
   /**
    * When the navbar settles into place, in ms.
    *
-   * Early, and deliberately so — it lands while the curtain is still up, so it
-   * is already at rest behind it. Two reasons. It is then simply *there* when
-   * the tear uncovers it, instead of fading in over a live page. And the intro
-   * measures the navbar emblem's box to know where to fly the "A": measuring
-   * mid-entrance would read a position the navbar is still animating away from,
-   * and the letter would land 24px high.
+   * Deliberately before the dissolve finishes, so the masthead is already at
+   * rest behind the intro rather than fading in over a live page.
    */
-  navbarMs: (CUE.flight - 0.35) * 1000,
+  navbarMs: (CUE.dissolve - 0.3) * 1000,
 } as const;
 
 export const SITE = {
@@ -91,9 +70,16 @@ export const SITE = {
   shortName: "Aarnaa",
   tagline: "Architecture of quiet luxury",
   description:
-    "Aarnaa Studios is a premium architecture and interior design practice crafting calm, sophisticated spaces where light, material and proportion meet.",
+    "Aarnaa Design Studios is a multidisciplinary architecture and interior design practice in Gurugram, specialising in architecture, commercial interiors and bespoke spaces.",
   email: "studio@aarnaa.com",
-  phone: "+91 98765 43210",
-  address: "12 Marine Drive, Mumbai, India",
-  url: "https://aarnaa.studio",
+  /** As supplied by the studio. */
+  phone: "+91 99903 47716",
+  /** Dial string for tel: links — digits only. */
+  phoneHref: "+919990347716",
+  address: "Gurugram Sec 103, India",
+  url: "https://aarnaadesignstudios.com",
+  /** Display form of the URL, for the contact block. */
+  urlLabel: "aarnaadesignstudios.com",
+  /** The year the studio was founded. Drives every "Est." line on the site. */
+  founded: "2019",
 } as const;

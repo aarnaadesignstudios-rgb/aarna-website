@@ -4,10 +4,10 @@
  */
 import type { IconType } from "react-icons";
 
-/** A navigation entry rendered in the navbar and footer. */
+/** A navigation entry rendered in the navbar and contact block. */
 export interface NavLink {
   label: string;
-  /** In-page anchor target, e.g. "#about". */
+  /** In-page anchor ("#about") or a route ("/faq"). */
   href: string;
 }
 
@@ -19,23 +19,32 @@ export interface Feature {
   description: string;
 }
 
-/** A single credibility figure in the achievements band under the hero. */
+/**
+ * A single credibility figure in the achievements band under the hero.
+ *
+ * `value` is a STRING, not a number. Two of the five figures ("2 Lakh",
+ * "Pan India") are not countable, and a count-up that ran on three of five
+ * would read as broken rather than as restrained — so the whole row simply
+ * arrives instead of counting.
+ */
 export interface Stat {
   id: string;
-  /** The number the counter animates to. */
-  value: number;
-  /** Appended to the counted value, e.g. "+" or "%". */
-  suffix?: string;
-  /** Short mono label sitting under the figure. */
+  value: string;
+  /** Short label sitting under the figure. */
   label: string;
 }
 
-/** A studio service offering. */
+/** One of the studio's disciplines. */
 export interface Service {
   id: string;
+  /** Display index, e.g. "01". */
+  index: string;
   title: string;
-  description: string;
+  /** Revealed when the title is clicked; not shown at rest. */
+  body: string;
   image: string;
+  /** Set only where the discipline opens a page of its own. */
+  href?: string;
 }
 
 /** A featured architecture project. */
@@ -65,35 +74,46 @@ export interface Testimonial {
   role: string;
 }
 
-/** A project panel in the pinned horizontal "Selected Works" gallery. */
+/**
+ * A project panel in the pinned horizontal "Selected Works" gallery.
+ *
+ * `location`, `area` and `year` are optional and currently unset for every
+ * real project: the studio has not supplied them, and an invented area on a
+ * real commission is worse than a visible gap. The gallery renders the meta
+ * row only when there is something to put in it.
+ */
 export interface Work {
   id: string;
   category: string;
   title: string;
-  location: string;
-  area: string;
-  year: string;
+  location?: string;
+  area?: string;
+  year?: string;
   description: string;
   image: string;
   /** CSS width for the panel — intentionally uneven for editorial rhythm. */
   width: string;
 }
 
-/**
- * A single frame in the hero's cross-dissolving image cycle.
- *
- * These are real studio projects, so `alt` describes the space rather than the
- * brand — the hero carries no copy of its own.
- */
+/** A single frame in the hero's cross-dissolving image cycle. */
 export interface HeroSlide {
   id: string;
   image: string;
   alt: string;
+  /** Project name, captioned under the hero while this frame is up. */
+  title: string;
   /**
    * Optional art direction for the crop, as a CSS `object-position` value.
    * Only set it where centring loses the subject on narrow viewports.
    */
   position?: string;
+}
+
+/** A question and answer on the FAQ page. */
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
 }
 
 /** A social media profile link. */

@@ -1,21 +1,41 @@
 "use client";
 
 /**
- * Contact — luxury enquiry form over an architectural backdrop.
+ * Contact — the enquiry, and the end of the page.
  *
- * Large heading, calm background image, minimal underlined inputs. The form is
- * non-functional in Phase 1 (submit is prevented); it exists to establish the
- * layout and interaction surface.
+ * ── This is now the last thing on the site ────────────────────────────────
  *
- * TODO (future phases):
- *  - Wire submission to a route handler / form service with validation + toast.
- *  - Add focus/label float micro-interactions and a success state.
- *  - Parallax the background image behind the form on scroll.
+ * There used to be a footer below this: a nav column, a repeat of the contact
+ * details, an oversized raster logo and a copyright line. The client's note
+ * was "remove this last slide and have important data in above slide", with a
+ * neater reference site attached — so the footer is deleted and everything
+ * from it that earned its place has moved in here:
+ *
+ *   · the studio's navigation, as a compact index
+ *   · the social links
+ *   · the copyright line
+ *
+ * What did not move is the giant logo. It was a 640px raster of the full
+ * lockup, visibly soft at that size, and it ended the page on a picture of a
+ * logo rather than on an invitation to write.
+ *
+ * The contact details themselves were all wrong and are corrected here:
+ * the website, the phone number and the address now come from `SITE`.
+ *
+ * The heading is set in GOLD, per the client's mark-up on this specific
+ * heading. Every other section title on the site stays emerald/cream — gold
+ * type this size only holds up against the dark emerald ground, and this is
+ * the only display heading that sits on one.
+ *
+ * The form is non-functional (submit is prevented); it establishes the layout
+ * and the interaction surface.
+ *
+ * TODO (future phases): wire submission to a route handler / form service.
  */
 import { useState, type FormEvent } from "react";
 
 import { Media, PageContainer, Reveal, Button, SectionHeading } from "@/components/ui";
-import { SITE } from "@/constants";
+import { NAV_LINKS, SITE, SOCIAL_LINKS } from "@/constants";
 
 // Field definitions kept declarative so the form stays DRY.
 const FIELDS = [
@@ -23,6 +43,8 @@ const FIELDS = [
   { name: "email", label: "Email", type: "email" },
   { name: "project", label: "Project type", type: "text" },
 ] as const;
+
+const YEAR = 2026; // Phase 1: static; wire to build-time date later.
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
@@ -39,13 +61,13 @@ export default function Contact() {
       <div className="absolute inset-0">
         <Media
           src="https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=2000&q=80"
-          alt="Serene minimal architectural facade at dusk"
+          alt=""
           sizes="100vw"
         />
         <div className="overlay-emerald absolute inset-0" />
       </div>
 
-      <PageContainer className="relative z-10 py-24 md:py-32 lg:py-40">
+      <PageContainer className="relative z-10 pt-20 pb-10 md:pt-24 lg:pt-28">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2">
           {/* Left: heading + details */}
           <div className="flex flex-col justify-center">
@@ -54,25 +76,57 @@ export default function Contact() {
               eyebrow="Contact"
               title={"Let’s design\nsomething lasting"}
               tone="dark"
+              titleClassName="text-gold"
             />
 
             <Reveal delay={0.1}>
-              <dl className="mt-12 space-y-4 border-t border-cream/15 pt-8 font-mono text-[11px] uppercase tracking-[0.16em] text-cream/70">
+              <dl className="mt-12 grid gap-5 border-t border-cream/15 pt-8">
                 <div>
-                  <dt className="sr-only">Email</dt>
-                  <dd>
-                    <a href={`mailto:${SITE.email}`} className="hover:text-gold">
+                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                    Website
+                  </dt>
+                  <dd className="mt-1.5 ml-0">
+                    <a
+                      href={SITE.url}
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
+                    >
+                      {SITE.urlLabel}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                    Telephone
+                  </dt>
+                  <dd className="mt-1.5 ml-0">
+                    <a
+                      href={`tel:${SITE.phoneHref}`}
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
+                    >
+                      {SITE.phone}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                    Email
+                  </dt>
+                  <dd className="mt-1.5 ml-0">
+                    <a
+                      href={`mailto:${SITE.email}`}
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
+                    >
                       {SITE.email}
                     </a>
                   </dd>
                 </div>
                 <div>
-                  <dt className="sr-only">Phone</dt>
-                  <dd>{SITE.phone}</dd>
-                </div>
-                <div>
-                  <dt className="sr-only">Address</dt>
-                  <dd>{SITE.address}</dd>
+                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                    Studio
+                  </dt>
+                  <dd className="mt-1.5 ml-0 font-serif text-xl text-cream md:text-2xl">
+                    {SITE.address}
+                  </dd>
                 </div>
               </dl>
             </Reveal>
@@ -81,14 +135,17 @@ export default function Contact() {
           {/* Right: form */}
           <Reveal delay={0.15} className="flex flex-col justify-center">
             {submitted ? (
-              <p className="font-serif text-3xl">
-                Thank you — we&rsquo;ll be in touch shortly.
-              </p>
+              <div className="border-t border-gold/40 pt-8">
+                <p className="m-0 font-serif text-3xl text-gold">Thank you.</p>
+                <p className="mt-4 max-w-[36ch] text-[15px] leading-[1.8] text-cream/70">
+                  We read every enquiry ourselves and will be in touch shortly.
+                </p>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-8">
                 {FIELDS.map((field) => (
                   <label key={field.name} className="flex flex-col gap-2">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-cream/55">
+                    <span className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60">
                       {field.label}
                     </span>
                     <input
@@ -98,7 +155,7 @@ export default function Contact() {
                       // Form-filler / temp-mail browser extensions inject style
                       // + data-* attributes onto inputs (esp. email) before
                       // React hydrates. Suppress the resulting benign attribute
-                      // mismatch on the field itself (does not affect our code).
+                      // mismatch on the field itself.
                       suppressHydrationWarning
                       className="border-b border-cream/30 bg-transparent pb-3 text-lg text-cream outline-none transition-colors focus:border-gold"
                     />
@@ -106,7 +163,7 @@ export default function Contact() {
                 ))}
 
                 <label className="flex flex-col gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-cream/55">
+                  <span className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60">
                     Tell us about your project
                   </span>
                   <textarea
@@ -125,6 +182,51 @@ export default function Contact() {
               </form>
             )}
           </Reveal>
+        </div>
+
+        {/* ── The colophon ─────────────────────────────────────────────────
+            What survived the footer's deletion. Kept to one hairline-separated
+            row so the page ends on the enquiry, not on a second block of
+            navigation. */}
+        <div className="mt-16 flex flex-col gap-6 border-t border-cream/15 pt-8 md:mt-20 lg:flex-row lg:items-center lg:justify-between">
+          <nav aria-label="Site">
+            <ul className="flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
+              {NAV_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60 transition-colors duration-500 hover:text-gold"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="flex items-center gap-7">
+            <ul className="flex list-none items-center gap-5 p-0">
+              {SOCIAL_LINKS.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <li key={social.label}>
+                    <a
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={social.label}
+                      className="block text-cream/60 transition-colors duration-500 hover:text-gold"
+                    >
+                      <Icon size={17} />
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="m-0 font-label text-[12px] uppercase tracking-[0.18em] text-cream/40">
+              © {YEAR} {SITE.name}
+            </p>
+          </div>
         </div>
       </PageContainer>
     </section>

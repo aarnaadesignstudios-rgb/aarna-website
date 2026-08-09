@@ -11,11 +11,15 @@
  *     An optional lead paragraph.
  *
  *   • a gold hairline opens every section
- *   • the section INDEX is set in gold mono — the numbers run 01…10 down the
- *     page, so the site reads as one curated document rather than a stack of
+ *   • the section INDEX is set in gold — the numbers run 01…08 down the page,
+ *     so the site reads as one curated document rather than a stack of
  *     unrelated blocks
- *   • the eyebrow is mono small-caps (the "spec-sheet" cue used for every
- *     technical label on the site), not another sans-serif shout
+ *   • the eyebrow is uppercase small-caps in the SERIF. It used to be set in
+ *     JetBrains Mono as a "spec-sheet" cue; the client's review asked for that
+ *     font to be changed and for the serif to be used everywhere, so the label
+ *     row and the title it introduces are now one voice. Cormorant has a low
+ *     x-height, so these labels are set at 12px rather than the 10px a mono
+ *     could carry — below that the strokes break up.
  *   • `meta` is the sheet's title block — the right-aligned slot for a counter,
  *     a hint, a place name
  *   • the title is EMERALD on light surfaces. This is the single biggest reason
@@ -50,6 +54,20 @@ interface SectionHeadingProps {
   align?: "left" | "center";
   /** Surface this sits on. Drives the ink colour. */
   tone?: "light" | "dark";
+  /**
+   * Override the title's ink.
+   *
+   * Exists for the Contact heading, which the client marked to be set in gold.
+   * It is deliberately an opt-in on one caller rather than a new `tone`:
+   * `cn()` is a plain joiner with no conflict resolution, so a colour passed
+   * here and the tone's own colour would BOTH land on the element and CSS
+   * source order would pick the winner. So the tone's colour is only applied
+   * when this is absent.
+   *
+   * Only use it on a dark surface. Gold display type on cream is around 2:1
+   * contrast — illegible, and the reason gold is not the default title ink.
+   */
+  titleClassName?: string;
 }
 
 export default function SectionHeading({
@@ -61,6 +79,7 @@ export default function SectionHeading({
   className,
   align = "left",
   tone = "light",
+  titleClassName,
 }: SectionHeadingProps) {
   const dark = tone === "dark";
 
@@ -87,7 +106,7 @@ export default function SectionHeading({
           <span className="flex items-center gap-3.5">
             {/* Gold hairline — opens every section on the site. */}
             <span className="block h-px w-10 shrink-0 bg-gold" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.24em]">
+            <span className="font-label text-[12px] uppercase tracking-[0.18em]">
               {index && <span className="text-gold">{index}</span>}
               {index && eyebrow && (
                 <span className={dark ? "text-cream/40" : "text-charcoal/35"}>
@@ -106,7 +125,7 @@ export default function SectionHeading({
           {meta && (
             <span
               className={cn(
-                "font-mono text-[10px] uppercase tracking-[0.14em]",
+                "font-label text-[12px] uppercase tracking-[0.14em]",
                 dark ? "text-cream/50" : "text-charcoal/45"
               )}
             >
@@ -122,7 +141,9 @@ export default function SectionHeading({
           text={title}
           className={cn(
             "font-serif text-4xl font-light leading-[1.05] tracking-tight md:text-5xl lg:text-6xl",
-            dark ? "text-cream" : "text-emerald"
+            // The tone's ink only applies when the caller has not overridden
+            // it — see the note on `titleClassName`.
+            titleClassName ?? (dark ? "text-cream" : "text-emerald")
           )}
         />
       )}

@@ -1,72 +1,57 @@
 "use client";
 
 /**
- * Founder — a portrait, a short biography, a signed philosophy, and the three
- * principles the practice is run by.
+ * Founder — a portrait, the biography, and a signed philosophy.
  *
- * This is the page's one deep-emerald moment: it sits between two light
- * sections (Process, Why Us) so the founder reads as the still point of the
- * page rather than another editorial band. The portrait carries the same calm
- * counter-parallax used in Practice, and is veiled at its lower edge
- * so it sits INTO the emerald ground instead of on top of it.
+ * This is the page's one deep-emerald moment among the light sections around
+ * it, so the founder reads as the still point of the page rather than as
+ * another editorial band. The portrait carries a calm counter-parallax and is
+ * veiled at its lower edge so it sits INTO the emerald ground instead of on
+ * top of it.
  *
- * TODO: the portrait and the founder's name are real; the biography, the quote
- *       and the three principles are still placeholder copy.
+ * ── Changed in the client review ──────────────────────────────────────────
+ *
+ *  - The biography is now the studio's own copy, replacing the placeholder
+ *    text. It is longer and more factual — credentials, philosophy — so it is
+ *    set at body size in a held measure rather than as display type.
+ *  - The pull quote is replaced with hers: "For me, luxury is not about
+ *    more…", attributed to Ar. Annpurna Kinha.
+ *  - The three principles that closed the section (Light before plan /
+ *    Material before finish / Silence before statement) are removed. They were
+ *    placeholder copy, and the note was simply "remove".
+ *  - "Est. 2008" corrected to `SITE.founded`.
  */
 import { Media, PageContainer, Reveal, SectionHeading } from "@/components/ui";
 import { SITE } from "@/constants";
-import { useParallax, useReveal } from "@/hooks";
-
-/** The three principles, shown as a hairline row beneath the biography. */
-const PRINCIPLES = [
-  {
-    id: "light",
-    index: "01",
-    title: "Light before plan",
-    body: "The sun decides the orientation. We draw only what it allows, and we draw it in section first.",
-  },
-  {
-    id: "material",
-    index: "02",
-    title: "Material before finish",
-    body: "Stone, teak, lime. Chosen for how they will age, never for how they photograph on handover day.",
-  },
-  {
-    id: "silence",
-    index: "03",
-    title: "Silence before statement",
-    body: "If a room has to be explained, it is not finished. We remove until nothing is left to remove.",
-  },
-];
+import { useParallax } from "@/hooks";
 
 export default function Founder() {
   const portraitRef = useParallax<HTMLDivElement>({ from: -7, to: 7 });
-  const principlesRef = useReveal<HTMLDivElement>({ stagger: 0.12 });
 
   return (
     <section
       id="founder"
-      className="surface-emerald overflow-hidden border-y border-gold/15 py-24 text-cream md:py-32 lg:py-40"
+      className="surface-emerald overflow-hidden border-y border-gold/15 py-20 text-cream md:py-24 lg:py-28"
     >
       <PageContainer>
-        <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-20">
+        <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-12 lg:gap-20">
           {/* Portrait */}
-          <Reveal variant="fadeScale" className="lg:col-span-5">
+          <Reveal variant="fadeScale" className="lg:col-span-5 lg:sticky lg:top-28">
             <figure className="m-0">
               <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-emerald-deep">
                 <div ref={portraitRef} className="absolute inset-0 scale-110">
                   <Media
                     src="/images/founder/annapurna.jpg"
-                    alt="Annpurna Kinha, founder and principal architect"
+                    alt="Ar. Annpurna Kinha, Founder and Principal Architect"
                     sizes="(max-width: 1024px) 100vw, 40vw"
                   />
                 </div>
                 {/* Lower veil — settles the portrait into the emerald ground. */}
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,41,28,0)_45%,rgba(6,41,28,0.55)_100%)]" />
               </div>
-              <figcaption className="mt-4 flex items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-cream/50">
+              <figcaption className="mt-4 flex items-center justify-between gap-4 font-label text-[12px] uppercase tracking-[0.14em] text-cream/55">
                 <span>{SITE.name}, Gurugram</span>
-                <span>Est. 2008</span>
+                <span>Est. {SITE.founded}</span>
               </figcaption>
             </figure>
           </Reveal>
@@ -76,72 +61,76 @@ export default function Founder() {
             <SectionHeading
               index="05"
               eyebrow="The Founder"
-              title="Annpurna Kinha"
+              title="Ar. Annpurna Kinha"
               tone="dark"
             />
 
             <Reveal delay={0.1}>
-              <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-gold">
-                Founder &amp; Principal Architect
+              <p className="mt-5 font-label text-[12px] uppercase tracking-[0.16em] text-gold">
+                Founder &amp; Principal Architect, {SITE.name}
               </p>
 
-              <div className="mt-8 grid max-w-[52ch] gap-5 text-base leading-[1.75] text-cream/70 md:text-lg">
+              <p className="mt-8 max-w-[46ch] font-serif text-[1.5rem] leading-[1.35] tracking-tight text-cream md:text-[1.7rem]">
+                Designing spaces with intention, meaning and a sense of
+                belonging.
+              </p>
+
+              <div className="mt-8 grid max-w-[58ch] gap-5 text-[15px] leading-[1.8] text-cream/70 md:text-base">
                 <p>
-                  She studied in Ahmedabad, then spent nine years on other
-                  people&rsquo;s sites before she drew anything under her own
-                  name. The habit stuck — she still judges a room by standing in
-                  it at three different hours of the day.
+                  An architect and design entrepreneur, Annpurna Kinha is the
+                  Founder &amp; Principal Architect of{" "}
+                  <strong className="font-normal text-cream">{SITE.name}</strong>
+                  , a multidisciplinary design practice specialising in
+                  architecture, commercial interiors and bespoke spaces.
                 </p>
                 <p>
-                  She founded the studio in 2008 with one rule she has never
-                  relaxed: nothing leaves it that she has not stood inside, at
-                  least in a model, at least once.
+                  She holds a{" "}
+                  <strong className="font-normal text-cream">
+                    Bachelor of Architecture
+                  </strong>{" "}
+                  from the University School of Architecture &amp; Planning, an{" "}
+                  <strong className="font-normal text-cream">MBA</strong> from
+                  Symbiosis Institute of Business Management, Pune, and advanced
+                  certification in{" "}
+                  <strong className="font-normal text-cream">
+                    Design &amp; Innovation
+                  </strong>{" "}
+                  from the Indian Institute of Technology Delhi.
                 </p>
-                <p className="text-cream/50">
-                  Her drawings are small. Her site visits are long.
+                <p>
+                  Her approach brings together design thinking, business
+                  understanding and a human-centric perspective, with a focus on
+                  creating spaces that are not only visually refined but also
+                  functional, sustainable and meaningful.
+                </p>
+                <p>
+                  Her philosophy,{" "}
+                  <strong className="font-normal text-gold-soft">
+                    &ldquo;Designing Conscious Luxury,&rdquo;
+                  </strong>{" "}
+                  is rooted in the belief that every element should have a
+                  purpose — and that the best spaces are those that feel
+                  naturally connected to the people who inhabit them.
                 </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.15}>
               <blockquote className="mt-10 border-t border-cream/20 pt-8">
-                <p className="m-0 max-w-[40ch] font-serif text-2xl font-light leading-[1.3] tracking-tight md:text-3xl">
-                  &ldquo;A house should be quieter than the street it stands on.
-                  If it is not, we have added something that did not need to be
-                  there.&rdquo;
+                <p className="m-0 max-w-[34ch] font-serif text-2xl font-light leading-[1.3] tracking-tight md:text-[1.9rem]">
+                  &ldquo;For me, luxury is not about more. It is about knowing
+                  what matters, and giving it the space to matter.&rdquo;
                 </p>
-                {/* Signature — gold rule + her name set in italic serif. */}
+                {/* Signature — gold rule + her name in italic serif. */}
                 <footer className="mt-6 flex items-center gap-3.5">
-                  <span className="block h-px w-8 bg-gold" />
+                  <span aria-hidden className="block h-px w-8 bg-gold" />
                   <span className="font-serif text-lg italic text-cream/75">
-                    Annpurna Kinha
+                    Ar. Annpurna Kinha
                   </span>
                 </footer>
               </blockquote>
             </Reveal>
           </div>
-        </div>
-
-        {/* The three principles — a hairline row closing the section. */}
-        <div
-          ref={principlesRef}
-          className="mt-16 grid grid-cols-1 gap-y-10 border-t border-cream/15 pt-12 md:mt-24 md:grid-cols-3 md:gap-10"
-        >
-          {PRINCIPLES.map((principle) => (
-            <div key={principle.id} data-reveal className="flex flex-col gap-3">
-              {/* Muted, not gold: gold small-mono is reserved for the section
-                  index, so it means one thing everywhere on the page. */}
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-cream/40">
-                {principle.index}
-              </span>
-              <h3 className="font-serif text-xl font-light md:text-2xl">
-                {principle.title}
-              </h3>
-              <p className="max-w-[34ch] text-sm leading-[1.7] text-cream/60">
-                {principle.body}
-              </p>
-            </div>
-          ))}
         </div>
       </PageContainer>
     </section>

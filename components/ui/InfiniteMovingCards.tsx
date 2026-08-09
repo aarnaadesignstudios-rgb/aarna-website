@@ -167,7 +167,7 @@ export default function InfiniteMovingCards({
               </span>
               <span
                 className={cn(
-                  "font-mono text-[9px] tracking-[0.2em] uppercase",
+                  "font-label text-[11px] tracking-[0.16em] uppercase",
                   ink.role
                 )}
               >

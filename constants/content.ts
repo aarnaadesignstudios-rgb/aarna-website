@@ -1,12 +1,10 @@
 /**
- * Placeholder content for Phase 1.
+ * Site content.
  *
- * All copy and imagery here is temporary and exists only to build out layout
- * and motion structure. Remote Unsplash URLs are used as placeholders and are
- * whitelisted in next.config.ts.
- *
- * TODO: replace every image with an optimised local asset in /public/images and
- *       swap placeholder copy for final brand content.
+ * Project names, service copy, figures and FAQ text below are the studio's
+ * real content, supplied in the client review. IMAGERY is still placeholder —
+ * every photograph is a stock stand-in, and the per-project location / area /
+ * year are marked TODO rather than invented. See the note on WORKS.
  */
 import {
   FiCompass,
@@ -19,6 +17,7 @@ import {
 import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
 
 import type {
+  Faq,
   Feature,
   HeroSlide,
   NavLink,
@@ -38,43 +37,43 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Services", href: "#services" },
   { label: "Projects", href: "#projects" },
   { label: "Process", href: "#process" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "#contact" },
 ];
 
 /**
- * Hero imagery — real studio work, cross-dissolved one frame at a time.
+ * Hero imagery — the four projects the studio wants in view on the opening
+ * screen, in this order.
  *
- * Sources live in /assets at full resolution; these are the 2560px web copies.
- * Order alternates commercial ↔ residential so the cycle keeps showing range
- * instead of settling into one mood.
+ * TODO: the `image` on each is a placeholder from the old stock set. Replace
+ *       with real photography of these four projects.
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    id: "corporate-lounge",
-    image: "/images/hero/corporate-lounge.jpg",
-    alt: "Corporate reception lounge with brass pendants and gold velvet armchairs",
-  },
-  {
-    id: "residence-bedroom",
-    image: "/images/hero/residence-bedroom.jpg",
-    alt: "Master bedroom with botanical panelling and a coved, backlit ceiling",
-  },
-  {
-    id: "workplace-open-plan",
+    id: "awc",
     image: "/images/hero/workplace-open-plan.jpg",
-    alt: "Open-plan workplace with a slatted ceiling raft and planted desk dividers",
+    alt: "AWC — workplace interior",
+    title: "AWC",
   },
   {
-    id: "residence-foyer",
-    image: "/images/hero/residence-foyer.jpg",
-    alt: "Residential foyer with fluted joinery and a cluster of brass-framed mirrors",
+    id: "cha-and-co",
+    image: "/images/hero/corporate-lounge.jpg",
+    alt: "Cha and Co — hospitality interior",
+    title: "Cha and Co",
   },
   {
-    id: "workplace-collaborative",
+    id: "kapali-mall",
     image: "/images/hero/workplace-collaborative.jpg",
-    alt: "Workstation bay running to a glazed façade beside private cabins",
-    // The desk run reads better than the cabin doors when cropped to portrait.
+    alt: "Kapali Mall — food court interior",
+    title: "Kapali Mall",
+    // The wider run reads better than the cabins when cropped to portrait.
     position: "35% 50%",
+  },
+  {
+    id: "sobha-residence",
+    image: "/images/hero/residence-foyer.jpg",
+    alt: "Sobha Residence — residential interior",
+    title: "Sobha Residence",
   },
 ];
 
@@ -127,54 +126,70 @@ export const FEATURES: Feature[] = [
 /**
  * Credibility figures for the achievements band directly under the hero.
  *
- * Five is deliberate — enough to establish the studio, few enough to stay a
- * glance rather than a section.
+ * Figures corrected in the client review: 7+ years (consistent with Est. 2019),
+ * 2 Lakh sq ft, and "Pan India" in place of a city count.
  *
- * TODO: confirm every figure with the studio before launch. Note that the hero
- *       currently reads "Est. 2008", which contradicts the 8-year figure below —
- *       one of the two needs correcting.
+ * `value` is a string rather than a number because two of the five are no
+ * longer countable — "2 Lakh" and "Pan India" cannot animate up from zero, and
+ * a counter that ran on three of five figures and not the other two would look
+ * broken rather than restrained. So none of them count; they simply arrive.
  */
 export const STATS: Stat[] = [
-  { id: "years", value: 8, suffix: "+", label: "Years in practice" },
-  { id: "projects", value: 150, suffix: "+", label: "Projects delivered" },
-  { id: "area", value: 2, suffix: "M+", label: "Sq. ft. designed" },
-  { id: "cities", value: 12, label: "Cities across India" },
-  { id: "returning", value: 96, suffix: "%", label: "Repeat & referred" },
+  { id: "years", value: "7+", label: "Years in practice" },
+  { id: "projects", value: "150+", label: "Projects delivered" },
+  { id: "area", value: "2 Lakh", label: "Sq. ft. designed" },
+  { id: "reach", value: "Pan India", label: "Projects across" },
+  { id: "returning", value: "96%", label: "Repeat & referred" },
 ];
 
-/** Studio services rendered as large horizontal cards. */
+/**
+ * The studio's five disciplines.
+ *
+ * `body` is revealed when the discipline's NAME is clicked (client request);
+ * it is not shown at rest. `href` is set only where the discipline opens a
+ * page of its own — currently just Architectural Photography.
+ */
 export const SERVICES: Service[] = [
   {
     id: "architecture",
+    index: "01",
     title: "Architecture",
-    description:
-      "Ground-up architectural design for private residences, retreats and cultural spaces.",
+    body: "Residential & commercial architecture shaped around site, purpose and context — from concept and planning to design development and execution support.",
     image:
       "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80",
   },
   {
-    id: "interiors",
-    title: "Interiors",
-    description:
-      "Interior architecture and bespoke detailing that carries the concept indoors.",
+    id: "commercial-interiors",
+    index: "02",
+    title: "Commercial Interiors",
+    body: "Workspaces, restaurants, cafés, food courts, hotels, resorts, retail and hospitality spaces designed around people, brand, function and experience.",
+    image:
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&q=80",
+  },
+  {
+    id: "boutique-interiors",
+    index: "03",
+    title: "Boutique Interiors",
+    body: "Bespoke interiors for villas, bungalows, residences and resorts, crafted with character, materiality and attention to detail.",
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=80",
   },
   {
-    id: "landscape",
-    title: "Landscape",
-    description:
-      "Site, garden and threshold design that dissolves the line between inside and out.",
+    id: "vastu",
+    index: "04",
+    title: "Vastu",
+    body: "Vastu-guided planning led by Dr. Vimmi Kinha, PhD, bringing experience and insight into the orientation, balance and harmony of spaces.",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80",
   },
   {
-    id: "advisory",
-    title: "Advisory",
-    description:
-      "Art direction, material curation and long-term stewardship of completed works.",
+    id: "photography",
+    index: "05",
+    title: "Architectural Photography",
+    body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&q=80",
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
+    href: "/photography",
   },
 ];
 
@@ -188,33 +203,6 @@ export const PROJECTS: Project[] = [
     category: "Residence",
     image:
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=80",
-  },
-  {
-    id: "stone-pavilion",
-    title: "Stone Pavilion",
-    location: "Udaipur, India",
-    year: "2023",
-    category: "Cultural",
-    image:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
-  },
-  {
-    id: "forest-retreat",
-    title: "Forest Retreat",
-    location: "Coorg, India",
-    year: "2023",
-    category: "Hospitality",
-    image:
-      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80",
-  },
-  {
-    id: "city-loft",
-    title: "City Loft",
-    location: "Mumbai, India",
-    year: "2022",
-    category: "Interior",
-    image:
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600&q=80",
   },
 ];
 
@@ -251,9 +239,8 @@ export const PROCESS_STEPS: ProcessStep[] = [
 ];
 
 /**
- * Client testimonials. Split down the middle across the two marquee bands in
- * the Testimonials section, so keep enough entries for each band to fill a row
- * (four apiece is comfortable).
+ * Client testimonials. Rendered in one continuous row, so keep enough entries
+ * that half a track still overflows the widest viewport.
  */
 export const TESTIMONIALS: Testimonial[] = [
   {
@@ -315,91 +302,176 @@ export const TESTIMONIALS: Testimonial[] = [
 ];
 
 /**
- * Selected Works — panels for the pinned horizontal gallery.
- * Widths are intentionally uneven so the row never reads as a carousel.
+ * Selected Works — the studio's nine real projects, in the order supplied.
+ *
+ * ── Placeholder imagery, real names ───────────────────────────────────────
+ *
+ * The names, order and categories are final. Everything visual is not: each
+ * `image` is a stock stand-in reused from the previous placeholder set, and
+ * `location` / `area` / `year` are deliberately left EMPTY rather than
+ * invented, because a plausible-looking wrong area on a real commission is
+ * worse than an obvious gap. <SelectedWorks /> renders the meta row only for
+ * the entries that have data, so nothing shows a blank field.
+ *
+ * TODO (needs the studio): real photography per project, plus location, area
+ *       and year. Widths are intentionally uneven so the row never reads as a
+ *       carousel — keep that when the real crops arrive.
  */
 export const WORKS: Work[] = [
   {
-    id: "vaastu-nivas",
-    category: "Luxury Residential",
-    title: "Vaastu Nivas",
-    location: "Alibaug, Maharashtra",
-    area: "11,400 sq ft",
-    year: "2024",
-    description:
-      "A laterite plinth cut into the slope, four courts turned to the monsoon wind. The sea is never shown, only heard.",
+    id: "awc",
+    category: "Commercial Interiors",
+    title: "AWC",
+    description: "",
     image:
-      "https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=2000&q=85",
+      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=2000&q=85",
     width: "min(78vw, 980px)",
   },
   {
-    id: "travertine-house",
-    category: "Luxury Residential",
-    title: "The Travertine House",
-    location: "Jaipur, Rajasthan",
-    area: "8,200 sq ft",
-    year: "2023",
-    description:
-      "One stone, quarried once, cut nine ways. A house that gets warmer as the desert cools.",
+    id: "cha-and-co",
+    category: "Hospitality",
+    title: "Cha and Co",
+    description: "",
     image:
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1800&q=85",
+      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1800&q=85",
     width: "min(52vw, 660px)",
   },
   {
-    id: "amaris",
-    category: "Hospitality",
-    title: "Amaris",
-    location: "Coorg, Karnataka",
-    area: "42,000 sq ft",
-    year: "2025",
-    description:
-      "Twenty-two keys hidden in a coffee estate. No lobby — you arrive into a room with a fire already lit.",
+    id: "kapali-mall",
+    category: "Commercial Interiors",
+    title: "Kapali Mall Food Court",
+    description: "",
     image:
-      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=2000&q=85",
+      "https://images.unsplash.com/photo-1481253127861-534498168948?w=2000&q=85",
     width: "min(66vw, 860px)",
   },
   {
-    id: "kinha-atelier",
-    category: "Boutique Interiors",
-    title: "Kinha Atelier",
-    location: "Mumbai",
-    area: "3,600 sq ft",
-    year: "2022",
-    description:
-      "Our own rooms, rebuilt — nine desks, one nine-metre table, no partitions.",
+    id: "hero-vadodra",
+    category: "Commercial Interiors",
+    title: "Hero Vadodra",
+    description: "",
     image:
-      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&q=85",
-    width: "min(40vw, 480px)",
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1600&q=85",
+    width: "min(46vw, 560px)",
   },
   {
-    id: "sanchaya",
-    category: "Commercial",
-    title: "Sanchaya",
-    location: "Ahmedabad, Gujarat",
-    area: "96,000 sq ft",
-    year: "2024",
-    description:
-      "A headquarters organised around shade rather than floors. Nobody sits more than seven metres from daylight.",
+    id: "kyukotoh",
+    category: "Hospitality",
+    title: "Kyukotoh Gurugram",
+    description: "",
     image:
-      "https://images.unsplash.com/photo-1481253127861-534498168948?w=2000&q=85",
+      "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1800&q=85",
     width: "min(60vw, 780px)",
   },
   {
-    id: "two-courtyards",
-    category: "Sustainable",
-    title: "House of Two Courtyards",
-    location: "Assagao, Goa",
-    area: "6,900 sq ft",
-    year: "2021",
-    description:
-      "Two open rooms with no roof, and a house arranged politely around them.",
+    id: "polo-elevator",
+    category: "Commercial Interiors",
+    title: "Polo Elevator",
+    description: "",
+    image:
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=85",
+    width: "min(44vw, 540px)",
+  },
+  {
+    id: "sobha-villa",
+    category: "Boutique Interiors",
+    title: "Sobha Villa Interior",
+    description: "",
+    image:
+      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1800&q=85",
+    width: "min(58vw, 740px)",
+  },
+  {
+    id: "westerlies-residence",
+    category: "Boutique Interiors",
+    title: "Westerlies Residence",
+    description: "Café theme.",
+    image:
+      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1600&q=85",
+    width: "min(50vw, 620px)",
+  },
+  {
+    id: "satish-residence",
+    category: "Boutique Interiors",
+    title: "Satish Residence",
+    description: "The muted palette.",
     image:
       "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=1800&q=85",
-    width: "min(48vw, 600px)",
+    width: "min(56vw, 700px)",
   },
 ];
 
-/** Footer social links. */
+/** Frequently asked questions — rendered on /faq. */
+export const FAQS: Faq[] = [
+  {
+    id: "project-types",
+    question: "What types of projects does Aarnaa Design Studios take on?",
+    answer:
+      "We work across residential and commercial projects, including villas, bungalows, workplaces, restaurants, cafés, food courts, hotels, resorts and retail spaces.",
+  },
+  {
+    id: "outside-ncr",
+    question: "Do you take on projects outside Gurgaon / Delhi NCR?",
+    answer:
+      "Yes. We undertake projects across India, with the scope and mode of collaboration tailored to the project's location and requirements.",
+  },
+  {
+    id: "smaller-projects",
+    question: "Do you take on smaller projects or individual rooms?",
+    answer:
+      "Yes, depending on the scope and design requirements. We evaluate each project individually to understand where we can bring meaningful value to the space.",
+  },
+  {
+    id: "process",
+    question: "What does your design process include?",
+    answer:
+      "Our process typically moves from understanding the brief and site to concept development, spatial planning, material selection, detailed design, drawings and execution support.",
+  },
+  {
+    id: "timeline",
+    question: "How long does the design process take?",
+    answer:
+      "The timeline depends on the size, complexity and type of project. A detailed timeline is established after understanding the scope and requirements.",
+  },
+  {
+    id: "execution",
+    question: "Do you handle execution as well as design?",
+    answer:
+      "Yes. Aarnaa Design Studios offers design and build / turnkey solutions through our execution partners, allowing the design intent to be carried through to the finished space.",
+  },
+  {
+    id: "fees",
+    question: "How do you charge for design?",
+    answer:
+      "Our design fees are structured based on the project's scope, scale and complexity. We believe in transparent engagements, with the commercial structure and deliverables clearly defined before we begin.",
+  },
+  {
+    id: "vastu",
+    question: "Do you offer Vastu consultation?",
+    answer:
+      "Yes. Vastu-guided planning is available as part of our design approach, led by Dr. Vimmi Kinha, PhD, and integrated with contemporary architectural and interior planning.",
+  },
+  {
+    id: "collaboration",
+    question: "Do you work with existing architects or contractors?",
+    answer:
+      "Yes. We can collaborate with existing consultants, contractors and project teams where required, while clearly defining responsibilities and design deliverables.",
+  },
+  {
+    id: "post-handover",
+    question: "Do you provide post-handover support?",
+    answer:
+      "Yes. We remain available after handover for design-related clarifications and support where required, helping ensure the finished space continues to perform as intended.",
+  },
+  {
+    id: "start",
+    question: "How do I start a project with Aarnaa Design Studios?",
+    answer:
+      "Simply email us your project details with the subject line: “NEW PROJECT — [LOCATION]”. Include the project type, approximate area, location and a brief about your requirements. Our team will get back to you to take the conversation forward.",
+  },
+];
+
+/** Social links, shown in the contact block. */
 export const SOCIAL_LINKS: SocialLink[] = [
   { label: "Instagram", href: "https://instagram.com", icon: FaInstagram },
   { label: "LinkedIn", href: "https://linkedin.com", icon: FaLinkedinIn },

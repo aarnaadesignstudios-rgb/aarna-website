@@ -21,13 +21,20 @@
   --color-stone: #e4ddd0; /* Light Stone — alt light surface */
 
   /* Typography ------------------------------------------------------ */
-  /* Font family CSS vars are injected by next/font in app/layout.tsx. */
+  /* Font family CSS vars are injected by next/font in app/layout.tsx.
+     ONE typeface family carries the whole site. The client's note was
+     explicit: the small technical label font was to be changed, and the
+     serif used for "Design is the brand of our vision" was to be used
+     everywhere. So JetBrains Mono is gone entirely — its spec-sheet look
+     was the one thing on the page that belonged to a different design. */
   --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
   /* High-contrast display serif reserved for the hero statement. */
   --font-display: var(--font-bodoni), "Didot", Georgia, serif;
-  /* Monospace for technical spec-sheet labels. */
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  /* Small uppercase labels — eyebrows, indices, meta rows, buttons.
+     The serif, not a monospace: same family as the headings, so the label
+     row and the title it sits above now read as one voice. */
+  --font-label: var(--font-cormorant), Georgia, "Times New Roman", serif;
 
   /* Motion ---------------------------------------------------------- */
   --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
@@ -94,10 +101,58 @@ html.lenis body {
 /* ------------------------------------------------------------------ */
 /*  Utilities                                                          */
 /* ------------------------------------------------------------------ */
+@layer components {
+  /* Small uppercase labels.
+     `font-label` is a font-FAMILY utility, but it also carries a weight here,
+     and deliberately: Cormorant at 400 and 10px is too fine to hold an
+     uppercase, widely-tracked label — the strokes break up. 600 restores it.
+     This sits in @layer components, so an explicit `font-*` weight utility on
+     the element still wins if a caller needs something else. */
+  .font-label {
+    font-weight: 600;
+    /* Cormorant defaults to OLD-STYLE figures, where 0 sits at x-height and
+       1, 3, 4, 7, 9 hang below the baseline. That is correct inside running
+       prose and wrong here: every label on this site is an index, a counter
+       or a year set in uppercase — "01 — THE PRACTICE" rendered as "o1", and
+       "11 QUESTIONS" as "11" with two dropped stems. Lining figures put them
+       back on the cap line where uppercase expects them.
+       This was invisible while the labels were set in JetBrains Mono, which
+       has only one set of numerals. */
+    font-variant-numeric: lining-nums;
+    font-feature-settings: "lnum" 1;
+  }
+
+  /* The native pointer is hidden by <Cursor /> adding this class from JS.
+     Text fields keep their caret — the gold dot is a pointer replacement,
+     not a reason to lose the I-beam where someone is typing. */
+  @media (pointer: fine) {
+    .cursor-hidden,
+    .cursor-hidden * {
+      cursor: none;
+    }
+
+    .cursor-hidden input,
+    .cursor-hidden textarea,
+    .cursor-hidden select {
+      cursor: auto;
+    }
+  }
+}
+
 @layer utilities {
   /* Hairline divider used throughout the editorial layout. */
   .rule {
     border-color: color-mix(in srgb, currentColor 15%, transparent);
+  }
+
+  /* Hide scrollbars on horizontal tracks without losing scrollability. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 
   /* Rich emerald SURFACE (opaque) — replaces flat green fills.
