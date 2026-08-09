@@ -27,32 +27,42 @@ const CUE = {
   /** Mark fades up + settles. */
   settle: 0,
   /** Gold glint sweeps the silhouette. */
-  glint: 0.85,
-  /** Raster mark → vector phoenix, hidden under a bloom. */
-  separate: 1.35,
-  /** Anticipation crouch, then two wing-beats. */
-  flap: 1.6,
+  glint: 1.15,
+  /** Raster mark → vector bird + letter, hidden under a bloom. */
+  separate: 1.85,
+  /** Anticipation crouch, then three wing-beats. */
+  flap: 2.1,
   /** Arc up-right and out of frame. */
-  flight: 2.18,
+  flight: 2.95,
   /**
    * Curtain peels away along the flight vector.
    *
    * This deliberately overlaps the flight rather than following it. Starting
-   * the tear once the bird had fully left leaves a ~180ms beat of empty
-   * emerald, and the peel then reads as a separate event instead of as
-   * something the bird pulled open on its way out.
+   * the tear once the bird had fully left leaves a beat of empty emerald, and
+   * the peel then reads as a separate event instead of as something the bird
+   * pulled open on its way out.
    */
-  tear: 2.28,
+  tear: 3.45,
+  /**
+   * The "A" lifts out of the middle of the screen and settles into the navbar's
+   * emblem slot, arriving just as the curtain finishes clearing.
+   */
+  letter: 3.55,
 } as const;
 
 /** How long the curtain takes to clear the viewport once the tear begins. */
-const TEAR_DURATION = 0.8;
+const TEAR_DURATION = 1.05;
+
+/** How long the letterform takes to travel to the masthead. */
+const LETTER_DURATION = 1.15;
 
 export const INTRO = {
   /** Cue sheet, in seconds — consumed by the intro timeline. */
   cue: CUE,
   /** Duration of the curtain tear, in seconds. */
   tearDuration: TEAR_DURATION,
+  /** Duration of the letterform's travel to the masthead, in seconds. */
+  letterDuration: LETTER_DURATION,
 
   /**
    * When the reveal begins, in ms. Anything that should already be in motion
@@ -61,13 +71,19 @@ export const INTRO = {
   holdMs: CUE.tear * 1000,
   /** How long the curtain takes to clear the viewport, in ms. */
   liftMs: TEAR_DURATION * 1000,
-  /** When the page below is fully uncovered, in ms. */
-  clearedMs: (CUE.tear + TEAR_DURATION) * 1000,
+  /** When the whole intro is over, in ms. */
+  clearedMs: (CUE.letter + LETTER_DURATION) * 1000,
   /**
-   * When the bird has left the frame, in ms. The navbar's emblem arrives here,
-   * so it reads as the same bird landing rather than a new element fading in.
+   * When the navbar settles into place, in ms.
+   *
+   * Early, and deliberately so — it lands while the curtain is still up, so it
+   * is already at rest behind it. Two reasons. It is then simply *there* when
+   * the tear uncovers it, instead of fading in over a live page. And the intro
+   * measures the navbar emblem's box to know where to fly the "A": measuring
+   * mid-entrance would read a position the navbar is still animating away from,
+   * and the letter would land 24px high.
    */
-  landedMs: (CUE.flight + 0.57) * 1000,
+  navbarMs: (CUE.flight - 0.35) * 1000,
 } as const;
 
 export const SITE = {

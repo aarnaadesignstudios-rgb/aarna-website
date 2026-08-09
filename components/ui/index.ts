@@ -9,6 +9,7 @@ export { default as ImageCycle } from "./ImageCycle";
 export { default as Logo } from "./Logo";
 export { default as Mark } from "./Mark";
 export { default as PhoenixSilhouette } from "./PhoenixSilhouette";
+export { default as LetterMark } from "./LetterMark";
 export { default as TextReveal } from "./TextReveal";
 export { default as LayoutTextFlip } from "./LayoutTextFlip";
 export { default as Counter } from "./Counter";

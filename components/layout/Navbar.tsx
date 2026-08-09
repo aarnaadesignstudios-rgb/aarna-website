@@ -124,7 +124,17 @@ function BrandLockup({
         className="flex origin-center items-center gap-3.5 transition-transform duration-700 ease-editorial md:gap-4"
         style={compact ? { transform: `scale(${COMPACT_SCALE})` } : undefined}
       >
-        <Mark size={MARK_SIZE} priority className="shrink-0" />
+        {/* `data-brand-mark` is the intro's landing target: <LoadingScreen />
+            measures this box to know where to fly the logo's "A" to, so the
+            letterform settles onto the masthead emblem exactly rather than onto
+            a hard-coded guess that would drift with the lockup's layout.
+            It sits on a tight `inline-flex` wrapper rather than on <Mark />
+            itself, which does not forward unknown props — and wrapping keeps
+            the change here instead of in a shared primitive. The wrapper adds
+            no box of its own: the emblem's pinned width/height set it. */}
+        <span data-brand-mark className="inline-flex shrink-0">
+          <Mark size={MARK_SIZE} priority />
+        </span>
         <span className="flex flex-col items-start justify-center leading-none">
           <span
             className={cn(
@@ -188,11 +198,12 @@ export default function Navbar() {
     <motion.header
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      /* Timed to `INTRO.landedMs` — the moment the intro's phoenix leaves the
-         frame — so the emblem arriving up here reads as the same bird landing
-         rather than as a new element fading in. */
+      /* Timed to `INTRO.navbarMs`, which puts the bar at rest BEHIND the intro
+         curtain — see the note on that constant. It is uncovered already in
+         place, and the intro can measure the emblem's resting box to fly the
+         "A" onto it. */
       transition={{
-        delay: INTRO.landedMs / 1000,
+        delay: INTRO.navbarMs / 1000,
         duration: 0.9,
         ease: [0.22, 1, 0.36, 1],
       }}
