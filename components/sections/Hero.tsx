@@ -88,15 +88,14 @@ export default function Hero() {
           {/* The imagery begins as the intro screen starts to dissolve, so the
               hero is already in motion the moment it is uncovered.
 
-              Cadence: hold + dissolve = 3800 + 900 = 4.7s per frame. Slower
-              than the previous 2.5s: at that rate the hero cut between rooms
-              faster than a visitor could take one in, which reads as a
-              slideshow rather than as a held shot. */}
+              Cadence: hold + dissolve = 1800 + 700 = 2.5s per frame, on
+              request — the studio wanted a faster cycle than the previous
+              4.7s. */}
           <ImageCycle
             frames={HERO_SLIDES}
             startDelayMs={INTRO.holdMs}
-            holdMs={3800}
-            fadeMs={900}
+            holdMs={1800}
+            fadeMs={700}
             onFrameChange={onFrameChange}
           />
         </motion.div>
