@@ -6,6 +6,14 @@
  * every photograph is a stock stand-in, and the per-project location / area /
  * year are marked TODO rather than invented. See the note on WORKS.
  */
+import {
+  FiCompass,
+  FiFeather,
+  FiLayers,
+  FiSun,
+  FiHome,
+  FiAward,
+} from "react-icons/fi";
 import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
 
 import type {
@@ -38,34 +46,33 @@ export const NAV_LINKS: NavLink[] = [
  * Hero imagery — the four projects the studio wants in view on the opening
  * screen, in this order.
  *
- * TODO: the `image` on each is a placeholder from the old stock set. Replace
- *       with real photography of these four projects.
+ * These four are the studio's OWN photography, supplied by the client — the
+ * only images on the site that are not stock placeholders, along with the
+ * three they also appear as in WORKS.
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
     id: "awc",
-    image: "/images/hero/workplace-open-plan.jpg",
-    alt: "AWC — workplace interior",
+    image: "/images/hero/AWC.jpg",
+    alt: "AWC — reception and breakout area",
     title: "AWC",
   },
   {
     id: "cha-and-co",
-    image: "/images/hero/corporate-lounge.jpg",
-    alt: "Cha and Co — hospitality interior",
+    image: "/images/hero/chaandco.jpg",
+    alt: "Cha and Co — open-plan workspace with planted desk dividers",
     title: "Cha and Co",
   },
   {
     id: "kapali-mall",
-    image: "/images/hero/workplace-collaborative.jpg",
-    alt: "Kapali Mall — food court interior",
+    image: "/images/hero/kapalimall.jpg",
+    alt: "Kapali Mall — food court seating and bar",
     title: "Kapali Mall",
-    // The wider run reads better than the cabins when cropped to portrait.
-    position: "35% 50%",
   },
   {
     id: "sobha-residence",
-    image: "/images/hero/residence-foyer.jpg",
-    alt: "Sobha Residence — residential interior",
+    image: "/images/hero/shobharesidency.jpg",
+    alt: "Sobha Residence — bedroom with feature mural wall",
     title: "Sobha Residence",
   },
 ];
@@ -74,36 +81,42 @@ export const HERO_SLIDES: HeroSlide[] = [
 export const FEATURES: Feature[] = [
   {
     id: "vision",
+    icon: FiCompass,
     title: "Considered Vision",
     description:
       "Every project begins with a singular idea, refined until nothing unnecessary remains.",
   },
   {
     id: "craft",
+    icon: FiFeather,
     title: "Material Craft",
     description:
       "We honour natural stone, timber and light — detailing them with quiet precision.",
   },
   {
     id: "space",
+    icon: FiLayers,
     title: "Spatial Clarity",
     description:
       "Proportion and flow are choreographed so that each space breathes with intention.",
   },
   {
     id: "light",
+    icon: FiSun,
     title: "Light as Material",
     description:
       "Daylight is treated as a building block, shaping mood across the hours of a day.",
   },
   {
     id: "living",
+    icon: FiHome,
     title: "Human Living",
     description:
       "Spaces are designed around ritual and comfort, not just form and photograph.",
   },
   {
     id: "legacy",
+    icon: FiAward,
     title: "Enduring Legacy",
     description:
       "We build for permanence — architecture meant to age gracefully across generations.",
@@ -310,17 +323,17 @@ export const WORKS: Work[] = [
     category: "Commercial Interiors",
     title: "AWC",
     description: "",
-    image:
-      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=2000&q=85",
+    image: "/images/hero/AWC.jpg",
     width: "min(78vw, 980px)",
   },
   {
     id: "cha-and-co",
-    category: "Hospitality",
+    // Categorised from the supplied photograph, which shows an open-plan
+    // office fit-out rather than a hospitality space.
+    category: "Commercial Interiors",
     title: "Cha and Co",
     description: "",
-    image:
-      "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1800&q=85",
+    image: "/images/hero/chaandco.jpg",
     width: "min(52vw, 660px)",
   },
   {
@@ -328,8 +341,7 @@ export const WORKS: Work[] = [
     category: "Commercial Interiors",
     title: "Kapali Mall Food Court",
     description: "",
-    image:
-      "https://images.unsplash.com/photo-1481253127861-534498168948?w=2000&q=85",
+    image: "/images/hero/kapalimall.jpg",
     width: "min(66vw, 860px)",
   },
   {
@@ -364,8 +376,8 @@ export const WORKS: Work[] = [
     category: "Boutique Interiors",
     title: "Sobha Villa Interior",
     description: "",
-    image:
-      "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=1800&q=85",
+    // Confirmed as the same commission as the hero's "Sobha Residence".
+    image: "/images/hero/shobharesidency.jpg",
     width: "min(58vw, 740px)",
   },
   {

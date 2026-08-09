@@ -4,7 +4,7 @@
  * Navbar — a floating inset masthead.
  *
  *   ┌──────────────────────────────────────────────────────────────────┐
- *   │ [mark] Aarnaa Design Studios   ABOUT PROJECTS … FAQ   [ENQUIRE]  │
+ *   │ ABOUT  WHY US  …   [mark] Aarnaa Design Studios      [ENQUIRE]   │
  *   └──────────────────────────────────────────────────────────────────┘
  *      ↑ inset from all three edges; photography runs behind and around it
  *
@@ -36,10 +36,13 @@
  * present as a line, not as a fill. See the note on the opacity itself, which
  * is high on purpose.
  *
- * BRAND LEFT, NOT CENTRED. The previous lockup was centred with the links
- * split either side. Symmetrical mastheads read as institutional; every
- * reference the client pointed at (and every studio site worth copying) puts
- * the mark top-left and lets the right-hand end carry the actions.
+ * BRAND CENTRED, AND LOUD. The name sits on the page's axis and is the largest
+ * thing in the chrome — set in champagne rather than the deeper logo gold,
+ * which loses too much contrast against a dark ground at this size. It is
+ * positioned absolutely on the bar rather than laid out between the two
+ * groups, so it stays on the true centre line however wide the links get.
+ * (An earlier pass put it top-left, on the reasoning that symmetrical
+ * mastheads read institutional. Overruled: the studio wants its name read.)
  *
  * A SCROLL PROGRESS HAIRLINE runs along the bar's bottom edge. It is the only
  * moving element in the chrome, it tells you where you are in a long page, and
@@ -185,26 +188,7 @@ export default function Navbar() {
             : "border-gold/15 py-3.5"
         )}
       >
-        {/* Brand — left. One line, always. */}
-        <a
-          href="#hero"
-          aria-label={`${SITE.name} — back to top`}
-          className="flex shrink-0 items-center gap-3 transition-opacity duration-500 hover:opacity-80"
-        >
-          <span className="inline-flex shrink-0">
-            <Mark size={scrolled ? 32 : 38} priority />
-          </span>
-          {/* Visible at EVERY width. It was hidden below sm to save room, but
-              the client asked twice for the name to read on one line and a
-              phone is where most of them will see it — the emblem alone is not
-              the studio's name. It scales down instead of disappearing, and
-              `whitespace-nowrap` guarantees the one line the brief asked for. */}
-          <span className="block font-display text-[0.92rem] leading-none tracking-[0.01em] whitespace-nowrap text-gold transition-all duration-500 ease-editorial sm:text-[1.05rem] lg:text-[1.2rem]">
-            {SITE.name}
-          </span>
-        </a>
-
-        {/* Links — right of centre, inline at lg+. */}
+        {/* Links — left track. */}
         <ul className="hidden list-none items-center gap-7 p-0 lg:flex xl:gap-9">
           {INLINE_LINKS.map((link) => (
             <li key={link.href}>
@@ -217,8 +201,46 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Actions — far right. */}
-        <div className="flex shrink-0 items-center gap-3">
+        {/* ── Brand — the centre track ─────────────────────────────────────
+            Absolutely positioned and centred on the BAR, not placed between
+            the two link groups. That distinction is the whole point: laid out
+            in flow, the lockup sits at the midpoint of whatever space the
+            links happen to leave, so it drifts left or right as soon as a
+            label is added or the active state changes width. Centring it on
+            the bar itself pins it to the page's true axis and keeps it there.
+
+            `pointer-events-none` on the wrapper with `pointer-events-auto` on
+            the link: the wrapper spans the full bar width, and without this it
+            would sit over the nav links and swallow their clicks. */}
+        <a
+          href="#hero"
+          aria-label={`${SITE.name} — back to top`}
+          // `px-14` is a collision guard, not spacing. The wrapper spans the
+          // whole bar, so without it the centred lockup is free to grow under
+          // the menu trigger at the right edge — which it does on a 360px
+          // phone, where the name is ~175px wide and the trigger is 40px. The
+          // padding keeps the centred content inside a box that both edge
+          // controls sit outside of.
+          className="pointer-events-none absolute inset-x-0 flex items-center justify-center gap-3 px-14 transition-opacity duration-500 hover:opacity-85"
+        >
+          <span className="pointer-events-auto inline-flex shrink-0">
+            <Mark size={scrolled ? 34 : 40} priority />
+          </span>
+          {/* Set to be read, not to be tasteful about it: champagne rather
+              than the deeper logo gold (which loses too much against a dark
+              ground at this size), a full weight, and a size that holds its
+              own against the section headings further down the page.
+              `whitespace-nowrap` guarantees the single line the brief asked
+              for at every width — it scales down on a phone rather than
+              wrapping or disappearing. */}
+          <span className="pointer-events-auto block font-display text-[0.95rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap text-gold-soft transition-all duration-500 ease-editorial sm:text-[1.3rem] lg:text-[1.5rem]">
+            {SITE.name}
+          </span>
+        </a>
+
+        {/* Actions — right track. `ml-auto` pushes this to the far edge on
+            the widths where the left link list is hidden. */}
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           {/* The one CTA. Square, hairline, fills gold on hover. */}
           <a
             href="#contact"

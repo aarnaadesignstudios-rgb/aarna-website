@@ -150,17 +150,56 @@ export default function Services() {
                     lazy-loaded and the track scrolls sideways, so a card can be
                     on screen before its image has arrived. Without a ground the
                     card reads as a hole in the row. */}
-                <div className="relative aspect-4/5 w-full shrink-0 overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]">
-                  <Media
-                    src={service.image}
-                    alt={service.title}
-                    sizes="(max-width: 1024px) 90vw, 30vw"
-                    className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
-                  />
-                  <span className="absolute top-5 left-5 font-label text-[12px] tracking-[0.16em] uppercase text-cream/90">
-                    {service.index}
-                  </span>
-                </div>
+                {/* ── The image is the primary target ──────────────────────
+                    Clicking the photograph does exactly what clicking the name
+                    does: opens the description, or follows the link on
+                    Photography. It is by far the biggest thing in the card, so
+                    it was always the thing a visitor would aim at first — and
+                    until now it was the one part that did nothing.
+
+                    Rendered as a real <a> or <button>, not a div with an
+                    onClick, so both targets are reachable by keyboard and
+                    announce themselves. The two share `aria-controls`, and the
+                    image copy is `tabIndex={-1}` / `aria-hidden`: it is a
+                    second handle on the same control, and exposing it twice
+                    would make a keyboard user tab through nine stops to cross
+                    five cards. */}
+                {isLink ? (
+                  <a
+                    href={service.href}
+                    tabIndex={-1}
+                    aria-hidden
+                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]"
+                  >
+                    <Media
+                      src={service.image}
+                      alt=""
+                      sizes="(max-width: 1024px) 90vw, 30vw"
+                      className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
+                    />
+                    <span className="absolute top-5 left-5 font-label text-[12px] tracking-[0.16em] uppercase text-cream/90">
+                      {service.index}
+                    </span>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-hidden
+                    onClick={() => setOpenId(open ? null : service.id)}
+                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]"
+                  >
+                    <Media
+                      src={service.image}
+                      alt=""
+                      sizes="(max-width: 1024px) 90vw, 30vw"
+                      className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
+                    />
+                    <span className="absolute top-5 left-5 font-label text-[12px] tracking-[0.16em] uppercase text-cream/90">
+                      {service.index}
+                    </span>
+                  </button>
+                )}
 
                 {/* The image above is a FIXED share of the column height and
                     this block takes the remainder, rather than the image

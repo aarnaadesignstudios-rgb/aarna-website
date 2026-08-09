@@ -11,16 +11,10 @@ export interface NavLink {
   href: string;
 }
 
-/**
- * A single principle in the "Why Us" index.
- *
- * No icon field. These carried a Feather glyph each until the section was
- * rebuilt as hairline bays — a stock icon set is the fastest way to make a
- * bespoke studio site look assembled from parts, and the six glyphs
- * illustrated nothing the four words beside them did not already say.
- */
+/** A single "Why choose us" value proposition card. */
 export interface Feature {
   id: string;
+  icon: IconType;
   title: string;
   description: string;
 }

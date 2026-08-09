@@ -13,12 +13,14 @@ Nothing else needs changing except the one `image:` line per entry in
 The opening screen cross-dissolves through these four. Landscape, ideally
 2560px wide. These are the studio's four showcase projects from the review.
 
-| Order | Project | Path |
-|---|---|---|
-| 1 | AWC | `/public/images/hero/awc.jpg` |
-| 2 | Cha and Co | `/public/images/hero/cha-and-co.jpg` |
-| 3 | Kapali Mall | `/public/images/hero/kapali-mall.jpg` |
-| 4 | Sobha Residence | `/public/images/hero/sobha-residence.jpg` |
+| Order | Project | Path | Status |
+|---|---|---|---|
+| 1 | AWC | `/public/images/hero/AWC.jpg` | **supplied** |
+| 2 | Cha and Co | `/public/images/hero/chaandco.jpg` | **supplied** |
+| 3 | Kapali Mall | `/public/images/hero/kapalimall.jpg` | **supplied** |
+| 4 | Sobha Residence | `/public/images/hero/shobharesidency.jpg` | **supplied** |
+
+All four are in place and live on the site.
 
 **These are the first thing anyone sees, so they carry the most weight.** Pick
 the widest, best-lit frame of each. Avoid anything with legible third-party
@@ -32,17 +34,22 @@ which is exactly the sort of thing that undercuts the opening.
 Shown in the pinned horizontal gallery. Landscape or 4:5 portrait, 2000px on
 the long edge.
 
-| # | Project | Path |
-|---|---|---|
-| 01 | AWC | `/public/images/projects/awc.jpg` |
-| 02 | Cha and Co | `/public/images/projects/cha-and-co.jpg` |
-| 03 | Kapali Mall Food Court | `/public/images/projects/kapali-mall.jpg` |
-| 04 | Hero Vadodra | `/public/images/projects/hero-vadodra.jpg` |
-| 05 | Kyukotoh Gurugram | `/public/images/projects/kyukotoh.jpg` |
-| 06 | Polo Elevator | `/public/images/projects/polo-elevator.jpg` |
-| 07 | Sobha Villa Interior | `/public/images/projects/sobha-villa.jpg` |
-| 08 | Westerlies Residence | `/public/images/projects/westerlies-residence.jpg` |
-| 09 | Satish Residence | `/public/images/projects/satish-residence.jpg` |
+| # | Project | Path | Status |
+|---|---|---|---|
+| 01 | AWC | reuses `/images/hero/AWC.jpg` | **supplied** |
+| 02 | Cha and Co | reuses `/images/hero/chaandco.jpg` | **supplied** |
+| 03 | Kapali Mall Food Court | reuses `/images/hero/kapalimall.jpg` | **supplied** |
+| 04 | Hero Vadodra | `/public/images/projects/hero-vadodra.jpg` | STOCK PLACEHOLDER |
+| 05 | Kyukotoh Gurugram | `/public/images/projects/kyukotoh.jpg` | STOCK PLACEHOLDER |
+| 06 | Polo Elevator | `/public/images/projects/polo-elevator.jpg` | STOCK PLACEHOLDER |
+| 07 | Sobha Villa Interior | reuses `/images/hero/shobharesidency.jpg` | **supplied** |
+| 08 | Westerlies Residence | `/public/images/projects/westerlies-residence.jpg` | STOCK PLACEHOLDER |
+| 09 | Satish Residence | `/public/images/projects/satish-residence.jpg` | STOCK PLACEHOLDER |
+
+Four of nine now carry the studio's own photography. **The five marked STOCK
+PLACEHOLDER are not the studio's work** and should be replaced before launch.
+A different frame for the Projects panel than the hero one is welcome for the
+four already supplied — right now each is used twice.
 
 ### Also needed per project (currently blank on the site)
 

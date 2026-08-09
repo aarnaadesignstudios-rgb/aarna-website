@@ -120,6 +120,14 @@ export default function SectionHeading({
                 </span>
               )}
             </span>
+            {/* Mirrored rule, centred headings only. The single left-hand rule
+                is what makes the label read as the START of a line, which is
+                right when the heading is ranged left and wrong when it is
+                centred — there it just makes a symmetrical block look as
+                though it has slipped. */}
+            {align === "center" && (
+              <span aria-hidden className="block h-px w-10 shrink-0 bg-gold" />
+            )}
           </span>
 
           {meta && (

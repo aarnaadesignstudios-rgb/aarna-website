@@ -67,7 +67,7 @@ export default function Practice() {
   return (
     <section
       id="practice"
-      className="relative overflow-hidden bg-stone pb-16 text-charcoal md:pb-20 lg:pb-24"
+      className="relative overflow-hidden bg-paper pb-16 text-charcoal md:pb-20 lg:pb-24"
     >
       {/* Figures strip — full-bleed, flush to the TOP of the section, so it
           lands directly between the hero and the statement and reads as a
