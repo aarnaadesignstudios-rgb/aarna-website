@@ -30,7 +30,13 @@ import { useRef, useState } from "react";
 
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks";
-import { PageContainer, Media, Button, SectionHeading } from "@/components/ui";
+import {
+  PageContainer,
+  Media,
+  Button,
+  SectionHeading,
+  SmoothLink,
+} from "@/components/ui";
 import { WORKS } from "@/constants";
 import { smoothScrollTo } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
@@ -164,7 +170,7 @@ export default function SelectedWorks() {
             const meta = [work.location, work.area, work.year].filter(Boolean);
 
             return (
-              <a
+              <SmoothLink
                 key={work.id}
                 href="#contact"
                 style={{ width: work.width }}
@@ -186,15 +192,15 @@ export default function SelectedWorks() {
 
                 {/* Content */}
                 <div className="relative flex h-full flex-col justify-end p-6 text-cream md:p-10">
-                  <div className="mb-2.5 font-label text-[12px] uppercase tracking-[0.16em] text-cream/70">
+                  <div className="mb-2.5 font-label text-cream/70">
                     {work.category}
                   </div>
-                  <h3 className="font-serif text-3xl font-light leading-[1.02] tracking-tight md:text-5xl">
+                  <h3 className="font-serif text-3xl leading-[1.02] tracking-tight md:text-5xl">
                     {work.title}
                   </h3>
 
                   {meta.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-cream/25 pt-3.5 font-label text-[12px] uppercase tracking-[0.14em] text-cream/70">
+                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-cream/25 pt-3.5 font-label text-cream/70">
                       {meta.map((item) => (
                         <span key={item}>{item}</span>
                       ))}
@@ -204,16 +210,16 @@ export default function SelectedWorks() {
                   {/* Open by default on mobile, hover-reveal on desktop. */}
                   <div className="max-h-[320px] overflow-hidden opacity-100 transition-all duration-700 ease-editorial lg:max-h-0 lg:opacity-0 lg:group-hover:max-h-[320px] lg:group-hover:opacity-100">
                     {work.description && (
-                      <p className="mt-4 max-w-[40ch] text-sm leading-[1.65] text-cream/80">
+                      <p className="mt-4 max-w-[40ch] text-cream/80">
                         {work.description}
                       </p>
                     )}
-                    <span className="mt-3.5 inline-block font-label text-[12px] uppercase tracking-[0.16em] text-gold">
+                    <span className="mt-3.5 inline-block font-label text-gold">
                       View project &rarr;
                     </span>
                   </div>
                 </div>
-              </a>
+              </SmoothLink>
             );
           })}
 
@@ -222,10 +228,10 @@ export default function SelectedWorks() {
             style={{ width: "min(46vw, 520px)" }}
             className="flex shrink-0 flex-col justify-end pb-6 max-lg:w-full! max-lg:pt-4"
           >
-            <h3 className="mb-5 max-w-[14ch] font-serif text-3xl font-light leading-[1.04] tracking-tight text-emerald md:text-5xl">
+            <h3 className="mb-5 max-w-[14ch] font-serif text-3xl leading-[1.04] tracking-tight text-emerald md:text-5xl">
               More, on request.
             </h3>
-            <p className="mb-7 max-w-[34ch] text-[15px] leading-[1.7] text-charcoal/60">
+            <p className="mb-7 max-w-[34ch] text-charcoal/60">
               Several commissions are held privately. We share them in
               conversation.
             </p>
@@ -240,7 +246,7 @@ export default function SelectedWorks() {
           <div className="relative mb-0.5 h-px bg-charcoal/20">
             <div ref={progressRef} className="absolute top-0 left-0 h-px w-0 bg-gold" />
           </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 font-label text-[12px] uppercase tracking-[0.14em]">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 font-label">
             {WORKS.map((work, i) => (
               <button
                 key={work.id}

@@ -43,19 +43,47 @@
 
   /* Typography ------------------------------------------------------ */
   /* Font family CSS vars are injected by next/font in app/layout.tsx.
-     ONE typeface family carries the whole site. The client's note was
-     explicit: the small technical label font was to be changed, and the
-     serif used for "Design is the brand of our vision" was to be used
-     everywhere. So JetBrains Mono is gone entirely — its spec-sheet look
-     was the one thing on the page that belonged to a different design. */
+   *
+   * ── THREE ROLES, AND NOTHING OUTSIDE THEM ───────────────────────────
+   *
+   * The page had drifted into using its faces by mood rather than by role:
+   * Bodoni turned up on the wordmark, on the statistics figures AND on one
+   * word inside a Cormorant sentence; headings were set at 300, 400 and 500
+   * depending on the file; body copy came in 14, 15, 16 and 17px with six
+   * different leadings; labels came in three sizes and three trackings.
+   * None of that was a decision — it was accumulation, and it is what makes
+   * a page read as assembled rather than designed.
+   *
+   * So the system is now exactly three roles, and every element on the site
+   * belongs to one of them:
+   *
+   *   SERIF   (Cormorant)  — every heading, every label, every figure.
+   *                          One family, one weight per role.
+   *   SANS    (Inter)      — running body copy, and only that.
+   *   DISPLAY (Bodoni)     — the WORDMARK, and only that. Two places: the
+   *                          masthead and the intro screen.
+   *
+   * The rule that keeps it honest: a new size, weight or tracking has to be
+   * added HERE, where it is visible next to the others, rather than inline
+   * at one call site where it looks harmless. */
   --font-serif: var(--font-cormorant), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  /* High-contrast display serif reserved for the hero statement. */
+  /* The wordmark's face. Not a general-purpose display serif — see above. */
   --font-display: var(--font-bodoni), "Didot", Georgia, serif;
   /* Small uppercase labels — eyebrows, indices, meta rows, buttons.
      The serif, not a monospace: same family as the headings, so the label
      row and the title it sits above now read as one voice. */
   --font-label: var(--font-cormorant), Georgia, "Times New Roman", serif;
+
+  /* ── The type scale ────────────────────────────────────────────────
+     Named rather than numbered, because each one has exactly one job. Any
+     call site that wants "slightly bigger" has to pick the next role up,
+     which is the point. */
+  --text-label: 0.75rem; /* 12px — every uppercase label on the site */
+  --text-label--line-height: 1.35;
+  --text-label--letter-spacing: 0.16em;
+  --text-body: 1rem; /* 16px — every running paragraph */
+  --text-body--line-height: 1.8;
 
   /* Motion ---------------------------------------------------------- */
   --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
@@ -70,23 +98,66 @@
     scroll-behavior: auto;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* See the note on `body`. */
+    overflow-x: clip;
   }
 
   body {
     background-color: var(--color-cream);
     color: var(--color-charcoal);
     font-family: var(--font-sans);
-    font-size: 1rem;
-    line-height: 1.6;
-    /* Prevent horizontal shift from off-screen animated elements. */
-    overflow-x: hidden;
+    font-size: var(--text-body);
+    line-height: 1.7;
+
+    /* ── `clip`, NOT `hidden` ─────────────────────────────────────────
+       Both stop the page drifting sideways when an off-screen element
+       animates in, and only one of them is free.
+
+       Per CSS Overflow, an element with `overflow-x: hidden` and
+       `overflow-y: visible` has its Y axis computed to `auto` — so
+       `overflow-x: hidden` here quietly turned <body> into a SCROLL
+       CONTAINER nested inside the one Lenis is driving. Two consequences,
+       both of which were visible:
+
+         · scrolling had a second container to reconcile against, which is
+           the classic source of the judder people describe as "the page
+           fighting itself" — most obvious during a long programmatic scroll
+         · a scroll container is a containing block for `position: sticky`,
+           so the Founder portrait's `lg:sticky lg:top-28` was resolving
+           against <body> rather than the viewport
+
+       `clip` is the one overflow value that clips WITHOUT establishing a
+       scroll container, so the Y axis stays `visible`, Lenis keeps the only
+       scroller on the page, and sticky resolves against the viewport again.
+       It is set on <html> as well, because that is the element whose
+       overflow propagates to the viewport. */
+    overflow-x: clip;
+  }
+
+  /* Running copy has ONE size and ONE leading across the whole site.
+     It lives here rather than at 15 call sites, which is how the page ended
+     up with 14/15/16/17px paragraphs at six different leadings. A caller that
+     genuinely needs something else still wins — these are base-layer rules
+     and any `text-*` / `leading-*` utility overrides them — but it now has to
+     say so explicitly instead of by accident. */
+  p {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
   }
 
   h1,
   h2,
   h3,
-  h4 {
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-serif);
+    /* One weight for every heading on the site.
+       The files used to ask for 300, 400 and 500 more or less at random —
+       and 300 was never even loaded, so half of those headings were silently
+       rendering at 400 anyway. 400 is what Cormorant's display sizes are cut
+       for; going heavier closes its counters and going lighter breaks its
+       hairlines up at the sizes used here. */
     font-weight: 400;
     letter-spacing: -0.01em;
   }
@@ -123,14 +194,30 @@ html.lenis body {
 /*  Utilities                                                          */
 /* ------------------------------------------------------------------ */
 @layer components {
-  /* Small uppercase labels.
-     `font-label` is a font-FAMILY utility, but it also carries a weight here,
-     and deliberately: Cormorant at 400 and 10px is too fine to hold an
-     uppercase, widely-tracked label — the strokes break up. 600 restores it.
-     This sits in @layer components, so an explicit `font-*` weight utility on
-     the element still wins if a caller needs something else. */
+  /* ── The label, complete ──────────────────────────────────────────────
+     `font-label` is a font-FAMILY utility that Tailwind generates from the
+     token above, extended here into the WHOLE label recipe: family, weight,
+     size, leading, tracking and case.
+
+     It carries all six deliberately. Every call site used to repeat
+     `font-label text-[12px] uppercase tracking-[0.16em]` by hand, and repeated
+     by hand means eventually mistyped — the site had ended up with labels at
+     11px and 12px, tracked 0.14em, 0.16em and 0.18em, in what was supposed to
+     be one recurring element. Now a label is one class, and there is exactly
+     one place to change what a label is.
+
+     600, not 400: Cormorant is a low-contrast old-style face, and at 12px
+     uppercase with 0.16em of tracking its 400 breaks up into hairlines.
+
+     This sits in @layer components, so a `text-*` / `tracking-*` / `font-*`
+     utility on the element still wins where a caller genuinely needs it (the
+     masthead's nav labels go bolder — see components/layout/Navbar.tsx). */
   .font-label {
     font-weight: 600;
+    font-size: var(--text-label);
+    line-height: var(--text-label--line-height);
+    letter-spacing: var(--text-label--letter-spacing);
+    text-transform: uppercase;
     /* Cormorant defaults to OLD-STYLE figures, where 0 sits at x-height and
        1, 3, 4, 7, 9 hang below the baseline. That is correct inside running
        prose and wrong here: every label on this site is an index, a counter
@@ -139,6 +226,26 @@ html.lenis body {
        back on the cap line where uppercase expects them.
        This was invisible while the labels were set in JetBrains Mono, which
        has only one set of numerals. */
+    font-variant-numeric: lining-nums;
+    font-feature-settings: "lnum" 1;
+  }
+
+  /* ── Figures ──────────────────────────────────────────────────────────
+     The statistics strip: "150+", "2 Lakh", "Pan India".
+
+     These were the site's one remaining use of Bodoni outside the wordmark,
+     which is why they never quite belonged — a row of numbers in a third
+     typeface, sitting directly above labels set in the second one. They are
+     the serif now, like every other non-body element on the page, with the
+     weight lifted one step because a figure at 1.5rem has to hold its own
+     against the emerald ground behind it.
+
+     `lining-nums` for the same reason the labels need it: Cormorant's default
+     old-style figures set "150+" with the 1 and 5 hanging below the baseline,
+     which reads as a typesetting fault rather than as a design. */
+  .type-figure {
+    font-family: var(--font-serif);
+    font-weight: 500;
     font-variant-numeric: lining-nums;
     font-feature-settings: "lnum" 1;
   }
@@ -232,6 +339,124 @@ html.lenis body {
         var(--color-emerald) 42%,
         var(--color-emerald-deep) 100%
       );
+  }
+
+  /* ── Liquid glass ─────────────────────────────────────────────────────
+     The chrome's material — the masthead and the mobile index are cut from
+     it. Apple-style glass has four ingredients, and dropping any one of
+     them is what makes a blurred panel read as a flat box instead:
+
+       1. a HEAVY blur, so what is behind resolves to soft luminous colour
+          rather than legible detail. This is also what buys legibility: it
+          is high-frequency detail, not brightness, that makes type sitting
+          on a photograph unreadable
+       2. SATURATION lifted past 1 — blurring averages colour toward grey,
+          and glass is meant to carry the colour of the room behind it
+       3. a specular RIM: one bright hairline along the top edge where the
+          light catches, one dark along the bottom. This is the whole
+          illusion of thickness, and it costs two inset shadows
+       4. a wide, soft, low DROP SHADOW so the slab floats above the page
+          rather than being printed on it
+
+     ── There is no dark slab here any more ────────────────────────────
+     An earlier version tinted this with `--color-ink` at 72%: legible
+     everywhere, and effectively a near-black bar with a blur behind it.
+     The brief was explicit that it should not read as black, so the tint
+     is now a light veil in both modes and the glass genuinely transmits
+     what is behind it.
+
+     That costs the one thing the dark slab bought for free: a fixed ink
+     colour. Cream type needs a dark backdrop and emerald type needs a
+     light one, so the bar cannot carry one palette over a page that
+     alternates between the two — it has to know what it is over. Hence
+     the two variants below, and `data-chrome="dark"` on the dark bands.
+
+     The tint percentages are measured, not chosen. Over a photograph the
+     veil has to lift type off the image without bleaching it; over cream
+     it has to define an edge without becoming an opaque band. */
+
+  /* Shared: the blur, the thickness, the float. */
+  .glass-bar {
+    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+    backdrop-filter: blur(30px) saturate(1.8);
+  }
+
+  /* Over a DARK band — hero photography, emerald sections, the contact
+     backdrop. SMOKED glass: a veil that darkens rather than lightens.
+
+     A cream veil was tried here first, on the reasoning that "dark band ⇒
+     lighten it". It fails, and the reason is worth keeping: these bands are
+     dark by DECLARATION, not by measurement. `bg-ink` is only the fallback
+     behind hero photography, and the photographs themselves are often bright
+     — a bright restaurant interior blurs to a bright wash, the cream veil
+     lifts it further, and cream type on top has almost no contrast left.
+     Darkening is the only veil that works for cream type over an image whose
+     brightness is not known in advance.
+
+     38% is the number that keeps it transparent. The old dark slab sat at
+     72%, where the blur has nothing left to show and the bar reads as solid
+     black; here the image behind stays clearly visible through it, so it
+     reads as tinted glass. The tint is `--color-ink`, the site's true
+     neutral, so it darkens the photograph without colouring it — emerald
+     here would put the green cast back on the imagery that every scrim on
+     this site was corrected to remove. */
+  .glass-bar-dark {
+    background-color: color-mix(in srgb, var(--color-ink) 38%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-cream) 26%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--color-ink) 45%, transparent),
+      0 18px 50px -22px color-mix(in srgb, var(--color-ink) 70%, transparent);
+  }
+
+  /* Over a LIGHT band — paper, cream and stone sections. A brighter veil
+     than the dark variant, because here it is separating cream type-ground
+     from cream page and needs a little more presence to stay a distinct
+     object; the hairline border and the float shadow do the rest. */
+  .glass-bar-light {
+    background-color: color-mix(in srgb, var(--color-paper) 55%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 65%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--color-emerald) 8%, transparent),
+      0 16px 40px -20px color-mix(in srgb, var(--color-emerald) 28%, transparent);
+  }
+
+  /* Light-from-above wash over the top of the glass. Sits in its own layer
+     rather than on the tint so the background-color underneath stays a flat
+     colour that `color-mix` can reason about. */
+  .glass-sheen {
+    background-image: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-cream) 22%, transparent) 0%,
+      color-mix(in srgb, var(--color-cream) 7%, transparent) 45%,
+      transparent 78%
+    );
+  }
+
+  /* Pointer-tracked specular highlight — the "liquid" part.
+     Apple's glass carries a live highlight that slides as the surface moves;
+     this is the honest cheap version, one radial gradient positioned from
+     two custom properties that the pointer handler writes directly to the
+     element. Deliberately NOT React state: a setState per pointermove would
+     re-render the whole masthead at input rate. Defaults park it off-canvas
+     so nothing shows until a real pointer arrives — touch devices, which
+     never fire pointermove, therefore never see it. */
+  .glass-specular {
+    background-image: radial-gradient(
+      220px circle at var(--gx, -100%) var(--gy, 50%),
+      color-mix(in srgb, var(--color-gold-soft) 20%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Over a light band the champagne specular is invisible — it is a pale
+     warm glow on a pale warm ground. Same light, read as a soft shadow
+     instead, which is what a highlight looks like from the other side. */
+  .glass-specular-light {
+    background-image: radial-gradient(
+      220px circle at var(--gx, -100%) var(--gy, 50%),
+      color-mix(in srgb, var(--color-emerald) 10%, transparent) 0%,
+      transparent 70%
+    );
   }
 
   /* Rich emerald OVERLAY (translucent) — for tinting over imagery. */

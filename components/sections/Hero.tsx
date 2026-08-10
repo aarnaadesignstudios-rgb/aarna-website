@@ -29,11 +29,15 @@ import { useCallback, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FiArrowDown } from "react-icons/fi";
 
-import { ImageCycle, PageContainer } from "@/components/ui";
+import { ImageCycle, PageContainer, SmoothLink } from "@/components/ui";
 import { fadeScale } from "@/animations/variants";
 import { HERO_SLIDES, INTRO, SITE } from "@/constants";
 import { gsap } from "@/lib/gsap";
+import { introDelay } from "@/lib/intro";
 import { useIsomorphicLayoutEffect } from "@/hooks";
+
+/** The scroll cue both animates and scrolls, so it needs to be both. */
+const MotionSmoothLink = motion.create(SmoothLink);
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -72,6 +76,12 @@ export default function Hero() {
     <section
       id="hero"
       ref={heroRef}
+      /* `data-chrome="dark"` tells the masthead what it is floating over.
+         The bar is real glass now, so it has no opinion of its own about
+         ink colour — it reads this attribute off whatever band is behind it
+         and flips its own palette to suit. Light is the default; only dark
+         bands declare themselves. See components/layout/Navbar.tsx. */
+      data-chrome="dark"
       className="relative flex h-screen min-h-[640px] w-full items-end overflow-hidden bg-ink text-cream"
     >
       {/* Background imagery.
@@ -93,7 +103,9 @@ export default function Hero() {
               4.7s. */}
           <ImageCycle
             frames={HERO_SLIDES}
-            startDelayMs={INTRO.holdMs}
+            /* Starts on the intro's held beat — or immediately, when there is
+               no intro because it has already played this load. */
+            startDelayMs={introDelay(INTRO.holdMs) * 1000}
             holdMs={1800}
             fadeMs={700}
             onFrameChange={onFrameChange}
@@ -122,7 +134,7 @@ export default function Hero() {
       {/* Editorial meta — top corners, below the masthead panel. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 hidden md:block">
         {/* pt clears the masthead's resting height with room to spare. */}
-        <PageContainer className="flex items-center justify-between pt-28 font-label text-[12px] uppercase tracking-[0.18em] text-cream/80 [text-shadow:0_1px_16px_rgba(10,10,9,0.75)]">
+        <PageContainer className="flex items-center justify-between pt-28 font-label text-cream/80 [text-shadow:0_1px_16px_rgba(10,10,9,0.75)]">
           <span>Est. {SITE.founded}</span>
           <span>Gurugram · India</span>
         </PageContainer>
@@ -142,7 +154,7 @@ export default function Hero() {
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-md"
         >
-          <span className="block font-label text-[12px] uppercase tracking-[0.18em] text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
+          <span className="block font-label text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
             Selected work
           </span>
           <span className="mt-2.5 block font-serif text-3xl leading-none tracking-tight text-cream [text-shadow:0_1px_20px_rgba(10,10,9,0.8)] md:text-4xl">
@@ -152,26 +164,30 @@ export default function Hero() {
       </PageContainer>
 
       {/* Animated scroll indicator */}
-      <motion.a
+      <MotionSmoothLink
         href="#practice"
+        /* The cue says "scroll", so it scrolls. Every other link on the site
+           lets the distance choose between a glide and a chapter card; this is
+           the one place where the travel itself is the promise being made. */
+        travel="scroll"
         data-hero-indicator
         aria-label="Scroll to explore"
         className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: INTRO.clearedMs / 1000, duration: 0.8 }}
+        transition={{ delay: introDelay(INTRO.clearedMs), duration: 0.8 }}
       >
         <motion.span
           className="flex flex-col items-center gap-2 text-cream/90 [text-shadow:0_1px_16px_rgba(10,10,9,0.75)]"
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="font-label text-[12px] uppercase tracking-[0.18em]">
+          <span className="font-label">
             Scroll
           </span>
           <FiArrowDown size={18} />
         </motion.span>
-      </motion.a>
+      </MotionSmoothLink>
     </section>
   );
 }

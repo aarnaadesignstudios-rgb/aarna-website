@@ -31,6 +31,8 @@ export default function Founder() {
   return (
     <section
       id="founder"
+      /* Dark band — see the note in components/layout/Navbar.tsx. */
+      data-chrome="dark"
       className="surface-emerald overflow-hidden border-y border-gold/15 py-20 text-cream md:py-24 lg:py-28"
     >
       <PageContainer>
@@ -49,7 +51,7 @@ export default function Founder() {
                 {/* Lower veil — settles the portrait into the emerald ground. */}
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,41,28,0)_45%,rgba(6,41,28,0.55)_100%)]" />
               </div>
-              <figcaption className="mt-4 flex items-center justify-between gap-4 font-label text-[12px] uppercase tracking-[0.14em] text-cream/55">
+              <figcaption className="mt-4 flex items-center justify-between gap-4 font-label text-cream/55">
                 <span>{SITE.name}, Gurugram</span>
                 <span>Est. {SITE.founded}</span>
               </figcaption>
@@ -66,7 +68,7 @@ export default function Founder() {
             />
 
             <Reveal delay={0.1}>
-              <p className="mt-5 font-label text-[12px] uppercase tracking-[0.16em] text-gold">
+              <p className="mt-5 font-label text-gold">
                 Founder &amp; Principal Architect, {SITE.name}
               </p>
 
@@ -75,7 +77,7 @@ export default function Founder() {
                 belonging.
               </p>
 
-              <div className="mt-8 grid max-w-[58ch] gap-5 text-[15px] leading-[1.8] text-cream/70 md:text-base">
+              <div className="mt-8 grid max-w-[58ch] gap-5 text-cream/70">
                 <p>
                   An architect and design entrepreneur, Annpurna Kinha is the
                   Founder &amp; Principal Architect of{" "}
@@ -117,7 +119,7 @@ export default function Founder() {
 
             <Reveal delay={0.15}>
               <blockquote className="mt-10 border-t border-cream/20 pt-8">
-                <p className="m-0 max-w-[34ch] font-serif text-2xl font-light leading-[1.3] tracking-tight md:text-[1.9rem]">
+                <p className="m-0 max-w-[34ch] font-serif text-2xl leading-[1.3] tracking-tight md:text-[1.9rem]">
                   &ldquo;For me, luxury is not about more. It is about knowing
                   what matters, and giving it the space to matter.&rdquo;
                 </p>

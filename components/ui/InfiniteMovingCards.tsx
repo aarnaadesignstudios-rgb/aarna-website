@@ -148,7 +148,10 @@ export default function InfiniteMovingCards({
 
           <p
             className={cn(
-              "m-0 font-serif text-[1.05rem] leading-[1.7] italic md:text-[1.15rem]",
+              // One size, not a responsive step: these cards are a fixed
+              // `clamp()` width at every breakpoint, so the quote inside them
+              // had no reason to change size with the viewport.
+              "m-0 font-serif text-[1.15rem] leading-[1.7] italic",
               ink.quote
             )}
           >
@@ -165,14 +168,7 @@ export default function InfiniteMovingCards({
               <span className={cn("font-serif text-base", ink.author)}>
                 {item.author}
               </span>
-              <span
-                className={cn(
-                  "font-label text-[11px] tracking-[0.16em] uppercase",
-                  ink.role
-                )}
-              >
-                {item.role}
-              </span>
+              <span className={cn("font-label", ink.role)}>{item.role}</span>
             </span>
             {/* Phoenix as the signature on each quote. */}
             <Mark

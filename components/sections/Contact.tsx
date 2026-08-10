@@ -34,7 +34,14 @@
  */
 import { useState, type FormEvent } from "react";
 
-import { Media, PageContainer, Reveal, Button, SectionHeading } from "@/components/ui";
+import {
+  Media,
+  PageContainer,
+  Reveal,
+  Button,
+  SectionHeading,
+  SmoothLink,
+} from "@/components/ui";
 import { NAV_LINKS, SITE, SOCIAL_LINKS } from "@/constants";
 
 // Field definitions kept declarative so the form stays DRY.
@@ -56,7 +63,15 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative overflow-hidden text-cream">
+    <section
+      id="contact"
+      /* `data-chrome="dark"`: photography under an emerald overlay, so the
+         computed background colour here is transparent and only this
+         declaration tells the masthead it is over a dark band. See
+         components/layout/Navbar.tsx. */
+      data-chrome="dark"
+      className="relative overflow-hidden text-cream"
+    >
       {/* Architecture background image placeholder. */}
       <div className="absolute inset-0">
         <Media
@@ -82,20 +97,25 @@ export default function Contact() {
             <Reveal delay={0.1}>
               <dl className="mt-12 grid gap-5 border-t border-cream/15 pt-8">
                 <div>
-                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                  <dt className="font-label text-cream/50">
                     Website
                   </dt>
                   <dd className="mt-1.5 ml-0">
-                    <a
-                      href={SITE.url}
+                    {/* The studio's own address, so it links HOME rather than
+                        out to the absolute URL. Pointing it at `SITE.url` sent
+                        a visitor on a full round trip to the production domain
+                        to arrive back where they already were — and off-site
+                        entirely from a preview or a local build. */}
+                    <SmoothLink
+                      href="/"
                       className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
                     >
                       {SITE.urlLabel}
-                    </a>
+                    </SmoothLink>
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                  <dt className="font-label text-cream/50">
                     Telephone
                   </dt>
                   <dd className="mt-1.5 ml-0">
@@ -108,7 +128,7 @@ export default function Contact() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                  <dt className="font-label text-cream/50">
                     Email
                   </dt>
                   <dd className="mt-1.5 ml-0">
@@ -121,7 +141,7 @@ export default function Contact() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/50">
+                  <dt className="font-label text-cream/50">
                     Studio
                   </dt>
                   <dd className="mt-1.5 ml-0 font-serif text-xl text-cream md:text-2xl">
@@ -137,7 +157,7 @@ export default function Contact() {
             {submitted ? (
               <div className="border-t border-gold/40 pt-8">
                 <p className="m-0 font-serif text-3xl text-gold">Thank you.</p>
-                <p className="mt-4 max-w-[36ch] text-[15px] leading-[1.8] text-cream/70">
+                <p className="mt-4 max-w-[36ch] text-cream/70">
                   We read every enquiry ourselves and will be in touch shortly.
                 </p>
               </div>
@@ -145,7 +165,7 @@ export default function Contact() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-8">
                 {FIELDS.map((field) => (
                   <label key={field.name} className="flex flex-col gap-2">
-                    <span className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60">
+                    <span className="font-label text-cream/60">
                       {field.label}
                     </span>
                     <input
@@ -163,7 +183,7 @@ export default function Contact() {
                 ))}
 
                 <label className="flex flex-col gap-2">
-                  <span className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60">
+                  <span className="font-label text-cream/60">
                     Tell us about your project
                   </span>
                   <textarea
@@ -193,12 +213,17 @@ export default function Contact() {
             <ul className="flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
-                  <a
+                  {/* This block is the site's footer in all but name, and it
+                      renders on /faq and /photography too — so these are the
+                      same route-aware links the masthead uses, not bare
+                      anchors that would have pointed at ids those pages do not
+                      contain. */}
+                  <SmoothLink
                     href={link.href}
-                    className="font-label text-[12px] uppercase tracking-[0.16em] text-cream/60 transition-colors duration-500 hover:text-gold"
+                    className="font-label text-cream/60 transition-colors duration-500 hover:text-gold"
                   >
                     {link.label}
-                  </a>
+                  </SmoothLink>
                 </li>
               ))}
             </ul>
@@ -223,7 +248,7 @@ export default function Contact() {
                 );
               })}
             </ul>
-            <p className="m-0 font-label text-[12px] uppercase tracking-[0.18em] text-cream/40">
+            <p className="m-0 font-label text-cream/40">
               © {YEAR} {SITE.name}
             </p>
           </div>

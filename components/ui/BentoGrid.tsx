@@ -53,7 +53,7 @@ export function BentoGridItem({
     >
       {/* Optional oversized index watermark */}
       {index && (
-        <span className="pointer-events-none absolute right-6 top-4 font-serif text-6xl font-light text-emerald/8">
+        <span className="pointer-events-none absolute right-6 top-4 font-serif text-6xl text-emerald/8">
           {index}
         </span>
       )}
@@ -65,10 +65,10 @@ export function BentoGridItem({
       />
 
       <div className="transition-transform duration-500 group-hover:translate-x-1">
-        <h3 className="font-serif text-2xl font-light text-emerald md:text-3xl">
+        <h3 className="font-serif text-2xl text-emerald md:text-3xl">
           {title}
         </h3>
-        <p className="mt-3 max-w-sm text-base leading-[1.75] text-charcoal/70">
+        <p className="mt-3 max-w-sm text-charcoal/70">
           {description}
         </p>
       </div>

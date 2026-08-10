@@ -1,112 +1,288 @@
 "use client";
 
 /**
- * Navbar — a floating inset masthead.
+ * Navbar — a floating masthead cut from liquid glass.
  *
  *   ┌──────────────────────────────────────────────────────────────────┐
- *   │ ABOUT  WHY US  …   [mark] Aarnaa Design Studios      [ENQUIRE]   │
+ *   │ ABOUT  WHY US  …   [mark] Aarnaa Design Studios      ( ENQUIRE ↗)│
  *   └──────────────────────────────────────────────────────────────────┘
- *      ↑ inset from all three edges; photography runs behind and around it
+ *      ↑ inset from all three edges; photography runs behind and through it
  *
  * ── Why this shape ────────────────────────────────────────────────────────
  *
- * Three previous versions each failed for a nameable reason. Transparent over
- * the hero: illegible, because the frame behind it changes every five seconds.
- * Frosted-to-cream on scroll: the masthead changed colour scheme halfway down
- * the page and the wordmark had to change with it. A full-width solid emerald
- * bar: legible, but a saturated green band welded across the top of every
- * screen, which is a large amount of the loudest colour in the palette sitting
- * permanently in the visitor's eyeline.
+ * Several earlier versions each failed for a nameable reason. Transparent over
+ * the hero with no blur: illegible, because the frame behind it changes every
+ * five seconds. A full-width solid emerald bar: legible, but a saturated green
+ * band welded across the top of every screen. A near-black glass slab: legible
+ * everywhere and the same object on every surface, but it read as black, which
+ * the brief ruled out.
  *
- * A floating inset bar solves all three at once. It keeps its own ground, so
- * legibility never depends on the photograph. It never changes colour. And
- * because it is inset rather than full-bleed, the imagery runs past it on all
- * sides — the page reads as one continuous full-bleed canvas with a small
- * object resting on it, rather than as a header stacked above content.
+ * A floating inset bar of real glass answers all three. It is inset rather than
+ * full-bleed, so imagery runs past it on all sides and the page reads as one
+ * continuous canvas with a small object resting on it. It transmits what is
+ * behind it, so it is never a hole in the page. And legibility comes from the
+ * BLUR rather than from opacity — it is high-frequency detail, not brightness,
+ * that makes type on a photograph unreadable, so 30px of blur buys more
+ * legibility than 50% more tint would.
  *
- * ── The details that make it read as expensive ────────────────────────────
+ * ── The bar knows what it is over ─────────────────────────────────────────
  *
- * SQUARE CORNERS. The floating-island pattern is usually drawn as a rounded
- * pill, which is the single fastest way to make an architecture studio look
- * like a SaaS product. Architecture reads sharp.
+ * The one thing genuine transparency costs is a fixed ink colour: cream type
+ * needs a dark backdrop and emerald type needs a light one, and this page
+ * alternates between the two all the way down. So the bar reads the band behind
+ * it and flips its own palette.
  *
- * NEUTRAL GLASS, NOT GREEN. The ground is `--color-ink` — a true neutral — so
- * it darkens what is behind it without tinting it, the same correction applied
- * to every scrim on the site. A gold hairline draws the edge; the brand is
- * present as a line, not as a fill. See the note on the opacity itself, which
- * is high on purpose.
+ * Dark bands declare themselves with `data-chrome="dark"` (hero, the figures
+ * strip, Testimonials, Founder, Contact); light is the default, so most
+ * sections say nothing. Detection is a rect overlap test against those few
+ * elements rather than a hit test or a luminance sample, because it stays
+ * correct for the cases that break the alternatives — the emerald strip nested
+ * inside a paper section, and Contact, whose backdrop is a photograph under a
+ * gradient overlay and whose computed background-color is therefore
+ * transparent.
  *
- * BRAND CENTRED, AND LOUD. The name sits on the page's axis and is the largest
- * thing in the chrome — set in champagne rather than the deeper logo gold,
- * which loses too much contrast against a dark ground at this size. It is
- * positioned absolutely on the bar rather than laid out between the two
- * groups, so it stays on the true centre line however wide the links get.
- * (An earlier pass put it top-left, on the reasoning that symmetrical
- * mastheads read institutional. Overruled: the studio wants its name read.)
+ * ── Layout: a 3-column grid, not a centred absolute ───────────────────────
  *
- * A SCROLL PROGRESS HAIRLINE runs along the bar's bottom edge. It is the only
- * moving element in the chrome, it tells you where you are in a long page, and
- * it costs one transform.
+ * The brand sits in the middle column of `1fr auto 1fr`. Because the two outer
+ * tracks are both `1fr` they always resolve to the same width, so the middle
+ * one is centred on the BAR — the property that matters, and one that survives
+ * links being added, the active state changing width, or one edge control being
+ * wider than the other.
+ *
+ * An earlier version got the same centring by absolutely positioning the lockup
+ * across the full bar, and paid for it with a `px-14` "collision guard" to stop
+ * the name growing underneath the edge controls. Grid tracks cannot overlap by
+ * construction, so both the hack and the class of bug it patched are gone.
+ *
+ * Both edge controls are the same 36/40px circle-or-pill so the bar reads as
+ * control · brand · control. Below `xl` the link list is replaced by the menu
+ * trigger in the SAME left track, so the phone layout is the identical grid
+ * with a different left cell rather than a second layout to keep in sync.
  *
  * ── Motion ────────────────────────────────────────────────────────────────
  *
- * The bar tightens on scroll: less padding, a smaller emblem, a stronger
- * hairline. Progress is written straight to a transform via `quickTo` rather
- * than through React state — a `setState` per scroll event re-renders the
- * whole masthead at scroll rate.
+ * Seven things move, and none of them costs a re-render at input rate:
+ *
+ *   · the bar TIGHTENS on scroll — less padding, a smaller emblem
+ *   · SCROLL PROGRESS runs along the bottom edge, written to a transform by
+ *     `quickTo` (a `setState` per scroll event re-renders the whole masthead)
+ *   · a pointer-tracked SPECULAR highlight, written to two custom properties
+ *     the same way — this is the "liquid" in liquid glass
+ *   · the links ARRIVE staggered, once, after the intro clears
+ *   · a glass PILL slides between links as you move along them, carried by
+ *     framer's `layoutId` so it animates from wherever it currently is
+ *   · each label ROLLS vertically to its gold copy on hover
+ *   · the emblem and the CTA arrow answer their own hovers
  */
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiArrowUpRight } from "react-icons/fi";
 
 import { INTRO, NAV_LINKS, SITE } from "@/constants";
-import { Mark } from "@/components/ui";
+import { Mark, SmoothLink } from "@/components/ui";
 import { useIsomorphicLayoutEffect } from "@/hooks";
-import { gsap } from "@/lib/gsap";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { introDelay } from "@/lib/intro";
+import { setSmoothScrollPaused } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
 
 /** Links shown inline on desktop. Contact is the CTA, so it is excluded. */
 const INLINE_LINKS = NAV_LINKS.filter((l) => l.href !== "#contact");
 
-/** Nav link with a vertical text-roll on hover. */
+/**
+ * Every link in the bar goes through <SmoothLink />, which is what makes an
+ * in-page anchor scroll rather than jump AND what makes "About" still work from
+ * /faq, where `#practice` does not exist. Two of them animate, so they need the
+ * motion wrapper — see the note on `forwardRef` in that component.
+ */
+const MotionSmoothLink = motion.create(SmoothLink);
+
+/**
+ * ── The bar's own type ────────────────────────────────────────────────────
+ *
+ * `.font-label` is the site's label recipe (12px, 0.16em, uppercase, 600) and
+ * everything in the bar uses it — but the masthead is the one place it needs
+ * overriding, and it is worth saying why.
+ *
+ * The review was that the navigation "is not clearly visible". Two causes, both
+ * of them structural rather than a matter of taste. Cormorant is a low-contrast
+ * old-style face: its thin strokes land near a single pixel at 12px, and this
+ * bar is genuine glass, so those strokes sit over whatever photograph happens
+ * to be behind them rather than over a solid ground. And the labels were then
+ * dimmed to 70–80% on top of that, which is a reasonable way to rank a link
+ * below a heading and an unreasonable one when legibility is already marginal.
+ *
+ * So: 700 rather than 600 (loaded explicitly in app/layout.tsx — an unrequested
+ * weight would have silently fallen back to 600 and changed nothing), the tint
+ * dropped so labels sit at full ink, and a tight shadow over the dark bands to
+ * separate type from image. The brand wordmark is deliberately untouched.
+ */
+const BAR_LABEL ="font-label font-bold";
+/** Lifts 12px type off live photography without reading as a glow. */
+const ON_IMAGE = "[text-shadow:0_1px_10px_rgba(10,10,9,0.55)]";
+
+/**
+ * Entrance: the bar's contents arrive in sequence after the intro clears.
+ *
+ * A FUNCTION rather than a constant, because the delay depends on whether the
+ * intro is playing at all. It plays once per page load, so on a return to `/`
+ * from another page there is no brand screen to wait behind — and a masthead
+ * that still waited 1.7 seconds would leave a live page with no navigation on
+ * it. See lib/intro.ts.
+ */
+const barContentsFor = (delay: number) => ({
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: delay + 0.35,
+    },
+  },
+});
+
+const barItem = {
+  hidden: { opacity: 0, y: -8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+/**
+ * Nav link with a vertical text-roll on hover, and the slot the sliding
+ * glass pill occupies while this is the current item.
+ */
 function NavItem({
   label,
   href,
   active,
+  indicated,
+  onDark,
+  onHover,
 }: {
   label: string;
   href: string;
   active: boolean;
+  indicated: boolean;
+  onDark: boolean;
+  onHover: (href: string | null) => void;
 }) {
   return (
-    <a
+    <SmoothLink
       href={href}
-      className="group relative block overflow-hidden py-1 font-label text-[12px] tracking-[0.16em] whitespace-nowrap uppercase"
+      onPointerEnter={() => onHover(href)}
+      onFocus={() => onHover(href)}
+      onBlur={() => onHover(null)}
+      className={cn(
+        "group relative block py-1.5 whitespace-nowrap",
+        BAR_LABEL
+      )}
     >
-      <span
-        className={cn(
-          "block transition-transform duration-500 ease-editorial group-hover:translate-y-[-130%]",
-          active ? "text-gold" : "text-cream/70"
-        )}
-      >
-        {label}
+      {/* The sliding pill. One instance across the whole list — `layoutId`
+          moves it from wherever it is to here, so it reads as one object
+          travelling rather than as a highlight blinking between items.
+
+          NEGATIVE insets rather than padding on the <a>. The pill has to be
+          bigger than its label, and paying for that with `px-3` on the link
+          widened all six of them by 24px each — enough to push the list back
+          over its grid track and across the wordmark at 1280–1366. Being
+          absolutely positioned, the pill can grow outside its anchor for
+          free; the link keeps its text-width and the layout is unmoved. */}
+      {indicated && (
+        <motion.span
+          aria-hidden
+          layoutId="nav-pill"
+          className={cn(
+            "absolute -inset-x-1.5 -inset-y-0.5 -z-10 rounded-full",
+            onDark
+              ? "bg-cream/12 shadow-[inset_0_1px_0_rgba(246,242,233,0.22)]"
+              : "bg-emerald/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+          )}
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        />
+      )}
+
+      {/* The roll. This wrapper must be BOTH `relative` and `overflow-hidden`:
+          relative so it is the containing block for the incoming copy below
+          (otherwise that copy resolves against the <a>, which is relative for
+          the pill's sake, and escapes the clip entirely — printing a second
+          row of labels under the bar), and overflow-hidden so the two copies
+          are masked to one line's worth of space. It sits here rather than on
+          the <a> because the pill has to paint outside the text's bounds. */}
+      <span className="relative block overflow-hidden">
+        <span
+          className={cn(
+            "block transition-transform duration-500 ease-editorial group-hover:translate-y-[-130%]",
+            // Full ink, not 70–80% of it. Over glass at 12px the tint was
+            // costing more legibility than it bought hierarchy; the roll to
+            // gold on hover is what marks a link as live, and the gold `active`
+            // state is what marks the current section.
+            active ? "text-gold" : onDark ? "text-cream" : "text-emerald",
+            onDark && ON_IMAGE
+          )}
+        >
+          {label}
+        </span>
+        <span
+          aria-hidden
+          className={cn(
+            "absolute inset-0 block translate-y-[130%] transition-transform duration-500 ease-editorial group-hover:translate-y-0",
+            onDark ? "text-gold-soft" : "text-emerald",
+            onDark && ON_IMAGE
+          )}
+        >
+          {label}
+        </span>
       </span>
-      <span
-        aria-hidden
-        className="absolute inset-0 block translate-y-[130%] py-1 text-gold transition-transform duration-500 ease-editorial group-hover:translate-y-0"
-      >
-        {label}
-      </span>
-    </a>
+    </SmoothLink>
   );
 }
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  /** Phone-width layout. Drives the emblem, which is sized in JS (see below). */
+  const [compact, setCompact] = useState(false);
+  /** Is the band currently behind the bar a dark one? Drives the palette. */
+  const [onDark, setOnDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeId, setActiveId] = useState<string>("");
+  const [hovered, setHovered] = useState<string | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const specularRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  /** Coalesces pointermove writes to one per frame. */
+  const specularFrame = useRef<number | null>(null);
 
+  /**
+   * ── One measurement per FRAME, and one layout read inside it ────────────
+   *
+   * This handler used to run on every scroll event and, each time, ask the
+   * document three separate questions that can only be answered by laying the
+   * page out: `window.innerWidth`, a `querySelectorAll` for the dark bands, and
+   * a `getBoundingClientRect()` on every one of them. Scroll events fire at
+   * input rate — faster than frames during a programmatic scroll — so that was
+   * a forced synchronous layout several times a frame, each one potentially
+   * followed by a React re-render of a masthead full of animated nodes. It is
+   * the most expensive thing on the page during a scroll, and it was running
+   * hardest exactly when a smooth scroll needed the frame budget most.
+   *
+   * Three changes, in order of what they save:
+   *
+   *   1. COALESCE to one measurement per animation frame. Extra scroll events
+   *      within a frame are dropped rather than queued — the answer they would
+   *      produce is the same one the frame is already about to compute.
+   *   2. CACHE the dark bands' absolute positions instead of re-querying and
+   *      re-measuring them. They only move when the page is re-laid out, so the
+   *      cache is rebuilt on resize, on navigation, and on ScrollTrigger's own
+   *      refresh — which is precisely when the pinned sections change the
+   *      document's height and therefore everything below them.
+   *   3. Read `innerWidth` on RESIZE only. It cannot change during a scroll.
+   *
+   * What is left per frame: `window.scrollY`, and one rect on the bar itself.
+   */
   useIsomorphicLayoutEffect(() => {
     const bar = progressRef.current;
     // `quickTo` writes to an already-created tween, so this costs nothing per
@@ -115,22 +291,69 @@ export default function Navbar() {
       ? gsap.quickTo(bar, "scaleX", { duration: 0.25, ease: "power2" })
       : null;
 
-    const onScroll = () => {
+    /** Absolute document-space ranges of the bands that want cream chrome. */
+    let bands: Array<{ top: number; bottom: number }> = [];
+    let scrollHeight = document.documentElement.scrollHeight;
+
+    const measureBands = () => {
+      const y = window.scrollY;
+      bands = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-chrome="dark"]')
+      ).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top + y, bottom: r.bottom + y };
+      });
+      scrollHeight = document.documentElement.scrollHeight;
+    };
+
+    let frame = 0;
+
+    const measure = () => {
+      frame = 0;
       const y = window.scrollY;
       setScrolled(y > 40);
 
-      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const max = scrollHeight - window.innerHeight;
       setProgress?.(max > 0 ? Math.min(1, Math.max(0, y / max)) : 0);
+
+      // Which band is under the bar? Compare the bar's box against the cached
+      // ranges — no DOM query, no per-band measurement.
+      const rect = navRef.current?.getBoundingClientRect();
+      if (rect) {
+        const top = rect.top + y;
+        const bottom = rect.bottom + y;
+        setOnDark(bands.some((b) => b.top < bottom && b.bottom > top));
+      }
     };
 
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
     };
-  }, []);
+
+    const onResize = () => {
+      setCompact(window.innerWidth < 640);
+      measureBands();
+      onScroll();
+    };
+
+    onResize();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    // ScrollTrigger re-measures on load, on resize and whenever a pinned
+    // section's dimensions change; the band cache has to follow it or the bar
+    // keeps flipping palette against stale positions.
+    ScrollTrigger.addEventListener("refresh", measureBands);
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      ScrollTrigger.removeEventListener("refresh", measureBands);
+    };
+    // Re-run on navigation: the dark bands are different on every page, and a
+    // client-side route change does not scroll, so nothing would otherwise
+    // re-measure them and the bar would keep the palette of the page it left.
+  }, [pathname]);
 
   // Scroll-spy: mark the nav link whose section is currently in view.
   // Route links (/faq) have no section to observe and are simply skipped.
@@ -150,147 +373,294 @@ export default function Navbar() {
 
     sections.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
+    // Same reason as above: which of these sections exist depends on the page.
+  }, [pathname]);
+
+  // The index is a full-screen overlay, so the page behind it must not move.
+  // Escape closes it, which is the one keyboard affordance a modal owes you.
+  useEffect(() => {
+    setSmoothScrollPaused(menuOpen);
+    if (!menuOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      setSmoothScrollPaused(false);
+    };
+  }, [menuOpen]);
+
+  /** Park the specular under the pointer, at most once per frame. */
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLElement>) => {
+    const el = specularRef.current;
+    if (!el || e.pointerType !== "mouse") return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (specularFrame.current !== null) return;
+    specularFrame.current = requestAnimationFrame(() => {
+      specularFrame.current = null;
+      el.style.setProperty("--gx", `${x}px`);
+      el.style.setProperty("--gy", `${y}px`);
+      el.style.opacity = "1";
+    });
   }, []);
 
+  const onPointerLeave = useCallback(() => {
+    const el = specularRef.current;
+    if (el) el.style.opacity = "0";
+    setHovered(null);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (specularFrame.current !== null)
+        cancelAnimationFrame(specularFrame.current);
+    },
+    []
+  );
+
+  /**
+   * A section link is current when its section is in view; a ROUTE link is
+   * current when you are on it. The second half was missing, so /faq — the one
+   * nav item that is a page rather than a section — was the only link in the bar
+   * that never lit up, including while you were standing on it.
+   */
+  /**
+   * How long the bar waits before arriving. Read at render time rather than
+   * baked into the variants — see the note on `barContentsFor`.
+   */
+  const introWait = introDelay(INTRO.navbarMs);
+
   const isActive = (href: string) =>
-    href.startsWith("#") && activeId === href.slice(1);
+    href.startsWith("#") ? activeId === href.slice(1) : pathname === href;
+
+  // The emblem is sized by a prop rather than a class, because <Mark /> pins
+  // width/height inline so `size` stays authoritative (see that component).
+  // That means the responsive step has to happen here in JS.
+  const markSize = compact ? (scrolled ? 26 : 30) : scrolled ? 32 : 38;
+
+  // The pill follows the pointer, and parks on the current section when the
+  // pointer is elsewhere.
+  const activeHref = INLINE_LINKS.find((l) => isActive(l.href))?.href ?? null;
+  const indicatedHref = hovered ?? activeHref;
 
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       /* Timed to `INTRO.navbarMs`, so the bar is already at rest behind the
-         intro screen rather than fading in over a live page. */
+         intro screen rather than fading in over a live page — and timed to
+         nothing at all when the intro is not playing. */
       transition={{
-        delay: INTRO.navbarMs / 1000,
+        delay: introWait,
         duration: 0.9,
         ease: [0.22, 1, 0.36, 1],
       }}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 px-4 transition-[padding] duration-500 ease-editorial md:px-6 lg:px-8",
-        scrolled ? "pt-3" : "pt-4 md:pt-5"
+        "fixed inset-x-0 top-0 z-50 px-3 transition-[padding] duration-500 ease-editorial sm:px-4 md:px-6 lg:px-8",
+        scrolled ? "pt-2 md:pt-3" : "pt-3 md:pt-5"
       )}
     >
-      <nav
+      <motion.nav
+        ref={navRef}
+        onPointerMove={onPointerMove}
+        onPointerLeave={onPointerLeave}
+        variants={barContentsFor(introWait)}
+        initial="hidden"
+        animate="visible"
         className={cn(
-          // Square corners, neutral glass, gold hairline — see the notes above.
-          //
-          // The ground is nearly opaque (88%) rather than a light 60% veil,
-          // and that is a correction rather than a preference. A 60% dark
-          // glass reads beautifully over the hero photograph and turns into a
-          // muddy olive-grey smear the moment it crosses a cream section —
-          // which is most of this page. At 88% it stops being a translucent
-          // film and becomes a deliberate dark object resting on the page, so
-          // it looks the same over a photograph, over cream and over stone.
-          "relative mx-auto flex max-w-[1560px] items-center justify-between gap-6 border bg-ink/88 px-5 backdrop-blur-xl transition-all duration-500 ease-editorial md:px-7",
-          scrolled
-            ? "border-gold/25 py-2.5 shadow-[0_14px_44px_-14px_rgba(10,10,9,0.75)]"
-            : "border-gold/15 py-3.5"
+          // `overflow-hidden` keeps the sheen, the specular and the progress
+          // hairline inside the rounded shape — without it each one paints
+          // square corners back on.
+          "glass-bar relative mx-auto grid max-w-[1560px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden rounded-[18px] border px-3 transition-[padding,border-color,background-color,box-shadow] duration-700 ease-editorial sm:gap-4 sm:px-4 md:px-6",
+          onDark
+            ? "glass-bar-dark border-cream/18"
+            : "glass-bar-light border-emerald/12",
+          onDark && scrolled && "border-cream/24",
+          scrolled ? "py-2" : "py-2.5 md:py-3.5"
         )}
       >
-        {/* Links — left track. */}
-        <ul className="hidden list-none items-center gap-7 p-0 lg:flex xl:gap-9">
-          {INLINE_LINKS.map((link) => (
-            <li key={link.href}>
-              <NavItem
-                label={link.label}
-                href={link.href}
-                active={isActive(link.href)}
-              />
-            </li>
-          ))}
-        </ul>
+        {/* Glass layers. Both are inert and sit under the content. */}
+        <span
+          aria-hidden
+          className={cn(
+            "glass-sheen pointer-events-none absolute inset-0 z-0 transition-opacity duration-700",
+            onDark ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div
+          ref={specularRef}
+          aria-hidden
+          style={{ opacity: 0 }}
+          className={cn(
+            "pointer-events-none absolute inset-0 z-0 transition-opacity duration-500 ease-editorial",
+            onDark ? "glass-specular" : "glass-specular-light"
+          )}
+        />
 
-        {/* ── Brand — the centre track ─────────────────────────────────────
-            Absolutely positioned and centred on the BAR, not placed between
-            the two link groups. That distinction is the whole point: laid out
-            in flow, the lockup sits at the midpoint of whatever space the
-            links happen to leave, so it drifts left or right as soon as a
-            label is added or the active state changes width. Centring it on
-            the bar itself pins it to the page's true axis and keeps it there.
+        {/* ── Left track: the links on desktop, the trigger on a phone ───── */}
+        <div className="relative z-10 flex min-w-0 items-center justify-start">
+          {/* `xl`, not `lg`. The six labels need ~440px and the left track is
+              only `(bar - brand) / 2` wide, which at 1024–1280 is 300–430px —
+              so at `lg` the list used to overrun its track and paint itself
+              across the wordmark. It is the one measurement in this bar that
+              cannot be reasoned about from the markup, so: below 1280 the
+              trigger is the navigation, and the full index is one tap away. */}
+          <ul className="hidden list-none items-center gap-4 p-0 xl:flex 2xl:gap-6">
+            {INLINE_LINKS.map((link) => (
+              <motion.li key={link.href} variants={barItem}>
+                <NavItem
+                  label={link.label}
+                  href={link.href}
+                  active={isActive(link.href)}
+                  indicated={indicatedHref === link.href}
+                  onDark={onDark}
+                  onHover={setHovered}
+                />
+              </motion.li>
+            ))}
+          </ul>
 
-            `pointer-events-none` on the wrapper with `pointer-events-auto` on
-            the link: the wrapper spans the full bar width, and without this it
-            would sit over the nav links and swallow their clicks. */}
-        <a
-          href="#hero"
-          aria-label={`${SITE.name} — back to top`}
-          // `px-14` is a collision guard, not spacing. The wrapper spans the
-          // whole bar, so without it the centred lockup is free to grow under
-          // the menu trigger at the right edge — which it does on a 360px
-          // phone, where the name is ~175px wide and the trigger is 40px. The
-          // padding keeps the centred content inside a box that both edge
-          // controls sit outside of.
-          className="pointer-events-none absolute inset-x-0 flex items-center justify-center gap-3 px-14 transition-opacity duration-500 hover:opacity-85"
-        >
-          <span className="pointer-events-auto inline-flex shrink-0">
-            <Mark size={scrolled ? 34 : 40} priority />
-          </span>
-          {/* Set to be read, not to be tasteful about it: champagne rather
-              than the deeper logo gold (which loses too much against a dark
-              ground at this size), a full weight, and a size that holds its
-              own against the section headings further down the page.
-              `whitespace-nowrap` guarantees the single line the brief asked
-              for at every width — it scales down on a phone rather than
-              wrapping or disappearing. */}
-          <span className="pointer-events-auto block font-display text-[0.95rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap text-gold-soft transition-all duration-500 ease-editorial sm:text-[1.3rem] lg:text-[1.5rem]">
-            {SITE.name}
-          </span>
-        </a>
-
-        {/* Actions — right track. `ml-auto` pushes this to the far edge on
-            the widths where the left link list is hidden. */}
-        <div className="ml-auto flex shrink-0 items-center gap-3">
-          {/* The one CTA. Square, hairline, fills gold on hover. */}
-          <a
-            href="#contact"
-            className="group hidden items-center gap-2 border border-gold/45 px-5 py-2.5 font-label text-[12px] tracking-[0.16em] uppercase text-gold transition-colors duration-500 ease-editorial hover:bg-gold hover:text-emerald sm:inline-flex"
-          >
-            Enquire
-            <FiArrowUpRight
-              size={14}
-              aria-hidden
-              className="transition-transform duration-500 ease-editorial group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-            />
-          </a>
-
-          {/* Menu trigger. Present at every width — below lg it is the only
-              navigation, and at lg+ it still opens the full index, which is
-              where the sections that do not fit inline live. */}
-          <button
+          <motion.button
+            variants={barItem}
             type="button"
             aria-label="Open menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
-            className="group flex size-10 cursor-pointer flex-col items-center justify-center gap-1.25 lg:hidden"
+            className={cn(
+              "group flex size-9 shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-full border transition-colors duration-500 ease-editorial xl:hidden",
+              onDark
+                ? "border-cream/20 hover:bg-cream/10"
+                : "border-emerald/15 hover:bg-emerald/6"
+            )}
           >
-            <span className="block h-px w-5 bg-cream transition-transform duration-500 ease-editorial group-hover:w-6" />
-            <span className="block h-px w-5 bg-cream transition-transform duration-500 ease-editorial group-hover:w-3.5" />
-          </button>
+            {/* Two rules of unequal length that swap on hover — the bar's
+                quietest animation, and the only one on the trigger. */}
+            <span
+              className={cn(
+                "block h-px w-4 transition-all duration-500 ease-editorial group-hover:w-5",
+                onDark ? "bg-cream" : "bg-emerald"
+              )}
+            />
+            <span
+              className={cn(
+                "block h-px w-5 transition-all duration-500 ease-editorial group-hover:w-3",
+                onDark ? "bg-cream" : "bg-emerald"
+              )}
+            />
+          </motion.button>
+        </div>
+
+        {/* ── Centre track: the brand ─────────────────────────────────────
+            Centred by the grid, not by absolute positioning — see the note
+            at the top of the file. `min-w-0` lets this track give way before
+            it can push the edge controls off the bar. */}
+        <MotionSmoothLink
+          variants={barItem}
+          href="#hero"
+          aria-label={`${SITE.name} — back to top`}
+          className="group relative z-10 flex min-w-0 items-center justify-center gap-2 sm:gap-3"
+        >
+          <span className="inline-flex shrink-0 transition-transform duration-700 ease-editorial group-hover:scale-108">
+            <Mark size={markSize} priority />
+          </span>
+          {/* The name carries the brand, so it is set to be read: a full
+              weight, and a size that holds its own against the section
+              headings further down the page. `whitespace-nowrap` guarantees
+              the single line the brief asked for at every width — it scales
+              down on a phone rather than wrapping or disappearing.
+
+              Champagne over a dark band; emerald over a light one, because
+              gold display type on cream is about 2:1 contrast, which is the
+              reason gold is not a text colour on this site. */}
+          <span
+            className={cn(
+              "block font-display text-[0.72rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap transition-all duration-700 ease-editorial group-hover:opacity-80 min-[360px]:text-[0.82rem] min-[400px]:text-[0.92rem] sm:text-[1.15rem] lg:text-[1.4rem]",
+              onDark ? "text-gold-soft" : "text-emerald"
+            )}
+          >
+            {SITE.name}
+          </span>
+        </MotionSmoothLink>
+
+        {/* ── Right track: the one CTA ────────────────────────────────────
+            A pill, and the only one on the bar — the shape is what marks it
+            as the thing you press. The label drops below `sm` and the arrow
+            carries it alone, so the control stays a 36px tap target on a
+            360px phone instead of crowding the brand. */}
+        <div className="relative z-10 flex min-w-0 items-center justify-end">
+          <MotionSmoothLink
+            variants={barItem}
+            href="#contact"
+            aria-label="Enquire"
+            className={cn(
+              "group relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full border px-2.5 py-2 transition-colors duration-500 ease-editorial sm:px-5 sm:py-2.5",
+              BAR_LABEL,
+              onDark
+                ? "border-gold/50 text-gold-soft hover:text-emerald"
+                : "border-emerald/25 text-emerald hover:text-cream"
+            )}
+          >
+            {/* Gold on dark, emerald on light — the fill sweeps up from the
+                bottom edge rather than switching, so the control resolves
+                into a solid button instead of blinking into one. */}
+            <span
+              aria-hidden
+              className={cn(
+                "absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-500 ease-editorial group-hover:scale-y-100",
+                onDark ? "bg-gold" : "bg-emerald"
+              )}
+            />
+            <span className="hidden sm:inline">Enquire</span>
+            <FiArrowUpRight
+              size={14}
+              aria-hidden
+              className="shrink-0 transition-transform duration-500 ease-editorial group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </MotionSmoothLink>
         </div>
 
         {/* Scroll progress — the bar's own bottom edge. */}
         <div
           ref={progressRef}
           aria-hidden
-          className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-gold/70"
+          className={cn(
+            "absolute inset-x-0 bottom-0 z-10 h-px origin-left scale-x-0",
+            onDark ? "bg-gold/70" : "bg-emerald/45"
+          )}
         />
-      </nav>
+      </motion.nav>
 
-      {/* Full-screen index */}
+      {/* ── Full-screen index ────────────────────────────────────────────
+          Deliberately NOT the transparent glass the bar is made of: this one
+          has to hold seven 32–60px words over whatever section you happened
+          to open it on, and a 14% veil cannot do that. It is the dark
+          emerald surface the rest of the site uses for full-bleed panels,
+          with the blur kept so the page still reads faintly behind it.
+          `data-lenis-prevent` keeps this subtree scrollable while the page
+          underneath is frozen. */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="surface-emerald fixed inset-0 z-50 flex flex-col text-cream"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+            data-lenis-prevent
+            className="surface-emerald glass-bar fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain text-cream"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center justify-between px-6 py-5 md:px-10">
-              <span className="flex items-center gap-3">
-                <Mark size={34} />
-                <span className="font-display text-[1.05rem] leading-none tracking-[0.01em] text-gold">
+            <div className="flex shrink-0 items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 md:px-10">
+              <span className="flex min-w-0 items-center gap-3">
+                <Mark size={30} />
+                <span className="truncate font-display text-[0.95rem] leading-none font-semibold tracking-[0.015em] text-gold-soft sm:text-[1.15rem]">
                   {SITE.name}
                 </span>
               </span>
@@ -298,7 +668,7 @@ export default function Navbar() {
                 type="button"
                 aria-label="Close menu"
                 onClick={() => setMenuOpen(false)}
-                className="group relative size-10 cursor-pointer"
+                className="group relative size-10 shrink-0 cursor-pointer rounded-full border border-cream/15 transition-colors duration-500 ease-editorial hover:bg-cream/10"
               >
                 <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-cream transition-colors duration-500 group-hover:bg-gold" />
                 <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-cream transition-colors duration-500 group-hover:bg-gold" />
@@ -306,7 +676,7 @@ export default function Navbar() {
             </div>
 
             <motion.ul
-              className="flex flex-1 list-none flex-col justify-center gap-4 p-0 px-6 md:gap-5 md:px-14"
+              className="flex flex-1 list-none flex-col justify-center gap-3 p-0 px-5 py-6 sm:gap-4 sm:px-6 md:gap-5 md:px-14"
               initial="hidden"
               animate="visible"
               variants={{
@@ -323,30 +693,51 @@ export default function Navbar() {
                     visible: { opacity: 1, y: 0 },
                   }}
                 >
-                  <a
+                  {/* ── Order matters here, and it is not obvious ──────────
+                      <SmoothLink /> runs this handler and THEN starts its
+                      tween, which is why the overlay is dismissed here: an
+                      index still covering the screen would hide the whole
+                      journey.
+
+                      The freeze has to be released in the same breath, and
+                      BEFORE the tween begins. Lenis's `start()` calls
+                      `reset()`, which snaps its animated position back to the
+                      real one and kills whatever is in flight — so releasing it
+                      the way it normally happens, in the effect cleanup after
+                      React commits `menuOpen: false`, landed mid-tween and
+                      dropped the page back where it started. Tapping an index
+                      entry closed the menu and went nowhere.
+
+                      Released first, the tween starts against a live Lenis and
+                      the cleanup's release becomes the no-op it should be —
+                      `start()` returns early when it is already running. */}
+                  <SmoothLink
                     href={link.href}
-                    onClick={() => setMenuOpen(false)}
-                    className="group flex items-baseline gap-5 md:gap-8"
+                    onClick={() => {
+                      setSmoothScrollPaused(false);
+                      setMenuOpen(false);
+                    }}
+                    className="group flex items-baseline gap-4 md:gap-8"
                   >
-                    <span className="font-label text-[12px] tracking-[0.16em] text-gold/70">
+                    <span className="font-label text-gold/70">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="font-serif text-4xl leading-[1.15] font-light transition-colors duration-500 group-hover:text-gold md:text-6xl">
+                    <span className="font-serif text-[2rem] leading-[1.15] transition-all duration-500 ease-editorial group-hover:translate-x-2 group-hover:text-gold sm:text-4xl md:text-6xl">
                       {link.label}
                     </span>
-                  </a>
+                  </SmoothLink>
                 </motion.li>
               ))}
             </motion.ul>
 
-            <div className="flex flex-col gap-2 border-t border-cream/15 px-6 py-7 md:flex-row md:items-center md:justify-between md:px-14">
+            <div className="flex shrink-0 flex-col gap-2 border-t border-cream/15 px-5 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:px-14 md:py-7">
               <a
                 href={`mailto:${SITE.email}`}
-                className="font-label text-[12px] tracking-[0.16em] uppercase text-gold"
+                className="font-label text-gold transition-colors duration-500 hover:text-gold-soft"
               >
                 {SITE.email}
               </a>
-              <span className="font-label text-[12px] tracking-[0.16em] uppercase text-cream/50">
+              <span className="font-label text-cream/50">
                 {SITE.address}
               </span>
             </div>

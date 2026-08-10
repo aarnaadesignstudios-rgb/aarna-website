@@ -4,6 +4,8 @@ export { default as SectionWrapper } from "./SectionWrapper";
 export { default as SectionHeading } from "./SectionHeading";
 export { default as Reveal } from "./Reveal";
 export { default as Button } from "./Button";
+export { default as SmoothLink } from "./SmoothLink";
+export { default as SectionTransition } from "./SectionTransition";
 export { default as Media } from "./Media";
 export { default as ImageCycle } from "./ImageCycle";
 export { default as Logo } from "./Logo";

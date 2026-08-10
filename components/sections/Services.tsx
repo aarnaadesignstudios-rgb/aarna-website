@@ -44,7 +44,7 @@ import { FiArrowUpRight, FiPlus } from "react-icons/fi";
 
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks";
-import { Media, PageContainer, SectionHeading } from "@/components/ui";
+import { Media, PageContainer, SectionHeading, SmoothLink } from "@/components/ui";
 import { SERVICES } from "@/constants";
 import { cn } from "@/utils/cn";
 
@@ -165,8 +165,8 @@ export default function Services() {
                     would make a keyboard user tab through nine stops to cross
                     five cards. */}
                 {isLink ? (
-                  <a
-                    href={service.href}
+                  <SmoothLink
+                    href={service.href!}
                     tabIndex={-1}
                     aria-hidden
                     className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]"
@@ -177,10 +177,10 @@ export default function Services() {
                       sizes="(max-width: 1024px) 90vw, 30vw"
                       className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
                     />
-                    <span className="absolute top-5 left-5 font-label text-[12px] tracking-[0.16em] uppercase text-cream/90">
+                    <span className="absolute top-5 left-5 font-label text-cream/90">
                       {service.index}
                     </span>
-                  </a>
+                  </SmoothLink>
                 ) : (
                   <button
                     type="button"
@@ -195,7 +195,7 @@ export default function Services() {
                       sizes="(max-width: 1024px) 90vw, 30vw"
                       className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
                     />
-                    <span className="absolute top-5 left-5 font-label text-[12px] tracking-[0.16em] uppercase text-cream/90">
+                    <span className="absolute top-5 left-5 font-label text-cream/90">
                       {service.index}
                     </span>
                   </button>
@@ -215,11 +215,11 @@ export default function Services() {
                     /* Photography opens its own page. A link, not a toggle —
                        and it says so, so the different behaviour is visible
                        before it is clicked rather than after. */
-                    <a
-                      href={service.href}
+                    <SmoothLink
+                      href={service.href!}
                       className="flex w-full items-start justify-between gap-4 text-left"
                     >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] font-light text-emerald xl:text-3xl">
+                      <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
                         {service.title}
                       </span>
                       <FiArrowUpRight
@@ -227,7 +227,7 @@ export default function Services() {
                         size={20}
                         aria-hidden
                       />
-                    </a>
+                    </SmoothLink>
                   ) : (
                     <button
                       type="button"
@@ -236,7 +236,7 @@ export default function Services() {
                       aria-controls={`service-${service.id}`}
                       className="flex w-full cursor-pointer items-start justify-between gap-4 text-left"
                     >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] font-light text-emerald xl:text-3xl">
+                      <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
                         {service.title}
                       </span>
                       <FiPlus
@@ -251,7 +251,7 @@ export default function Services() {
                   )}
 
                   {isLink ? (
-                    <p className="mt-3 max-w-sm text-[15px] leading-[1.75] text-charcoal/70">
+                    <p className="mt-3 max-w-sm text-charcoal/70">
                       {service.body}
                     </p>
                   ) : (
@@ -263,7 +263,7 @@ export default function Services() {
                       )}
                     >
                       <div className="overflow-hidden">
-                        <p className="mt-3 max-w-sm text-[15px] leading-[1.75] text-charcoal/70">
+                        <p className="mt-3 max-w-sm text-charcoal/70">
                           {service.body}
                         </p>
                       </div>
@@ -278,12 +278,12 @@ export default function Services() {
               gives the horizontal run somewhere to arrive. */}
           <div className="hidden shrink-0 flex-col justify-end pb-8 lg:flex lg:w-[24vw]">
             <span aria-hidden className="mb-6 block h-px w-16 bg-gold" />
-            <p className="font-serif text-[1.7rem] leading-[1.15] font-light text-emerald xl:text-3xl">
+            <p className="font-serif text-[1.7rem] leading-[1.15] text-emerald xl:text-3xl">
               One studio, five disciplines, one continuous idea.
             </p>
-            <a
+            <SmoothLink
               href="#contact"
-              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/50 pb-1.5 font-label text-[12px] tracking-[0.16em] uppercase text-emerald transition-colors duration-500 hover:text-gold"
+              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/50 pb-1.5 font-label text-emerald transition-colors duration-500 hover:text-gold"
             >
               Start a conversation
               <FiArrowUpRight
@@ -291,7 +291,7 @@ export default function Services() {
                 aria-hidden
                 className="transition-transform duration-500 ease-editorial group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
               />
-            </a>
+            </SmoothLink>
           </div>
         </div>
 

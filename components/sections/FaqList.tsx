@@ -75,11 +75,11 @@ export default function FaqList({ items, className }: FaqListProps) {
               aria-controls={`faq-${faq.id}`}
               className="group flex w-full cursor-pointer items-baseline gap-5 py-7 text-left md:gap-8"
             >
-              <span className="shrink-0 font-label text-[12px] tracking-[0.16em] text-gold">
+              <span className="shrink-0 font-label text-gold">
                 {String(i + 1).padStart(2, "0")}
               </span>
 
-              <span className="flex-1 font-serif text-xl leading-[1.3] font-light text-emerald transition-colors duration-500 group-hover:text-emerald/70 md:text-2xl">
+              <span className="flex-1 font-serif text-xl leading-[1.3] text-emerald transition-colors duration-500 group-hover:text-emerald/70 md:text-2xl">
                 {faq.question}
               </span>
 
@@ -111,7 +111,7 @@ export default function FaqList({ items, className }: FaqListProps) {
                 {/* The measure is held well short of the container: an answer
                     running the full 1440px would be ~160 characters a line,
                     which is roughly twice a comfortable read. */}
-                <p className="mb-8 max-w-[68ch] pl-[calc(1.5rem+11px)] text-[15px] leading-[1.85] text-charcoal/70 md:pl-[calc(2rem+11px)] md:text-base">
+                <p className="mb-8 max-w-[68ch] pl-[calc(1.5rem+11px)] text-charcoal/70 md:pl-[calc(2rem+11px)] md:text-base">
                   {faq.answer}
                 </p>
               </div>

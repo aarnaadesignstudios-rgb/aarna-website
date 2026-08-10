@@ -5,6 +5,9 @@
 
 # next.js
 /.next/
+# Alternate build dir, for profiling a production build while `next dev` owns
+# `.next` — see `distDir` in next.config.ts.
+/.next-prod/
 /out/
 next-env.d.ts
 

@@ -116,7 +116,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                 <span className="absolute inset-0 bg-ink/10 opacity-100 transition-opacity duration-700 group-hover:opacity-0" />
               </button>
               {frame.caption && (
-                <figcaption className="mt-3 font-label text-[12px] tracking-[0.16em] uppercase text-charcoal/50">
+                <figcaption className="mt-3 font-label text-charcoal/50">
                   {frame.caption}
                 </figcaption>
               )}
@@ -140,7 +140,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
             onClick={close}
           >
             <div className="flex shrink-0 items-center justify-between px-6 py-5 md:px-10">
-              <span className="font-label text-[12px] tracking-[0.16em] uppercase text-cream/60">
+              <span className="font-label text-cream/60">
                 {String((openIndex ?? 0) + 1).padStart(2, "0")} /{" "}
                 {String(frames.length).padStart(2, "0")}
               </span>
@@ -184,7 +184,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                   e.stopPropagation();
                   step(-1);
                 }}
-                className="cursor-pointer font-label text-[12px] tracking-[0.16em] uppercase text-cream/60 transition-colors duration-300 hover:text-gold"
+                className="cursor-pointer font-label text-cream/60 transition-colors duration-300 hover:text-gold"
               >
                 ← Previous
               </button>
@@ -194,7 +194,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                   e.stopPropagation();
                   step(1);
                 }}
-                className="cursor-pointer font-label text-[12px] tracking-[0.16em] uppercase text-cream/60 transition-colors duration-300 hover:text-gold"
+                className="cursor-pointer font-label text-cream/60 transition-colors duration-300 hover:text-gold"
               >
                 Next →
               </button>

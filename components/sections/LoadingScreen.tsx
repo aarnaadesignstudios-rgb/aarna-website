@@ -35,11 +35,30 @@ import Image from "next/image";
 import { useIsomorphicLayoutEffect } from "@/hooks";
 import { INTRO, SITE } from "@/constants";
 import { gsap } from "@/lib/gsap";
+import { introHasPlayed, markIntroPlayed } from "@/lib/intro";
 
 const { cue } = INTRO;
 
+/**
+ * ── Once per load, not once per visit to the home page ────────────────────
+ *
+ * This component is mounted by app/page.tsx, so it used to replay in full every
+ * time someone came back to `/` — clicking the wordmark from /faq, or "About"
+ * from /photography. That is 2.9 seconds of brand screen, with the page frozen
+ * behind it, in the middle of a session, as the answer to a navigation.
+ *
+ * It became visible when navigation started being carried by a chapter card
+ * (see lib/sectionNavigation.ts): returning to a home SECTION played the card,
+ * revealed the intro underneath it, and only landed on the section three seconds
+ * later — two brand panels in a row for one click.
+ *
+ * The flag lives in lib/intro.ts because the masthead and the hero are timed to
+ * this screen too; see the note there. It is set when the timeline COMPLETES
+ * rather than when it starts, so navigating away mid-intro does not cost the
+ * next visitor their first impression.
+ */
 export default function LoadingScreen() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(!introHasPlayed());
   const rootRef = useRef<HTMLDivElement>(null);
 
   useIsomorphicLayoutEffect(() => {
@@ -49,6 +68,7 @@ export default function LoadingScreen() {
     document.body.style.overflow = "hidden";
 
     const finish = () => {
+      markIntroPlayed();
       document.body.style.overflow = "";
       setVisible(false);
     };

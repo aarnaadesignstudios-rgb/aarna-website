@@ -106,7 +106,7 @@ export default function SectionHeading({
           <span className="flex items-center gap-3.5">
             {/* Gold hairline — opens every section on the site. */}
             <span className="block h-px w-10 shrink-0 bg-gold" />
-            <span className="font-label text-[12px] uppercase tracking-[0.18em]">
+            <span className="font-label">
               {index && <span className="text-gold">{index}</span>}
               {index && eyebrow && (
                 <span className={dark ? "text-cream/40" : "text-charcoal/35"}>
@@ -133,7 +133,7 @@ export default function SectionHeading({
           {meta && (
             <span
               className={cn(
-                "font-label text-[12px] uppercase tracking-[0.14em]",
+                "font-label",
                 dark ? "text-cream/50" : "text-charcoal/45"
               )}
             >
@@ -148,7 +148,9 @@ export default function SectionHeading({
           as="h2"
           text={title}
           className={cn(
-            "font-serif text-4xl font-light leading-[1.05] tracking-tight md:text-5xl lg:text-6xl",
+            // No weight: every heading on the site is 400, set once in the base
+            // layer. See the type-system note in styles/globals.css.
+            "font-serif text-4xl leading-[1.2] tracking-tight md:text-5xl lg:text-6xl",
             // The tone's ink only applies when the caller has not overridden
             // it — see the note on `titleClassName`.
             titleClassName ?? (dark ? "text-cream" : "text-emerald")
@@ -159,7 +161,11 @@ export default function SectionHeading({
       {description && (
         <motion.p
           className={cn(
-            "max-w-xl text-base leading-[1.75] md:text-lg",
+            // Size and leading come from the one body-copy rule in
+            // styles/globals.css — this used to step up to 18px at `md`, which
+            // made the same lead paragraph a different size on every section
+            // depending on which breakpoint you happened to be at.
+            "max-w-xl",
             dark ? "text-cream/70" : "text-charcoal/70"
           )}
           variants={fadeUp}

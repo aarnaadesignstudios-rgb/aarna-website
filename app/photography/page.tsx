@@ -48,7 +48,11 @@ export default function PhotographyPage() {
             A full-bleed photograph is the right opening for a page about
             photography — the discipline argues for itself before any copy
             does. Neutral scrim, never green: see --color-ink. */}
-        <section className="relative flex h-[78vh] min-h-[520px] items-end overflow-hidden bg-ink text-cream">
+        <section
+          /* Dark band — see the note in components/layout/Navbar.tsx. */
+          data-chrome="dark"
+          className="relative flex h-[78vh] min-h-[520px] items-end overflow-hidden bg-ink text-cream"
+        >
           <div className="absolute inset-0">
             <Media
               src={PHOTOGRAPHY_FRAMES[0]?.image ?? ""}
@@ -63,10 +67,10 @@ export default function PhotographyPage() {
 
           <PageContainer className="relative z-20 pb-16 md:pb-20">
             <Reveal>
-              <span className="block font-label text-[12px] tracking-[0.18em] uppercase text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
+              <span className="block font-label text-gold [text-shadow:0_1px_18px_rgba(10,10,9,0.8)]">
                 05 — A discipline of {SITE.name}
               </span>
-              <h1 className="mt-5 max-w-[16ch] font-serif text-[2.6rem] leading-[1.02] font-light tracking-tight text-cream [text-shadow:0_1px_24px_rgba(10,10,9,0.7)] md:text-[4rem] lg:text-[4.75rem]">
+              <h1 className="mt-5 max-w-[16ch] font-serif text-[2.6rem] leading-[1.02] tracking-tight text-cream [text-shadow:0_1px_24px_rgba(10,10,9,0.7)] md:text-[4rem] lg:text-[4.75rem]">
                 Architectural Photography
               </h1>
             </Reveal>
@@ -87,14 +91,14 @@ export default function PhotographyPage() {
               </div>
 
               <div className="lg:pt-4">
-                <p className="text-base leading-[1.85] text-charcoal/70">
+                <p className="text-charcoal/70">
                   A building is photographed twice — once when it is handed
                   over, and once by everyone who visits it afterwards. This
                   discipline exists so the first of those is done properly:
                   with the light the architecture was designed around, and at
                   the hour it was designed for.
                 </p>
-                <p className="mt-5 text-base leading-[1.85] text-charcoal/70">
+                <p className="mt-5 text-charcoal/70">
                   The work is commissioned both alongside the studio&rsquo;s own
                   projects and independently, for other practices and their
                   clients.
@@ -129,13 +133,13 @@ export default function PhotographyPage() {
                     "border-cream/15 sm:px-7 lg:px-8"
                   }
                 >
-                  <span className="font-label text-[12px] tracking-[0.16em] uppercase text-gold">
+                  <span className="font-label text-gold">
                     {item.index}
                   </span>
-                  <h3 className="mt-4 font-serif text-2xl font-light md:text-[1.7rem]">
+                  <h3 className="mt-4 font-serif text-2xl md:text-[1.7rem]">
                     {item.title}
                   </h3>
-                  <p className="mt-3 max-w-[34ch] text-[15px] leading-[1.8] text-cream/70">
+                  <p className="mt-3 max-w-[34ch] text-cream/70">
                     {item.body}
                   </p>
                 </Reveal>

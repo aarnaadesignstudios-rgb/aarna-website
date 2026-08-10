@@ -60,13 +60,13 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
           isEven ? "lg:order-2 lg:pl-4" : "lg:order-1 lg:pr-4"
         )}
       >
-        <span className="text-xs uppercase tracking-[0.2em] text-gold">
+        <span className="font-label text-gold">
           {project.category} · {project.year}
         </span>
         <h3 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">
           {project.title}
         </h3>
-        <p className="mt-3 text-sm uppercase tracking-[0.15em] text-cream/50">
+        <p className="mt-3 font-label text-cream/50">
           {project.location}
         </p>
       </div>

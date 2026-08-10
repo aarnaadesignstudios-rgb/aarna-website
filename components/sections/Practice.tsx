@@ -74,7 +74,13 @@ export default function Practice() {
           plinth under the hero's imagery. Deliberately outside
           <PageContainer /> so the emerald runs edge to edge; the list inside
           pours back through it to keep the page's left/right rhythm. */}
-      <div className="surface-emerald relative z-10 border-y border-gold/25 py-7 md:py-8">
+      {/* `data-chrome="dark"` — this strip, not the paper section around it,
+          is what the masthead floats over as the hero scrolls away. See
+          components/layout/Navbar.tsx. */}
+      <div
+        data-chrome="dark"
+        className="surface-emerald relative z-10 border-y border-gold/25 py-7 md:py-8"
+      >
         <PageContainer>
           <motion.ul
             aria-label="The studio in numbers"
@@ -103,10 +109,14 @@ export default function Practice() {
                 {/* `whitespace-nowrap`: "Pan India" and "2 Lakh" are two words
                     and must not break across lines, or the row's baselines
                     stop agreeing and one cell sits lower than its neighbours. */}
-                <p className="m-0 whitespace-nowrap font-display text-[1.5rem] font-medium leading-none tracking-tight text-gold-soft md:text-[1.75rem] xl:text-3xl">
+                {/* `type-figure` — the serif, with lining numerals. These were
+                    the last Bodoni on the site outside the wordmark, which is
+                    why a row of figures never sat easily above labels set in
+                    Cormorant. See styles/globals.css. */}
+                <p className="type-figure m-0 whitespace-nowrap text-[1.5rem] leading-none tracking-tight text-gold-soft md:text-[1.75rem] xl:text-3xl">
                   {stat.value}
                 </p>
-                <p className="m-0 mt-2.5 font-label text-[12px] uppercase leading-normal tracking-[0.16em] text-gold md:text-[12px]">
+                <p className="m-0 mt-2.5 font-label leading-normal text-gold">
                   {stat.label}
                 </p>
               </motion.li>
@@ -127,9 +137,9 @@ export default function Practice() {
 
         {/* Caption on the left, the studio's words on the right. One row, so
             the frame closes horizontally instead of leaving a dead column. */}
-        <div className="mt-12 grid gap-y-12 md:mt-16 lg:grid-cols-[1.5fr_1fr] lg:gap-x-20 xl:gap-x-28">
+        <div className="mt-12 grid gap-y-12 md:mt-16 lg:grid-cols-[1.5fr_1fr] lg:items-center lg:gap-x-20 xl:gap-x-28">
           <div>
-            <h2 className="font-serif font-light leading-[1.04] tracking-[-0.02em] text-emerald">
+            <h2 className="font-serif leading-[1.04] tracking-[-0.02em] text-emerald">
               <LayoutTextFlip
                 text="Design is the brand of our"
                 words={[
@@ -144,7 +154,11 @@ export default function Practice() {
                 // word owns the next, so the line count cannot change as it
                 // flips and the heading can never jump mid-read.
                 phraseClassName="block text-[2.15rem] md:text-[3rem] lg:text-[2.9rem] xl:text-[3.7rem] 2xl:text-[4.2rem]"
-                wordClassName="font-display italic text-gold text-[2.7rem] md:text-[3.8rem] lg:text-[3.7rem] xl:text-[4.7rem] 2xl:text-[5.3rem]"
+                /* The flipping word is part of this sentence, so it is set in
+                   the same face as the sentence — italic and gold to mark it,
+                   not a second typeface. It was Bodoni, which meant one word
+                   inside a Cormorant heading came from a different family. */
+                wordClassName="font-serif italic text-gold text-[2.7rem] md:text-[3.8rem] lg:text-[3.7rem] xl:text-[4.7rem] 2xl:text-[5.3rem]"
               />
             </h2>
 
@@ -156,15 +170,18 @@ export default function Practice() {
             initial="hidden"
             whileInView="visible"
             viewport={VIEWPORT_ONCE}
-            className="lg:pt-3"
           >
             <Rule className="w-16 bg-gold" />
 
             {/* The caption. Set in the serif at pull-quote size, because it is
-                the studio's line and everything under it is elaboration. */}
+                the studio's line and everything under it is elaboration.
+                `mt-7` on mobile keeps its stacked spacing under the heading;
+                `lg:mt-3` at the two-column breakpoint pulls it up so this
+                first line sits level with "Design is the brand of our"
+                instead of trailing ~40px below it. */}
             <motion.p
               variants={fadeUp}
-              className="mt-7 font-serif text-[1.6rem] leading-[1.35] tracking-tight text-emerald xl:text-[1.85rem]"
+              className="mt-7 font-serif text-[1.7rem] leading-[1.35] tracking-tight text-emerald lg:mt-3 xl:text-[2rem]"
             >
               &ldquo;Every space has a story. Our work begins by listening to
               it.&rdquo;
@@ -172,7 +189,7 @@ export default function Practice() {
 
             <motion.p
               variants={fadeUp}
-              className="mt-6 text-base leading-[1.8] font-light text-charcoal/75 xl:text-[1.05rem]"
+              className="mt-6 text-charcoal/75"
             >
               From the first conversation to the final detail, we approach
               design as a process of discovery. We understand the context,

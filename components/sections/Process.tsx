@@ -73,16 +73,16 @@ export default function Process() {
                 i === 0 ? "lg:border-l-0" : "lg:border-l"
               )}
             >
-              <span className="font-serif text-5xl leading-none font-light text-gold md:text-6xl">
+              <span className="font-serif text-5xl leading-none text-gold md:text-6xl">
                 {step.step}
               </span>
-              <h3 className="font-serif text-2xl font-light text-emerald md:text-3xl">
+              <h3 className="font-serif text-2xl text-emerald md:text-3xl">
                 {step.title}
               </h3>
               {/* Held to a measure, and centred within it. Without the cap the
                   four paragraphs are four different widths and the row stops
                   looking evenly divided however equal the columns are. */}
-              <p className="mx-auto max-w-[30ch] text-base leading-[1.75] text-charcoal/70">
+              <p className="mx-auto max-w-[30ch] text-charcoal/70">
                 {step.description}
               </p>
             </li>

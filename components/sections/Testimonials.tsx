@@ -38,6 +38,8 @@ export default function Testimonials() {
     <section
       id="testimonials"
       aria-label="What our clients say"
+      /* Dark band — see the note in components/layout/Navbar.tsx. */
+      data-chrome="dark"
       className="surface-emerald overflow-hidden border-y border-gold/15 py-14 text-cream md:py-16 lg:py-20"
     >
       <PageContainer>

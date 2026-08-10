@@ -4,21 +4,29 @@ import { Cormorant_Garamond, Bodoni_Moda, Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { SITE } from "@/constants";
 import SmoothScrollProvider from "@/lib/SmoothScrollProvider";
-import { GrainOverlay, Cursor } from "@/components/ui";
+import { GrainOverlay, Cursor, SectionTransition } from "@/components/ui";
 
-/* The studio's voice. Section headings, and — since the client's review —
-   every small uppercase label on the site as well, so the label row and the
-   title above it share one family. Exposed as --font-cormorant. */
+/* The studio's voice. Section headings, every small uppercase label, and the
+   figures in the statistics strip — one family carries all three, so a label
+   row and the title above it read as one voice. Exposed as --font-cormorant.
+ *
+ * 700 is loaded for ONE reason: the masthead's navigation labels. Cormorant is
+ * a low-contrast old-style face with a small x-height, and at 12px uppercase
+ * over live photography its 600 was not holding up — the review was that the
+ * nav "is not clearly visible". A weight that is not requested here does not
+ * silently synthesise; the browser falls back to the nearest one it has, so
+ * asking for `font-bold` without this line would have rendered as 600 and
+ * changed nothing. */
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-cormorant",
   display: "swap",
 });
 
-/* High-contrast "fashion" display serif for the hero statement and the
-   flipping emphasis word. Exposed as --font-bodoni. */
+/* High-contrast "fashion" display serif. Reserved for the WORDMARK alone — the
+   name in the masthead and on the intro screen. Exposed as --font-bodoni. */
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
@@ -78,6 +86,10 @@ export default function RootLayout({
         {/* The gold dot that replaces the pointer. Hides the native cursor
             from JS, not from CSS — see the note in the component. */}
         <Cursor />
+        {/* The chapter card that carries in-page navigation over any real
+            distance. Mounted once, above everything except the intro and the
+            cursor — see the component. */}
+        <SectionTransition />
         {/* SmoothScrollProvider initialises Lenis + GSAP once for the whole app. */}
         <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
