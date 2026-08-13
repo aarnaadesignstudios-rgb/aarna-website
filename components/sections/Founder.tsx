@@ -38,7 +38,7 @@ export default function Founder() {
   return (
     <section
       id="founder"
-      className="surface-sage overflow-hidden py-20 text-charcoal md:py-24 lg:py-28"
+      className="overflow-hidden bg-paper py-20 text-charcoal md:py-24 lg:py-28"
     >
       <PageContainer>
         <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-12 lg:gap-20">

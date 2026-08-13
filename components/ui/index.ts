@@ -18,6 +18,7 @@ export { default as LayoutTextFlip } from "./LayoutTextFlip";
 export { default as Counter } from "./Counter";
 export { default as Marquee } from "./Marquee";
 export { default as GrainOverlay } from "./GrainOverlay";
+export { default as SheetTexture } from "./SheetTexture";
 export { default as Spotlight } from "./Spotlight";
 export { default as SpotlightCard } from "./SpotlightCard";
 export { BentoGrid, BentoGridItem } from "./BentoGrid";

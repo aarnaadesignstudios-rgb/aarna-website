@@ -52,6 +52,7 @@ import {
   Reveal,
   Button,
   SectionHeading,
+  SheetTexture,
   SmoothLink,
 } from "@/components/ui";
 import { NAV_LINKS, SITE, SOCIAL_LINKS } from "@/constants";
@@ -77,7 +78,16 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="relative overflow-hidden bg-mist text-charcoal"
+      /* ── The last chapter, on the brand's own colour ────────────────────
+         The story arc ends here — see the note on `.surface-moss` in
+         styles/globals.css. Six chapters carry the page from paper to brand
+         emerald in one direction, and the invitation to work with the studio
+         sits on the colour of the logo. That is the argument of a brand site
+         made as a gradient instead of as a sentence.
+
+         `data-chrome="dark"` because the masthead floats over it. */
+      data-chrome="dark"
+      className="relative overflow-hidden bg-emerald text-cream"
     >
       {/* ── The studio's own room, under a paper veil ─────────────────
           This was a stock Unsplash kitchen — and a near-WHITE one, which is why
@@ -97,24 +107,34 @@ export default function Contact() {
           alt=""
           sizes="100vw"
         />
-        <div className="overlay-paper absolute inset-0" />
+        {/* A FLAT veil, not a graded one. Three stacked linear-gradients used
+            to do this job and they are what the studio meant by green smears.
+            At 94% the room reads as a texture inside the green rather than as a
+            photograph being washed out, the type has one predictable ground
+            everywhere on it, and there is no gradient anywhere in the section. */}
+        <div className="absolute inset-0 bg-emerald/94" />
       </div>
+
+      {/* Sits above the photograph and its veil, below the content — the
+          <PageContainer /> below is `relative z-10`. */}
+      <SheetTexture tone="dark" />
 
       <PageContainer className="relative z-10 pt-20 pb-10 md:pt-24 lg:pt-28">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2">
           {/* Left: heading + details */}
           <div className="flex flex-col justify-center">
             <SectionHeading
-              index="08"
+              index="06"
               eyebrow="Contact"
               title={"Let’s design\nsomething lasting"}
-              titleClassName="text-gold-ink"
+              tone="dark"
+              titleClassName="text-gold"
             />
 
             <Reveal delay={0.1}>
-              <dl className="mt-12 grid gap-5 border-t border-emerald/15 pt-8">
+              <dl className="mt-12 grid gap-5 border-t border-cream/20 pt-8">
                 <div>
-                  <dt className="font-label text-charcoal/50">
+                  <dt className="font-label text-cream/50">
                     Website
                   </dt>
                   <dd className="mt-1.5 ml-0">
@@ -125,43 +145,43 @@ export default function Contact() {
                         entirely from a preview or a local build. */}
                     <SmoothLink
                       href="/"
-                      className="font-serif text-xl text-emerald transition-colors duration-500 hover:text-gold-ink md:text-2xl"
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
                     >
                       {SITE.urlLabel}
                     </SmoothLink>
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-charcoal/50">
+                  <dt className="font-label text-cream/50">
                     Telephone
                   </dt>
                   <dd className="mt-1.5 ml-0">
                     <a
                       href={`tel:${SITE.phoneHref}`}
-                      className="font-serif text-xl text-emerald transition-colors duration-500 hover:text-gold-ink md:text-2xl"
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
                     >
                       {SITE.phone}
                     </a>
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-charcoal/50">
+                  <dt className="font-label text-cream/50">
                     Email
                   </dt>
                   <dd className="mt-1.5 ml-0">
                     <a
                       href={`mailto:${SITE.email}`}
-                      className="font-serif text-xl text-emerald transition-colors duration-500 hover:text-gold-ink md:text-2xl"
+                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
                     >
                       {SITE.email}
                     </a>
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-charcoal/50">
+                  <dt className="font-label text-cream/50">
                     Studio
                   </dt>
-                  <dd className="mt-1.5 ml-0 font-serif text-xl text-emerald md:text-2xl">
+                  <dd className="mt-1.5 ml-0 font-serif text-xl text-cream md:text-2xl">
                     {SITE.address}
                   </dd>
                 </div>
@@ -191,11 +211,26 @@ export default function Contact() {
               styles/globals.css) — so the site's one piece of glass is used
               consistently rather than reinvented here. */}
           <Reveal delay={0.15} className="flex flex-col justify-center">
-            <div className="glass-bar rounded-2xl border border-emerald/12 bg-[color-mix(in_srgb,var(--color-paper)_86%,transparent)] p-7 shadow-[inset_0_1px_0_color-mix(in_srgb,#fff_70%,transparent),0_28px_60px_-30px_color-mix(in_srgb,var(--color-emerald)_45%,transparent)] md:p-9">
+            {/* ── A card, not a smoked pane ─────────────────────────────
+                This was `.glass-bar-dark` — a neutral ink veil at 38% over
+                whatever was behind it. Over the near-white kitchen it replaced
+                that was fine; over THIS photograph, which is a warm restaurant
+                full of pendant lights, a heavy blur averages all of that into a
+                brown-olive smear sitting in the middle of the section. Blurring
+                a busy warm image and tinting it neutral is a reliable way to
+                manufacture mud.
+
+                So the panel stops being transparent and becomes a surface: near
+                the emerald ground it sits on, with a champagne rim and a float
+                shadow. The blur stays, so the room still shows faintly at the
+                edges and it still reads as glass rather than as a box — but the
+                colour underneath it is now decided by the palette rather than
+                by whatever happened to be in the photograph. */}
+            <div className="glass-bar rounded-2xl border border-gold/25 bg-[color-mix(in_srgb,var(--color-emerald-deep)_80%,transparent)] p-7 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-gold-soft)_20%,transparent),0_34px_72px_-32px_color-mix(in_srgb,var(--color-emerald-deep)_85%,transparent)] md:p-9">
             {submitted ? (
               <div className="border-t border-gold/50 pt-8">
-                <p className="m-0 font-serif text-3xl text-emerald">Thank you.</p>
-                <p className="mt-4 max-w-[36ch] text-charcoal/70">
+                <p className="m-0 font-serif text-3xl text-gold">Thank you.</p>
+                <p className="mt-4 max-w-[36ch] text-cream/75">
                   We read every enquiry ourselves and will be in touch shortly.
                 </p>
               </div>
@@ -203,7 +238,7 @@ export default function Contact() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-8">
                 {FIELDS.map((field) => (
                   <label key={field.name} className="flex flex-col gap-2">
-                    <span className="font-label text-charcoal/55">
+                    <span className="font-label text-cream/60">
                       {field.label}
                     </span>
                     <input
@@ -215,20 +250,20 @@ export default function Contact() {
                       // React hydrates. Suppress the resulting benign attribute
                       // mismatch on the field itself.
                       suppressHydrationWarning
-                      className="border-b border-emerald/25 bg-transparent pb-3 text-lg text-charcoal outline-none transition-colors focus:border-gold-ink"
+                      className="border-b border-cream/30 bg-transparent pb-3 text-lg text-cream outline-none transition-colors focus:border-gold"
                     />
                   </label>
                 ))}
 
                 <label className="flex flex-col gap-2">
-                  <span className="font-label text-charcoal/55">
+                  <span className="font-label text-cream/60">
                     Tell us about your project
                   </span>
                   <textarea
                     name="message"
                     rows={3}
                     suppressHydrationWarning
-                    className="resize-none border-b border-emerald/25 bg-transparent pb-3 text-lg text-charcoal outline-none transition-colors focus:border-gold-ink"
+                    className="resize-none border-b border-cream/30 bg-transparent pb-3 text-lg text-cream outline-none transition-colors focus:border-gold"
                   />
                 </label>
 
@@ -247,7 +282,7 @@ export default function Contact() {
             What survived the footer's deletion. Kept to one hairline-separated
             row so the page ends on the enquiry, not on a second block of
             navigation. */}
-        <div className="mt-16 flex flex-col gap-6 border-t border-emerald/15 pt-8 md:mt-20 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-16 flex flex-col gap-6 border-t border-cream/20 pt-8 md:mt-20 lg:flex-row lg:items-center lg:justify-between">
           <nav aria-label="Site">
             <ul className="flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
               {NAV_LINKS.map((link) => (
@@ -259,7 +294,7 @@ export default function Contact() {
                       contain. */}
                   <SmoothLink
                     href={link.href}
-                    className="font-label text-charcoal/55 transition-colors duration-500 hover:text-gold-ink"
+                    className="font-label text-cream/60 transition-colors duration-500 hover:text-gold"
                   >
                     {link.label}
                   </SmoothLink>
@@ -279,7 +314,7 @@ export default function Contact() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={social.label}
-                      className="block text-charcoal/50 transition-colors duration-500 hover:text-gold-ink"
+                      className="block text-cream/55 transition-colors duration-500 hover:text-gold"
                     >
                       <Icon size={17} />
                     </a>
@@ -287,7 +322,7 @@ export default function Contact() {
                 );
               })}
             </ul>
-            <p className="m-0 font-label text-charcoal/40">
+            <p className="m-0 font-label text-cream/45">
               © {YEAR} {SITE.name}
             </p>
           </div>

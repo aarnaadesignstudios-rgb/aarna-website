@@ -265,7 +265,7 @@ export default function SectionTransition() {
              out of frame in both directions; without it the page briefly gains
              something to scroll sideways to, which is the exact bug this whole
              change is here to remove. */
-          className="surface-sage pointer-events-auto fixed inset-0 z-70 flex items-center justify-center overflow-hidden"
+          className="pointer-events-auto fixed inset-0 z-70 flex items-center justify-center overflow-hidden bg-paper"
           initial={{ y: card.direction > 0 ? "100%" : "-100%" }}
           animate={{ y: "0%" }}
           exit={{ y: card.direction > 0 ? "-100%" : "100%" }}

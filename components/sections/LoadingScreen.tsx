@@ -438,7 +438,7 @@ export default function LoadingScreen() {
          It is the same material at page value now — `surface-sage`, the brand
          emerald at 5% into cream — so the intro is the page's own paper with
          the photograph opening out of it. */
-      className="surface-sage pointer-events-none fixed inset-0 z-100 flex items-center justify-center overflow-hidden"
+      className="pointer-events-none fixed inset-0 z-100 flex items-center justify-center overflow-hidden bg-paper"
     >
       {/* ── The window ──────────────────────────────────────────────────────
           A full-bleed copy of the hero's opening frame, clipped down to a

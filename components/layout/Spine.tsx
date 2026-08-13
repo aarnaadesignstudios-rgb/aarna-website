@@ -11,28 +11,44 @@
  * same way — and it still read as eight sections in a row, because unifying how
  * things look is not the same as giving them something CONTINUOUS to belong to.
  *
- * This is that continuous thing: a fixed hairline down the left edge, with the
- * current sheet's number and name set vertically against it and a gold marker
- * riding the page's scroll. It is on screen in every section, it never
- * restarts, and it means the eyebrow row inside each section is no longer the
- * only thing saying where you are — so a section reads as a page of one
- * document rather than as a block on a stack.
+ * This is that continuous thing: a fixed thread down the left edge carrying a
+ * NODE for every chapter, a gold line drawn down it as you scroll, and the
+ * current chapter's number and name set vertically against it.
  *
- * It is also the only element on the site that is aware of the whole page at
- * once, which is exactly why it does the connecting.
+ * ── Why nodes, and not just a progress bar ────────────────────────────────
+ *
+ * A progress bar answers "how far through am I". A thread with nodes on it
+ * answers "how far through WHAT" — it shows the whole story at once: six
+ * chapters, their relative lengths, which are behind you, which is current, how
+ * much is left. That is the difference between a scroll indicator and a
+ * narrative device, and it is the shape the reference sites use (Eladio
+ * Dieste's page hangs its whole timeline off one unbroken vertical line with a
+ * node at each date, and content alternates either side of it).
+ *
+ * The node positions are the sections' real document offsets, so the thread is
+ * a true map rather than six evenly spaced dots. Chapter 02 is the longest
+ * thing on the page and its gap on the thread is visibly the longest gap.
+ *
+ * It is the only element on the site aware of the whole page at once, which is
+ * exactly why it does the connecting.
  *
  * ── What it deliberately is not ───────────────────────────────────────────
  *
  *  - Not a nav. It has `pointer-events-none` and no links: the masthead already
  *    navigates, and a second set of targets down the left edge would compete
  *    with it and with the per-section index rows.
- *  - Not present over the hero. It fades in past 55vh. The hero is a full-bleed
- *    photograph and the one band on the site that needs cream chrome — putting
- *    the spine there would mean teaching it the `data-chrome` dance the
- *    masthead does (components/layout/Navbar.tsx) for no gain, since the hero
- *    is not a numbered sheet and has nothing to report.
+ *  - Not present over the hero. It fades in past 55vh — the hero is not a
+ *    numbered chapter and has nothing to report.
  *  - Not on mobile. It lives in the page's left gutter, and below `lg` there is
  *    no gutter to live in.
+ *
+ * It DOES read `data-chrome="dark"`, which it did not have to when the whole
+ * page was light. The grounds alternate paper and brand emerald now, and gold
+ * on emerald needs a different weight from gold on paper — as does the fog
+ * behind the label, which has to darken rather than lighten to separate from a
+ * flat green ground. Same rect-overlap test the masthead uses, against the same
+ * declarations, so the two pieces of chrome can never disagree about which band
+ * they are over.
  *
  * ── Cost ─────────────────────────────────────────────────────────────────
  *
@@ -78,19 +94,22 @@ const SHEETS = [
   { id: "projects", index: "02", label: "Selected Works" },
   { id: "testimonials", index: "03", label: "Testimonials" },
   { id: "process", index: "04", label: "Process" },
-  { id: "founder", index: "05", label: "The Founder" },
-  { id: "why-us", index: "06", label: "Why Us" },
-  { id: "services", index: "07", label: "Services" },
-  { id: "contact", index: "08", label: "Contact" },
+  { id: "services", index: "05", label: "Services" },
+  { id: "contact", index: "06", label: "Contact" },
 ] as const;
 
 export default function Spine() {
-  const railRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<HTMLSpanElement>(null);
+  const headRef = useRef<HTMLSpanElement>(null);
   const [active, setActive] = useState<number | null>(null);
   const activeRef = useRef<number | null>(null);
   const [shown, setShown] = useState(false);
   const shownRef = useRef(false);
+  /** Where each chapter starts, as a fraction of the scrollable document. */
+  const [nodes, setNodes] = useState<number[]>([]);
+  /** True while the thread is over a band that declared itself dark. */
+  const [onDark, setOnDark] = useState(false);
+  const onDarkRef = useRef(false);
 
   useEffect(() => {
     /**
@@ -105,6 +124,7 @@ export default function Spine() {
      * on every frame, which is the one thing this must not do.
      */
     let table: Array<{ top: number; bottom: number }> = [];
+    let bands: Array<{ top: number; bottom: number }> = [];
     let docHeight = 1;
 
     const measure = () => {
@@ -115,9 +135,27 @@ export default function Spine() {
         const r = el.getBoundingClientRect();
         return { top: r.top + y, bottom: r.bottom + y };
       });
+      // The bands that want cream chrome — the same declarations the masthead
+      // reads. See components/layout/Navbar.tsx.
+      bands = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-chrome="dark"]')
+      ).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top + y, bottom: r.bottom + y };
+      });
       docHeight = Math.max(
         1,
         document.documentElement.scrollHeight - window.innerHeight
+      );
+
+      // Node positions, as fractions of the scroll. Committed to state because
+      // they change only when the document is re-measured, not per frame.
+      setNodes(
+        table.map((band) =>
+          Number.isFinite(band.top)
+            ? Math.min(1, Math.max(0, band.top / docHeight))
+            : -1
+        )
       );
     };
 
@@ -134,11 +172,30 @@ export default function Spine() {
         setShown(visible);
       }
 
-      // The marker reports progress through the whole document, and is written
-      // directly — this is the value that changes every frame.
+      /**
+       * The drawn line and its head.
+       *
+       * The line is a full-height element scaled from the top — `scaleY` rather
+       * than `height`, because a height change is layout on every frame and a
+       * scale is a compositor transform. The head is a small diamond that has to
+       * sit at the line's tip, and it CANNOT use the same trick: scaling its
+       * parent would squash it. So it translates instead, and its travel is
+       * expressed in its own heights (see MARKER_TRAVEL).
+       */
+      const p = Math.min(1, Math.max(0, y / docHeight));
       if (markerRef.current) {
-        const p = Math.min(1, Math.max(0, y / docHeight));
-        markerRef.current.style.transform = `translateY(${p * MARKER_TRAVEL}%)`;
+        markerRef.current.style.transform = `scaleY(${p})`;
+      }
+      if (headRef.current) {
+        headRef.current.style.transform = `translateY(${p * MARKER_TRAVEL}%) rotate(45deg)`;
+      }
+
+      // Which palette the thread is wearing.
+      const mid = y + window.innerHeight * 0.5;
+      const dark = bands.some((b) => mid >= b.top && mid < b.bottom);
+      if (dark !== onDarkRef.current) {
+        onDarkRef.current = dark;
+        setOnDark(dark);
       }
 
       /**
@@ -149,11 +206,10 @@ export default function Spine() {
        * the next section overlap in document space while the pin is active. A
        * single sample line cannot be in two sheets at once.
        */
-      const line = y + window.innerHeight * 0.5;
       let found: number | null = null;
       for (let i = 0; i < table.length; i++) {
         const band = table[i];
-        if (band && line >= band.top && line < band.bottom) {
+        if (band && mid >= band.top && mid < band.bottom) {
           found = i;
           break;
         }
@@ -199,18 +255,57 @@ export default function Spine() {
         shown ? "opacity-100" : "opacity-0"
       )}
     >
-      {/* The rail. Inset from the top and bottom so it reads as a drawn line on
-          a sheet rather than as a browser chrome edge. */}
-      <div
-        ref={railRef}
-        className="absolute top-[16vh] bottom-[16vh] left-7 w-px overflow-hidden bg-emerald/20"
-      >
-        {/* The marker: a short gold segment travelling the rail. See the note
-            on MARKER_TRAVEL for why the percentage is what it is. */}
+      {/* ── The thread ───────────────────────────────────────────────────
+          Inset top and bottom so it reads as a line drawn on a sheet rather
+          than as a browser chrome edge. `overflow-visible`, because the nodes
+          and the head sit wider than the 1px track. */}
+      <div className="absolute top-[14vh] bottom-[14vh] left-7 w-px">
+        {/* The unread thread. */}
+        <span
+          className={cn(
+            "absolute inset-0 block transition-colors duration-700",
+            onDark ? "bg-cream/25" : "bg-emerald/20"
+          )}
+        />
+
+        {/* The read thread — gold, drawn from the top. */}
         <span
           ref={markerRef}
-          className="absolute inset-x-0 top-0 block bg-gold will-change-transform"
-          style={{ height: `${MARKER_PCT}%`, transform: "translateY(0%)" }}
+          className="absolute inset-0 block origin-top bg-gold will-change-transform"
+          style={{ transform: "scaleY(0)" }}
+        />
+
+        {/* ── The chapter nodes ───────────────────────────────────────
+            One per chapter, at its real position in the document, so the
+            thread is a map of the story rather than six evenly spaced dots.
+
+            A node behind the reading head is filled; ahead of it, hollow. That
+            is the whole "where am I in the story" reading, and it costs one
+            comparison per node per chapter change. */}
+        {nodes.map((at, i) =>
+          at < 0 ? null : (
+            <span
+              key={SHEETS[i]?.id ?? i}
+              className={cn(
+                "absolute left-1/2 block size-1.5 -translate-x-1/2 rounded-full border transition-colors duration-500",
+                active !== null && i <= active
+                  ? "border-gold bg-gold"
+                  : onDark
+                    ? "border-cream/40 bg-transparent"
+                    : "border-emerald/35 bg-transparent"
+              )}
+              style={{ top: `calc(${at * 100}% - 3px)` }}
+            />
+          )
+        )}
+
+        {/* The reading head — a small rotated square at the tip of the drawn
+            line. Its own element rather than the line's end, because the line
+            is a `scaleY` and scaling its parent would squash the diamond. */}
+        <span
+          ref={headRef}
+          className="absolute inset-x-0 top-0 block size-[7px] -translate-x-[3px] bg-gold will-change-transform"
+          style={{ transform: "translateY(0%) rotate(45deg)" }}
         />
       </div>
 
@@ -231,24 +326,51 @@ export default function Spine() {
           key={sheet.id}
           className="absolute inset-y-0 left-8 flex items-center"
         >
-          {/* ── A fog behind the label ────────────────────────────────
+          {/* ── The label, and the fog behind it ─────────────────────────
               Two sections run their content FULL-BLEED through this gutter —
               the testimonial row and the services track both start at x=0 — so
               the label lands on a photograph or a card, not on the ground, and
-              12px letterspaced type at 55% charcoal disappears into it.
+              12px letterspaced type disappears into it. Hence a fog.
 
-              A soft radial plate rather than a rounded box: a box would read as
-              a UI chip stuck to the edge of an editorial page, and this reads as
-              the ground simply being brighter where the label sits. `closest-side`
-              on a tall thin element gives an ellipse that follows the vertical
-              text without needing to know how long the label is. */}
-          <span
-            className="absolute top-1/2 left-1/2 -z-10 h-[130%] w-[420%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-mist)_94%,transparent),transparent)]"
-          />
-          <span className="font-label whitespace-nowrap [writing-mode:vertical-rl] [transform:rotate(180deg)]">
-            <span className="text-gold-ink">{sheet.index}</span>
-            <span className="text-charcoal/35"> &mdash; </span>
-            <span className="text-charcoal/55">{sheet.label}</span>
+              ── The fog has to size against the LABEL ────────────────────
+              It was a child of the centring flex box, at `h-[130%]`. A
+              percentage height on an absolutely positioned element resolves
+              against its nearest POSITIONED ancestor, and that flex box is
+              `inset-y-0` — the full height of the spine. So 130% was 130% of the
+              viewport, and the "fog" painted a pale column down the entire left
+              edge of every page. Measured at 1170px tall against a label of
+              about 190px.
+
+              It is inside the label now, which is `relative`, so the inset
+              percentages resolve against the text they are supposed to be
+              backing. A soft radial plate rather than a rounded box: a box would
+              read as a UI chip stuck to the edge of an editorial page, and this
+              reads as the ground simply being brighter where the label sits. */}
+          <span className="relative font-label whitespace-nowrap [writing-mode:vertical-rl] [transform:rotate(180deg)]">
+            <span
+              aria-hidden
+              className={cn(
+                "absolute -inset-x-5 -inset-y-8 -z-10",
+                onDark
+                  // `emerald-deep`, not `emerald`. The dark chapters are now a
+                // FLAT `bg-emerald`, so a fog mixed from that same emerald is
+                // lighter than the ground it sits on and reads as a pale blob
+                // stuck to the left edge. A fog has to move away from the
+                // ground, and on a dark ground that means down.
+                ? "bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-emerald-deep)_80%,transparent),transparent)]"
+                  : "bg-[radial-gradient(closest-side,color-mix(in_srgb,var(--color-mist)_94%,transparent),transparent)]"
+              )}
+            />
+            <span className={onDark ? "text-gold" : "text-gold-ink"}>
+              {sheet.index}
+            </span>
+            <span className={onDark ? "text-cream/35" : "text-charcoal/35"}>
+              {" "}
+              &mdash;{" "}
+            </span>
+            <span className={onDark ? "text-cream/70" : "text-charcoal/55"}>
+              {sheet.label}
+            </span>
           </span>
         </span>
       )}

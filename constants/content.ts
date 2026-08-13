@@ -34,7 +34,10 @@ import type {
 /** Primary in-page navigation. Order defines both navbar and scroll flow. */
 export const NAV_LINKS: NavLink[] = [
   { label: "About", href: "#practice" },
-  { label: "Why Us", href: "#why-us" },
+  // "Why Us" is gone with the section it pointed at. Leaving it would give the
+  // masthead, the mobile index and the Contact colophon a link that scrolls
+  // nowhere — which is the bug the "Projects" link had before the client
+  // review, and it is invisible until someone clicks it.
   { label: "Services", href: "#services" },
   { label: "Projects", href: "#projects" },
   { label: "Process", href: "#process" },

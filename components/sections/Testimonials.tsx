@@ -41,6 +41,7 @@ import {
   InfiniteMovingCards,
   PageContainer,
   SectionHeading,
+  SheetTexture,
 } from "@/components/ui";
 import { TESTIMONIALS } from "@/constants";
 
@@ -49,13 +50,15 @@ export default function Testimonials() {
     <section
       id="testimonials"
       aria-label="What our clients say"
-      /* No `border-y`. `.surface-sage` opens and closes on the ground colour
-         of the sections either side of it, so there is no edge left to draw —
-         and a hairline there would put the boundary back that the gradient
-         exists to remove. See the note in styles/globals.css. */
-      className="surface-sage overflow-hidden py-14 text-charcoal md:py-16 lg:py-20"
+      /* Flat paper, and no hairline at either end. The grounds alternate
+         paper/emerald now, so every boundary on this page is a hard edge
+         between two flat colours — there is nothing left for a border to
+         clarify. See the note on the two grounds in styles/globals.css. */
+      className="relative overflow-hidden bg-paper py-16 text-charcoal md:py-20 lg:py-24"
     >
-      <PageContainer>
+      <SheetTexture />
+
+      <PageContainer className="relative z-10">
         <SectionHeading
           index="03"
           eyebrow="Testimonials"
@@ -76,7 +79,7 @@ export default function Testimonials() {
 
       {/* Full-bleed on purpose: the row should run off both edges of the page
           so the wall feels continuous rather than boxed into the container. */}
-      <div className="mt-10 md:mt-12">
+      <div className="relative z-10 mt-10 md:mt-12">
         <InfiniteMovingCards
           items={TESTIMONIALS}
           direction="left"

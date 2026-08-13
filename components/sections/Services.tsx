@@ -44,7 +44,13 @@ import { FiArrowUpRight, FiPlus } from "react-icons/fi";
 
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks";
-import { Media, PageContainer, SectionHeading, SmoothLink } from "@/components/ui";
+import {
+  Media,
+  PageContainer,
+  SectionHeading,
+  SheetTexture,
+  SmoothLink,
+} from "@/components/ui";
 import { SERVICES } from "@/constants";
 import { cn } from "@/utils/cn";
 
@@ -108,14 +114,29 @@ export default function Services() {
     <section
       ref={sectionRef}
       id="services"
-      className="relative bg-mist text-charcoal"
+      /* ── The arc's last light-to-dark step ──────────────────────────────
+         Mid brand green with cream type. This is the chapter where the green
+         stops being a tint and becomes the loudest thing on the screen — see
+         the note on `.surface-moss` in styles/globals.css.
+
+         It suits this section better than any other: five disciplines, each
+         carried by a photograph, and a saturated green ground makes
+         photography read as lit objects rather than as tiles on a page. */
+      data-chrome="dark"
+      className="relative bg-emerald text-cream"
     >
-      <div ref={pinRef} className="flex flex-col overflow-hidden lg:h-screen">
+      <SheetTexture tone="dark" placement="top" />
+
+      <div
+        ref={pinRef}
+        className="relative z-10 flex flex-col overflow-hidden lg:h-screen"
+      >
         <PageContainer className="shrink-0 pt-24 pb-8 md:pt-28">
           <SectionHeading
-            index="07"
+            index="05"
             eyebrow="Services"
             title="What we do"
+            tone="dark"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
               SERVICES.length
             ).padStart(2, "0")}`}
@@ -169,7 +190,7 @@ export default function Services() {
                     href={service.href!}
                     tabIndex={-1}
                     aria-hidden
-                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]"
+                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-emerald-deep lg:aspect-auto lg:h-[60%]"
                   >
                     <Media
                       src={service.image}
@@ -187,7 +208,7 @@ export default function Services() {
                     tabIndex={-1}
                     aria-hidden
                     onClick={() => setOpenId(open ? null : service.id)}
-                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone lg:aspect-auto lg:h-[60%]"
+                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-emerald-deep lg:aspect-auto lg:h-[60%]"
                   >
                     <Media
                       src={service.image}
@@ -210,7 +231,7 @@ export default function Services() {
                     bottom edges stopped agreeing; and opening a description
                     shrank that card's photograph as it expanded, which reads
                     as the layout collapsing rather than as a panel opening. */}
-                <div className="mt-6 min-h-0 flex-1 overflow-hidden border-t border-emerald/12 pt-5">
+                <div className="mt-6 min-h-0 flex-1 overflow-hidden border-t border-cream/20 pt-5">
                   {isLink ? (
                     /* Photography opens its own page. A link, not a toggle —
                        and it says so, so the different behaviour is visible
@@ -219,7 +240,7 @@ export default function Services() {
                       href={service.href!}
                       className="flex w-full items-start justify-between gap-4 text-left"
                     >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
+                      <span className="font-serif text-[1.7rem] leading-[1.1] text-cream xl:text-3xl">
                         {service.title}
                       </span>
                       <FiArrowUpRight
@@ -236,7 +257,7 @@ export default function Services() {
                       aria-controls={`service-${service.id}`}
                       className="flex w-full cursor-pointer items-start justify-between gap-4 text-left"
                     >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
+                      <span className="font-serif text-[1.7rem] leading-[1.1] text-cream xl:text-3xl">
                         {service.title}
                       </span>
                       <FiPlus
@@ -251,7 +272,7 @@ export default function Services() {
                   )}
 
                   {isLink ? (
-                    <p className="mt-3 max-w-sm text-charcoal/70">
+                    <p className="mt-3 max-w-sm text-cream/75">
                       {service.body}
                     </p>
                   ) : (
@@ -263,7 +284,7 @@ export default function Services() {
                       )}
                     >
                       <div className="overflow-hidden">
-                        <p className="mt-3 max-w-sm text-charcoal/70">
+                        <p className="mt-3 max-w-sm text-cream/75">
                           {service.body}
                         </p>
                       </div>
@@ -278,12 +299,12 @@ export default function Services() {
               gives the horizontal run somewhere to arrive. */}
           <div className="hidden shrink-0 flex-col justify-end pb-8 lg:flex lg:w-[24vw]">
             <span aria-hidden className="mb-6 block h-px w-16 bg-gold" />
-            <p className="font-serif text-[1.7rem] leading-[1.15] text-emerald xl:text-3xl">
+            <p className="font-serif text-[1.7rem] leading-[1.15] text-cream xl:text-3xl">
               One studio, five disciplines, one continuous idea.
             </p>
             <SmoothLink
               href="#contact"
-              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/50 pb-1.5 font-label text-emerald transition-colors duration-500 hover:text-gold"
+              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pb-1.5 font-label text-gold-soft transition-colors duration-500 hover:text-cream"
             >
               Start a conversation
               <FiArrowUpRight
@@ -298,7 +319,7 @@ export default function Services() {
         {/* Progress hairline (desktop only — below lg there is no horizontal
             travel for it to describe). */}
         <PageContainer className="hidden shrink-0 pb-5 lg:block">
-          <div className="relative h-px bg-charcoal/15">
+          <div className="relative h-px bg-cream/25">
             {/* scaleX rather than width: a transform is composited, so the bar
                 stays smooth while the pin is also driving the track. */}
             <div

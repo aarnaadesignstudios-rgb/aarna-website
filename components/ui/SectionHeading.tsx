@@ -104,8 +104,38 @@ export default function SectionHeading({
           viewport={VIEWPORT_ONCE}
         >
           <span className="flex items-center gap-3.5">
-            {/* Gold hairline — opens every section on the site. */}
-            <span className="block h-px w-10 shrink-0 bg-gold" />
+            {/* ── The hairline that opens every chapter, and now REACHES ────
+                It used to be a 40px stub sitting inside the container's left
+                gutter. At `lg` it runs from the page edge instead: `-ml-16`
+                cancels <PageContainer />'s `lg:px-16`, and the width is that
+                64px plus the original 40.
+
+                That is not a flourish. <Spine /> draws the story's thread at
+                x=28px, and this rule now crosses it — so every chapter's
+                heading is physically joined to the thread running down the
+                page, and the connection between "this section" and "the
+                document" is something you can see rather than something you
+                have to infer from a matching number.
+
+                Only from `lg`, because that is where the spine exists; below it
+                the rule stays the stub it was, since a hairline running off the
+                edge of a phone screen just looks like a clipped element.
+
+                The one thing to know before changing a section's overflow: a
+                section with `overflow-hidden` clips this at x=0, which is
+                exactly where it wants to stop, so it is safe. A section with
+                horizontal padding of its own on the WRAPPER, rather than on
+                <PageContainer />, would clip it short. */}
+            <span
+              className={cn(
+                "block h-px w-10 shrink-0 bg-gold",
+                // The reach only applies to a LEFT-ranged heading. On a centred
+                // one the rule is mirrored either side of the label, and a
+                // negative margin on one of the pair would pull the whole block
+                // off the page's axis — the centring is the point there.
+                align === "left" && "lg:-ml-16 lg:w-[6.5rem]"
+              )}
+            />
             <span className="font-label">
               {index && <span className="text-gold">{index}</span>}
               {index && eyebrow && (

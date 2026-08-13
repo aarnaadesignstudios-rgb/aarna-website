@@ -25,8 +25,16 @@
      (the hero caption, the masthead over the hero, the chapter card), and
      `mist` above is the ground that replaced it. */
   --color-cream: #f6f2e9; /* Cream White — type over photography */
-  --color-charcoal: #1c1b18; /* Charcoal — body ink */
-  --color-stone: #dcdccc; /* Warm olive-linen — the one warm ground (<WhyUs />) */
+  /* Cooled from #1c1b18. That was a WARM near-black, and warm near-black on a
+     cool ground is the quietest source of dirt on a page — it reads faintly
+     brown against everything around it, on every paragraph, everywhere. This
+     is the same value on the grounds' own hue. */
+  --color-charcoal: #17201c; /* Charcoal — body ink */
+  /* Was #dcdccc, a warm olive-grey — the single dirtiest value in the palette
+     and, with <WhyUs /> commented out, one that now only ever shows for the
+     moment before an image decodes. A pale olive flash behind a photograph on
+     a cool page is a smear; this is the same value on the ramp. */
+  --color-stone: #dde5e1;
 
   /* ── The neutral the palette was missing ──────────────────────────
      Every scrim, overlay and gradient on this site used to be built from
@@ -42,42 +50,60 @@
      longer allowed on top of a photograph. */
   --color-ink: #0a0a09;
 
-  /* ── The grounds are GREEN ─────────────────────────────────────
-     Every light surface on the site is now a desaturated cut of the brand
-     hue, not a warm off-white.
+  /* ── The grounds ────────────────────────────────────────────────
+     Near-achromatic, on the BRAND's hue, and that second half is the whole
+     correction.
 
-     This is the second correction to the same problem, in the opposite
-     direction. The first pass took the green OUT of the grounds because the
-     page was alternating cream with near-black emerald slabs. That fixed the
-     jump and lost the brand: five warm off-whites with green type on them is
-     a beige site with a green logo, and the note back was exactly that —
-     more green, and it should feel like one thing.
+     ── Why the last version read as dirty ──────────────────────────
+     It did, and it was measurable rather than a matter of taste. Two faults,
+     compounding:
 
-     So the green moved from being four bands to being the paper itself.
-     `emerald` is hsl(158 68% 15%); each of these is that hue held between 84°
-     and 100° (the olive side, which is where a desaturated green has to sit
-     to stay a NEUTRAL rather than becoming mint) at 12–22% saturation. On
-     screen they read as sage, celadon, and eucalyptus. Nothing on the page is
-     off-white any more, which is why the sections stopped looking like
-     separate documents: they are all cut from the same colour.
+       1. WRONG HUE. `emerald` is hsl(158 …) — a cool, blue-leaning green. The
+          grounds were built at hue 84–100°, which is OLIVE. Sixty degrees of
+          mismatch between the brand colour and every surface it sits on is not
+          a family of greens, it is two different greens arguing, and the eye
+          resolves that argument as mud.
+       2. TOO MUCH OF IT. They carried 13–22% saturation. Checked against the
+          reference palettes for architecture, luxury and premium-brand
+          products, every one of them puts its background at effectively zero
+          chroma (#FAFAF9, #FFFFFF) and spends all of its colour on the primary
+          and the accent. A saturated background does not read as branded, it
+          reads as stained — a tint at 20% is a wash, and a wash on paper is
+          what a coffee ring is.
 
-       paper     #f5f8f3  brightest — <Practice />
-       mist      #eaf0e6  the default ground: body, Process, Services, Works
-       sage      #dbe4d5  plinth — Testimonials, Founder, the mobile index
-       sage-deep #c9d5c2  deepest — the figures strip under the hero
-       stone     #dcdccc  the one warm-olive step, for <WhyUs />
+     So: hue 154–158, matching emerald, and chroma cut to a whisper. These are
+     cool near-whites with green in them rather than green surfaces. The BRAND
+     is carried where the reference palettes carry it — in the deep tones
+     (`moss`, `emerald`) and the accent (`gold`), both of which got MORE
+     saturated as these got less. That contrast is the thing that reads as
+     expensive: quiet grounds, saturated brand.
 
-     Gold is the only warm thing left, which is the point — it now has a cool
-     ground to be warm against instead of competing with four beiges. */
-  --color-paper: #f5f8f3;
-  --color-mist: #eaf0e6;
+       paper     #f8fbf9  brightest — chapter 01
+       mist      #f1f6f3  the default ground
+       sage      #e4ece8  chapter 03
+       sage-deep #d2e0da  chapter 04
+       stone     #dde5e1  behind an image while it decodes
 
-  /* The two plinth steps. Same hue family as the grounds above, two and three
-     steps down, so a plinth is a change of VALUE inside one colour rather
-     than a change of colour — which is what stopped these sections reading
-     as imported. See the note on `--color-paper`. */
-  --color-sage: #dbe4d5;
-  --color-sage-deep: #c9d5c2;
+     Measured: the widest channel spread in any of them is 14/255. The old
+     sage-deep was #c9d5c2 — spread 19, and with BLUE the lowest channel, which
+     is what made it yellow. In every one of these, blue sits above red, so
+     they lean cool. That single relationship is the difference. */
+  --color-paper: #f8fbf9;
+  --color-mist: #f1f6f3;
+
+  /* Two steps down the same near-achromatic ramp. A plinth is a change of
+     VALUE inside one colour, never a change of colour. */
+  --color-sage: #e4ece8;
+  --color-sage-deep: #d2e0da;
+
+  /* ── Where the green is allowed to be loud ──────────────────────
+     Mid brand green, and now on emerald's own hue at 45% saturation rather
+     than 30% on a hue that was 11° adrift. Carries cream type at 6.8:1.
+
+     It got more saturated for exactly the reason the grounds got less: the
+     reference palettes spend their colour on the primary, not the paper. This
+     is chapter 05, the point in the arc where the brand stops being a tint. */
+  --color-moss: #235c47;
 
   /* ── Gold that survives a light ground ────────────────────────────────
      `--color-gold` is sampled from the logo and is a ~2:1 contrast against
@@ -89,7 +115,13 @@
      hue and saturation dropped to 40% lightness, which reads as antique gold
      at display size and clears 5:1 on every light surface above. Use it for
      gold TYPE on light; keep `--color-gold` for rules, marks and glows. */
-  --color-gold-ink: #7c6413;
+  /* Raised from #7c6413 (hsl 45 73% 28%). The reference palettes for luxury
+     and architecture all land their gold accent near #A16207 — hsl 37 92% 33%
+     — and the difference between that and what was here is the difference
+     between brass and olive. At 73% saturation a dark gold on a cool ground
+     turns green-brown; at 88% it stays gold. Held at 29% lightness, which is
+     what keeps it at 4.8:1 on `mist`. */
+  --color-gold-ink: #8b6609;
 
   /* Typography ------------------------------------------------------ */
   /* Font family CSS vars are injected by next/font in app/layout.tsx.
@@ -367,146 +399,68 @@ html.lenis body {
     display: none;
   }
 
-  /* ── The green plinth ─────────────────────────────────────────
-     Testimonials and Founder. Three ingredients, and the third is new:
+              /* ── Two grounds, and both of them are flat ───────────────────
+     Every ground on this site is now either `paper` or `emerald`, painted as a
+     FLAT colour. There are no gradients on any surface.
 
-       1. a warm glow off the top edge — the only warm thing on a cool ground
-       2. an emerald vignette into the corners, so the band has a centre
-       3. ── IT FADES AT BOTH ENDS ──
-          The band opens and closes on `mist`, the ground of the sections above
-          and below it, and only reaches full `sage` 22% of the way in.
+     What was here before: a sage plinth that faded at both ends, a "cyclorama"
+     that swept from paper at its centre to emerald in its corners, a moss band
+     that opened on one neighbour and closed on the other, and an emerald room
+     built from three stacked linear-gradients. Every one of them was solving
+     the same problem — how to get from one section's colour to the next
+     without a seam — and the studio's note was that the result read as green
+     smears rather than as green.
 
-     (3) is what replaced `border-y border-emerald/12`. A hairline is an
-     ANNOUNCEMENT: it says a new document starts here, which is the opposite of
-     what these sections need — the note back was that every section should
-     feel connected. With the ends dissolved there is no boundary to see; the
-     page simply deepens in colour for a while and comes back. It works against
-     any of the light grounds because they are all within 6% of each other now.
+     They were right, and the honest fix is not a better gradient. It is to stop
+     needing one: with exactly two grounds and a hard edge between them, there
+     is no transition to hide. A flat brand green meeting a flat near-white is a
+     decision. A gradient between them is an apology for the decision.
 
-     The amplitudes are small on purpose: at this value a 4% shift is as
-     visible as a 20% shift was on the near-black version this replaced. */
-  .surface-sage {
-    background-color: var(--color-sage);
-    background-image:
-      radial-gradient(
-        90% 60% at 50% -10%,
-        color-mix(in srgb, var(--color-gold-soft) 26%, transparent) 0%,
-        transparent 62%
-      ),
-      radial-gradient(
-        130% 120% at 50% 45%,
-        transparent 42%,
-        color-mix(in srgb, var(--color-emerald) 16%, transparent) 100%
-      ),
-      linear-gradient(
-        180deg,
-        var(--color-mist) 0%,
-        var(--color-sage) 22%,
-        var(--color-sage) 76%,
-        var(--color-mist) 100%
-      );
+       paper    #f8fbf9   chapters 01, 03, 04
+       emerald  #0c402d   the title plate, chapters 02, 05, 06
+
+     The interest that the gradients were carrying now comes from the ORNAMENT
+     (see `.vine` below and components/ui/Ornament.tsx) — which is gold, which
+     is drawn, and which belongs to the brand in a way a gradient never did.
+
+     Contact keeps a photograph behind it, under a FLAT veil rather than a
+     graded one: at 94% the room reads as a texture in the green rather than as
+     a picture being washed out, and there is no gradient anywhere in it. */
+
+  /* ── The vine ─────────────────────────────────────────────────
+     Gold botanical line-work, drawn on with `stroke-dashoffset`.
+
+     `pathLength="1"` is set on every path in the SVG, which normalises the
+     dash arithmetic: without it each path needs its own measured length in
+     JS, and with it every path in the set is 0→1 regardless of how long it
+     actually is. So one keyframe draws all of them, and the stagger is per-
+     element `animation-delay` rather than per-element maths.
+
+     Drawn once on entry and then left alone. A vine that keeps animating is a
+     loading spinner. */
+  .vine path,
+  .vine circle,
+  .vine ellipse {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: vine-draw 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* The same material one step down, for the figures strip directly under the
-     hero photograph.
-
-     Only the BOTTOM end dissolves here. The top edge butts against a
-     photograph, and a photograph already has a hard edge — fading into one
-     just looks like the image is dirty. So that edge keeps its gold hairline
-     (the plinth reads as a mount under the picture) and the bottom melts into
-     the paper of <Practice />. */
-  .surface-sage-deep {
-    background-color: var(--color-sage-deep);
-    background-image:
-      radial-gradient(
-        80% 140% at 50% -20%,
-        color-mix(in srgb, var(--color-gold-soft) 30%, transparent) 0%,
-        transparent 70%
-      ),
-      linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--color-emerald) 8%, var(--color-sage-deep)) 0%,
-        var(--color-sage-deep) 62%,
-        var(--color-paper) 100%
-      );
+  @keyframes vine-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
 
-  /* ── The cyclorama ──────────────────────────────────────────
-     The ground <SelectedWorks /> stands the ring on.
-
-     The first version of that section was a flat `mist` rectangle with an arc
-     of photographs floating in the middle of it, and the note back named the
-     two things wrong with it exactly: too much empty space, and not enough
-     green. They are one problem. An arc of cards needs a ROOM — without one
-     the space around it is not composition, it is just unused page.
-
-     So this is a photographer's cyclorama: a lit sweep that curves from a
-     bright centre down into deep brand green at the floor and the corners.
-     Four layers, bottom of the stack first:
-
-       · the SWEEP    — emerald into every corner, brightest just above centre
-                        where the front card sits. This is the layer doing the
-                        "more green": at the outer edge it resolves to about
-                        #8da698, a true mid sage, and it covers the whole frame
-       · the FLOOR     — the bottom third deepens further, so the cards read as
-                        standing on something rather than hanging
-       · the KEY LIGHT — a warm gold pool from above, off-centre, which is what
-                        stops the sweep reading as a flat gradient
-       · the HORIZON   — a single soft band where floor meets sweep
-
-     The centre stays light on purpose. Photographs have to sit ON this, and
-     the moment the middle goes dark the section is a dark band again — the
-     thing that was wrong two revisions ago. Green owns the frame; the middle of
-     the frame stays paper. */
-  /* ── Desktop only ──────────────────────────────────────────────
-     The cyclorama is a 100vh STAGE. Below `lg` the section releases its pin
-     and becomes a ~5000px vertical stack, and the same gradient stretched over
-     that puts its deep green end under the last three project titles — which
-     are `emerald`, because on a phone there is no light-centre/dark-floor
-     composition for them to be `cream` against. Flat ground there instead.
-
-     Written as a media query inside the rule rather than as a `lg:` variant
-     because this is a hand-authored class in @layer utilities, not an
-     `@utility`, so Tailwind will not generate variants for it. */
-  .stage-cyclorama {
-    background-color: var(--color-mist);
+  /* The leaves and blossoms fade in behind the stroke that draws them. */
+  .vine [data-fill] {
+    opacity: 0;
+    animation: vine-bloom 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  @media (min-width: 1024px) {
-    .stage-cyclorama {
-      background-image:
-      /* horizon */
-      linear-gradient(
-        180deg,
-        transparent 58%,
-        color-mix(in srgb, var(--color-gold-soft) 16%, transparent) 63%,
-        transparent 68%
-      ),
-      /* key light */
-      radial-gradient(
-        55% 42% at 44% 6%,
-        color-mix(in srgb, var(--color-gold-soft) 34%, transparent) 0%,
-        transparent 74%
-      ),
-      /* floor */
-      linear-gradient(
-        180deg,
-        transparent 50%,
-        color-mix(in srgb, var(--color-emerald) 44%, transparent) 100%
-      ),
-      /* sweep.
-         The extent is 78% x 66% rather than 105% x 82%. That looks like a
-         detail and it is the whole difference between this reading as green and
-         reading as off-white: a radial gradient's last stop sits at its
-         EXTENT, so at 105% the deep emerald was only reached out past the
-         corners of the box and almost none of it was ever on screen. Pulled in,
-         the green resolves to about #769485 well inside the frame. */
-      radial-gradient(
-        78% 66% at 50% 38%,
-        color-mix(in srgb, var(--color-paper) 96%, transparent) 0%,
-        color-mix(in srgb, var(--color-mist) 55%, transparent) 42%,
-        color-mix(in srgb, var(--color-emerald) 52%, transparent) 100%
-      );
+  @keyframes vine-bloom {
+    to {
+      opacity: 1;
     }
   }
 
@@ -628,55 +582,7 @@ html.lenis body {
     );
   }
 
-  /* ── Veil for type over a photograph, on a LIGHT page ──────────────────
-     <Contact /> sets its enquiry form over an interior photograph. It used to
-     do that under `.overlay-emerald` — a near-opaque dark green wash with the
-     picture faintly behind it and cream type on top, which is the single
-     largest dark area on the site after the hero.
-
-     This is the same idea inverted: paper, heavy enough that charcoal and
-     emerald type sit on it at full contrast, light enough that the
-     photograph is still legibly a photograph. It is graded rather than flat
-     (brighter where the type sits, thinner toward the right and bottom) so
-     the image reads as a room the page is standing in rather than as a
-     texture behind a panel. */
-  .overlay-paper {
-    background-image:
-      /* The type's own ground: heaviest at the left, where the heading and the
-         details sit, thinning across so the room stays a room. */
-      linear-gradient(
-        100deg,
-        color-mix(in srgb, var(--color-paper) 88%, transparent) 0%,
-        color-mix(in srgb, var(--color-paper) 66%, transparent) 44%,
-        color-mix(in srgb, var(--color-paper) 40%, transparent) 100%
-      ),
-      /* A floor, as in the cyclorama. The colophon row sits on it. */
-      linear-gradient(
-        180deg,
-        transparent 44%,
-        color-mix(in srgb, var(--color-emerald) 42%, transparent) 100%
-      ),
-      /* ── The green edge ───────────────────────────────────────────
-         Same device as `.stage-cyclorama`, and here for the same reason: with
-         only the paper veil above, this section came out as the palest thing on
-         the site — the page ended on a near-white rectangle with a ghost of a
-         photograph in it, which is the "too much white space" note exactly, in
-         the one place it matters most because it is the last thing anyone sees.
-
-         The veil is thinner now and the frame is closed with brand green, so
-         the enquiry sits in a lit green room rather than on a blank sheet. The
-         extent is kept inside the box (85% x 78%) for the reason the cyclorama's
-         had to be: a radial gradient reaches its last stop at its EXTENT, so an
-         over-100% extent puts the colour off-screen. */
-      radial-gradient(
-        82% 72% at 38% 30%,
-        transparent 0%,
-        color-mix(in srgb, var(--color-sage) 46%, transparent) 48%,
-        color-mix(in srgb, var(--color-emerald) 58%, transparent) 100%
-      );
-  }
-
-  /* ── The 3D stage ─────────────────────────────────────────────────────
+    /* ── The 3D stage ─────────────────────────────────────────────────────
      Used by <SelectedWorks />, whose nine projects sit on the faces of an
      invisible cylinder. Three properties have to be here rather than inline
      because Tailwind has no utility that spells them, and all three are
@@ -860,6 +766,7 @@ html.lenis body {
   .marquee-group:hover .animate-marquee {
     animation-play-state: paused;
   }
+
 
   /* The hairline that rides the hero's wipe. See <ImageCycle />.
      Starts flush with the right edge of the frame and crosses to the left,

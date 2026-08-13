@@ -83,6 +83,7 @@ import {
   PageContainer,
   Media,
   SectionHeading,
+  SheetTexture,
   SmoothLink,
 } from "@/components/ui";
 import { WORKS } from "@/constants";
@@ -442,12 +443,12 @@ export default function SelectedWorks() {
         href="#contact"
         aria-label={`${work.title} — ${work.category}`}
         className={cn(
-          "group relative block size-full overflow-hidden rounded-xl bg-stone",
+          "group relative block size-full overflow-hidden rounded-xl bg-emerald-deep",
           // The ring's own drop shadow. Emerald-tinted rather than black: on a
           // cream page a neutral shadow reads as dirt, and this is the one
           // place the brand green can sit under a photograph without tinting
           // it — see the note on `--color-ink` in styles/globals.css.
-          "shadow-[0_34px_70px_-34px_color-mix(in_srgb,var(--color-emerald)_45%,transparent)]"
+          "shadow-[0_34px_70px_-34px_color-mix(in_srgb,var(--color-emerald-deep)_85%,transparent)]"
         )}
       >
         <Media
@@ -461,7 +462,7 @@ export default function SelectedWorks() {
             in the mobile stack it stays at 0 and costs nothing. */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-sage"
+          className="absolute inset-0 bg-emerald"
           style={{ opacity: "var(--face-haze, 0)" }}
         />
 
@@ -482,7 +483,7 @@ export default function SelectedWorks() {
             rather than as a smear. */}
         <div
           aria-hidden
-          className="absolute inset-0 rounded-xl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-emerald)_22%,transparent)]"
+          className="absolute inset-0 rounded-xl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-gold)_28%,transparent)]"
         />
       </SmoothLink>
     );
@@ -525,7 +526,7 @@ export default function SelectedWorks() {
               — a mirror image in a floor is always further away than the thing
               above it, so it has more air to look through. */}
           <div
-            className="absolute inset-0 bg-sage"
+            className="absolute inset-0 bg-emerald"
             style={{ opacity: "var(--face-haze, 0)" }}
           />
         </div>
@@ -545,17 +546,23 @@ export default function SelectedWorks() {
          it depends on were thousands of pixels below the fold. The background
          has to live on the 100vh stage that is actually on screen. The section
          keeps a flat ground for the pin spacer to sit on. */
-      className="relative bg-mist text-charcoal"
+      className="relative bg-emerald text-cream"
     >
       <div
         ref={pinRef}
-        className="stage-cyclorama relative flex flex-col overflow-hidden lg:h-screen"
+        className="relative flex flex-col overflow-hidden lg:h-screen"
       >
+        {/* `top` placement: this chapter's lower half is the ring, its
+            reflections and the floor, and a bloom under those would fight the
+            cyclorama's own floor gradient. */}
+        <SheetTexture placement="top" />
+
         {/* Header — the counter rides in the heading's title-block slot. */}
         <PageContainer className="relative z-20 shrink-0 pt-24 pb-2 md:pt-28">
           <SectionHeading
             index="02"
             eyebrow="Selected Works"
+            tone="dark"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
               COUNT
             ).padStart(2, "0")}`}
@@ -610,7 +617,7 @@ export default function SelectedWorks() {
               a solid numeral this size competes with the photographs. */}
           <span
             aria-hidden
-            className="pointer-events-none absolute top-[3%] right-0 translate-x-[32%] font-serif text-[30vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-emerald)_34%,transparent)]"
+            className="pointer-events-none absolute top-[3%] right-0 translate-x-[32%] font-serif text-[30vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
           >
             {String(active + 1).padStart(2, "0")}
           </span>

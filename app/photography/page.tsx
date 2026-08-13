@@ -78,7 +78,7 @@ export default function PhotographyPage() {
         </section>
 
         {/* ── The lead ────────────────────────────────────────────────────── */}
-        <section className="bg-mist py-20 text-charcoal md:py-24 lg:py-28">
+        <section className="bg-paper py-20 text-charcoal md:py-24 lg:py-28">
           <PageContainer>
             <div className="grid gap-y-12 lg:grid-cols-[1.35fr_1fr] lg:gap-x-20">
               <div>
@@ -109,7 +109,7 @@ export default function PhotographyPage() {
         </section>
 
         {/* ── Method ──────────────────────────────────────────────────────── */}
-        <section className="surface-sage py-20 text-charcoal md:py-24">
+        <section className="bg-paper py-20 text-charcoal md:py-24">
           <PageContainer>
             <SectionHeading
               eyebrow="Approach"

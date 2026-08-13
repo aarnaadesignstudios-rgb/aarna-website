@@ -78,7 +78,7 @@ export default function FeaturedProjects() {
   return (
     <section
       id="projects"
-      className="surface-sage overflow-hidden py-24 text-charcoal md:py-32 lg:py-40"
+      className="overflow-hidden bg-paper py-24 text-charcoal md:py-32 lg:py-40"
     >
       <PageContainer>
         <SectionHeading

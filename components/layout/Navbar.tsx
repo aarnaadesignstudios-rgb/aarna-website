@@ -657,7 +657,7 @@ export default function Navbar() {
             aria-modal="true"
             aria-label="Menu"
             data-lenis-prevent
-            className="surface-sage glass-bar fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain text-charcoal"
+            className="glass-bar fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain bg-paper text-charcoal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

@@ -19,102 +19,173 @@ website ink always matches the mark exactly.
 | `--color-emerald-deep` | `#06291c` | `bg-emerald-deep` | Near-black pine. Kept as part of the ramp; no current caller. **Not a scrim colour** — that is what it used to be, and it is why photography on this site once looked green. Use `--color-ink`. |
 | `--color-gold` | `#c9a932` | `bg-gold` / `text-gold` / `border-gold` | Primary brand gold — sampled pixel-exact from the logo mark/wordmark (`hsl(47.3 60.2% 49.2%)`, the most common gold pixel in the PNG). Accents, CTAs, hover states, dividers. |
 | `--color-gold-soft` | `#dac36c` | `text-gold-soft` | Champagne gold — the same hue/saturation lifted to 64% lightness. Subtle glows, secondary accent text on dark. |
-| `--color-gold-ink` | `#7c6413` | `text-gold-ink` | **Gold that is legible as TYPE on a light ground** — the same hue and saturation as `--color-gold` at 40% lightness. `--color-gold` is ~2:1 against paper: correct for hairlines, marks and glows, unreadable as small or running type. Use this for any gold *text* (the Contact heading, labels, the spine, the mobile index numerals). |
-| `--color-charcoal` | `#1c1b18` | `text-charcoal` | Ink — default body text. |
-| `--color-paper` | `#f5f8f3` | `bg-paper` | Brightest ground — Practice. |
-| `--color-mist` | `#eaf0e6` | `bg-mist` | **The default ground** — `<body>`, Process, Services, Contact, /faq. |
-| `--color-sage` | `#dbe4d5` | `bg-sage` | Plinth — Testimonials, Founder, the mobile index, the intro screen. |
-| `--color-sage-deep` | `#c9d5c2` | `bg-sage-deep` | Deepest ground — the figures strip under the hero. |
-| `--color-stone` | `#dcdccc` | `bg-stone` | The one warm-olive ground (Why Us), and the colour behind an image while it decodes. |
-| `--color-cream` | `#f6f2e9` | `text-cream` | **Type over photography, not a ground.** The hero caption, the masthead over the hero, the Works title and index over the cyclorama's floor, the chapter card. It was the page background too; see the light-only rule below for why those two jobs split. |
+| `--color-gold-ink` | `#8b6609` | `text-gold-ink` | **Gold that is legible as TYPE on a light ground** — the same hue and saturation as `--color-gold` at 40% lightness. `--color-gold` is ~2:1 against paper: correct for hairlines, marks and glows, unreadable as small or running type. Use this for any gold *text* (the Contact heading, labels, the spine, the mobile index numerals). |
+| `--color-charcoal` | `#17201c` | `text-charcoal` | Ink — default body text. Cooled onto the grounds' hue; a *warm* near-black on a cool ground reads faintly brown on every paragraph. |
+| `--color-paper` | `#f8fbf9` | `bg-paper` | Brightest ground — chapter 01. |
+| `--color-mist` | `#f1f6f3` | `bg-mist` | **The default ground** — `<body>`, /faq, /photography. |
+| `--color-sage` | `#e4ece8` | `bg-sage` | Plinth — chapter 03, the mobile index, the intro screen. |
+| `--color-sage-deep` | `#d2e0da` | `bg-sage-deep` | Chapter 04. |
+| `--color-moss` | `#235c47` | `bg-moss` | **Mid brand green** — chapter 05. Carries cream type at 6.8:1. Where the green stops being a tint. |
+| `--color-stone` | `#dde5e1` | `bg-stone` | The colour behind an image while it decodes. |
+| `--color-cream` | `#f6f2e9` | `text-cream` | **Type on emerald, and over photography.** Every green chapter's body ink, the hero caption, the masthead over the hero, the chapter card. |
 | `--color-ink` | `#0a0a09` | `bg-ink` | True neutral with the faintest warm cast. **Scrims and overlays over photography only** — never a section ground. A scrim exists to darken, not to colour: every scrim on this site used to be built from `--color-emerald-deep`, which tinted the photograph underneath it green. |
 
 **Usage rules**
 
-- **Green and gold must always resolve to the exact hex above, everywhere on the site** — navbar, headings, buttons, borders, glows, shadows, overlays, `<meta theme-color>`. If a value needs alpha (a tint, a glow, a scrim), build it from the token with `color-mix(in srgb, var(--color-emerald-deep) 75%, transparent)` (see `.surface-sage` / `.overlay-paper` in `globals.css` for the pattern) rather than re-typing an `rgba()` triplet.
+- **Green and gold must always resolve to the exact hex above, everywhere on the site** — navbar, headings, buttons, borders, glows, shadows, overlays, `<meta theme-color>`. If a value needs alpha (a tint, a glow, a scrim), build it from the token with `color-mix(in srgb, var(--color-emerald-deep) 75%, transparent)` (see `.vine` in `globals.css` for the pattern) rather than re-typing an `rgba()` triplet.
 - Don't reach for Tailwind's stock `green-*` / `emerald-*` / `amber-*` / `yellow-*` numbered scales — they aren't the brand color and will drift the moment anyone eyeballs a shade.
 - To change the brand green or gold in the future, edit the token in `styles/globals.css` **once** — everything using the Tailwind utilities or `var()` picks it up automatically.
 
-**The site is LIGHT throughout. There is no dark mode and no dark section.**
+### Grounds are near-achromatic. The brand lives in the deep tones and the accent.
 
-This is a hard rule, and it replaced the opposite one. The page used to alternate:
-cream → near-black emerald slab → cream → near-black emerald slab, four times on
-the way down (the figures strip, Testimonials, Founder, and Contact under a green
-wash), plus a dark green intro screen, a dark mobile index and a dark chapter
-card. Each of those made a defensible local argument — "a dark plinth between two
-light sections" — and together they made the green sections look imported from
-another site, because they shared no ground with anything around them.
+This is the rule the palette failed twice before arriving at, and it is checkable
+rather than a matter of taste. Two faults, compounding:
 
-So the green stays and its VALUE changes. Five light surfaces, and the darkest is
-13% below the lightest — see the table above for which is which.
+1. **Wrong hue.** `emerald` is hsl(158 …), a cool blue-leaning green. The grounds
+   were built at hue **84–100°** — olive. Sixty degrees of mismatch between the
+   brand colour and every surface it sits on is not a family of greens; it is two
+   greens arguing, and the eye resolves that as mud.
+2. **Too much of it.** They carried **13–22% saturation**. Checked against the
+   reference palettes for architecture, luxury and premium-brand products, every
+   one puts its background at effectively zero chroma (`#FAFAF9`, `#FFFFFF`) and
+   spends all of its colour on the primary and the accent. A saturated background
+   does not read as branded, it reads as *stained*.
 
-### The correction to the correction
+So every ground is now hue 154–158, matching emerald, with chroma cut to a
+whisper — cool near-whites with green in them rather than green surfaces. The
+widest channel spread in any of them is 14/255, and in all of them **blue sits
+above red**, which is what makes them lean cool. The old `sage-deep` was
+`#c9d5c2`: spread 19, with blue the *lowest* channel. That single relationship is
+the difference between clean and dirty.
 
-Taking the green out of the grounds fixed the jump and lost the brand. The next
-note back was exactly that: *more green, and the whole site should feel like one
-experience.* Both of those are the same problem as before, seen from the other
-side — five warm off-whites with green type on them is a beige site with a green
-logo, and eight sections that merely share a type system still read as eight
-sections.
+The brand went the other way at the same time. `moss` moved onto emerald's own
+hue and up from 30% to 45% saturation; `gold-ink` moved from 73% to 88%, because
+at 73% a dark gold on a cool ground turns olive and at 88% it stays brass (the
+reference palettes land their gold accent near `#A16207`). **Quiet grounds,
+saturated brand** — that contrast is the thing that reads as expensive.
 
-Three things answer it, and none of them brings back a dark band:
+### Two grounds, both flat. No gradient on any surface.
 
-1. **The grounds are green.** Every light surface is now a desaturated cut of the
-   brand hue (84–100°, 12–22% saturation) instead of a warm off-white. The green
-   went from being four bands to being the paper itself, so it is continuous
-   rather than intermittent — which is also most of why the sections stopped
-   looking like separate documents. Gold is the only warm thing left, and now has
-   a cool ground to be warm against.
-2. **The plinths dissolve.** `.surface-sage` opens and closes on `mist`, the
-   ground of whatever sits either side of it, and the `border-y` hairlines are
-   gone. A hairline announces that a new document starts here; with the ends
-   faded there is no boundary to see, the page just deepens in colour for a while
-   and comes back.
-3. **The spine.** A fixed rail down the left gutter carrying the current sheet's
-   number and name and a gold scroll marker — the one element aware of the whole
-   page at once. See its own section below.
+Every ground is either `paper` or `emerald`, painted as a **flat colour**, and
+they alternate:
 
-Green now carries the site through the GROUNDS, the type, the hairlines, and two
-large green fields (the Works cyclorama and the Contact room). The only dark
-areas are the two full-bleed photographic heroes, which are dark because a
-photograph is dark, not because a section is.
+| | Chapter | Ground |
+|---|---|---|
+| | the title plate | `emerald` |
+| 01 | The Practice | `paper` |
+| 02 | Selected Works | `emerald` |
+| 03 | Testimonials | `paper` |
+| 04 | Process | `emerald` |
+| 05 | Services | `emerald` |
+| 06 | Contact | `emerald` + photograph under a flat 94% veil |
 
-### Where large green fields are allowed
+What this replaced: a sage plinth that faded at both ends, a "cyclorama" that
+swept from paper at its centre to emerald in its corners, a moss band that opened
+on one neighbour and closed on the other, and an emerald room built from three
+stacked `linear-gradient`s. Every one of them was solving the same problem — how
+to get from one section's colour to the next without a seam — and the studio's
+note was that the result read as **green smears rather than as green**.
 
-`.stage-cyclorama` and `.overlay-paper` both put brand green across a whole
-frame, and both keep the MIDDLE light. That is the rule that separates them from
-the dark slabs this all started with: green owns the frame, the centre of the
-frame stays paper, and photographs sit **on** the green rather than under it.
+The honest fix is not a better gradient. It is to stop needing one: with two
+grounds and a hard edge between them there is no transition to hide. A flat brand
+green meeting a flat near-white is a decision; a gradient between them is an
+apology for the decision.
 
-The one consequence worth knowing: where a green field is dense enough
-(the cyclorama's floor, the Contact room's edges) type on it has to be `cream`
-and `gold-soft`, not `emerald`. Selected Works therefore carries two ink schemes
-in one section — charcoal and gold at the top where the sweep is still paper,
-cream below the horizon. That is not an inconsistency; it is what a lit sweep is.
+Consequences:
 
-Consequences to keep in mind when adding anything:
+- **`sage`, `sage-deep`, `mist`, `moss` and `stone` have no callers.** They are
+  left in the token block as the ramp they belong to, but reaching for one puts a
+  third ground on the page and breaks the alternation.
+- Type on a green chapter is `cream` / `gold` / `gold-soft`; on paper it is
+  `emerald` / `charcoal` / `gold-ink`. `tone="dark"` on `<SectionHeading />` and
+  `<InfiniteMovingCards />` selects the first set.
+- `data-chrome="dark"` now has six callers (both photographic heroes, the title
+  plate, and chapters 02/04/05/06). The masthead **and** `<Spine />` read it.
+- Anything mixed from `--color-emerald` will be *lighter* than a `bg-emerald`
+  ground, not darker. The spine's label fog hit this and had to be rebuilt from
+  `--color-emerald-deep`; a fog has to move away from its ground, and on a dark
+  ground that means down.
 
-- Gold TYPE must be `--color-gold-ink`, not `--color-gold`. See the table.
-- `tone="dark"` on `<SectionHeading />` and `tone="dark"` on
-  `<InfiniteMovingCards />` have no callers on either page. They are kept for a
-  band that sits over photography; don't reach for them for a section ground.
-- `data-chrome="dark"` (the attribute the masthead reads to flip its own
-  palette) now has exactly two callers, both photographic heroes. Adding a third
-  means you have added a dark band — which is the thing this rule forbids.
-- `<meta theme-color>` is `--color-cream`, matching `<body>`. It was the brand
-  emerald, which put a near-black green bar above a light page on mobile.
+### The figures strip
+
+"7+ YEARS IN PRACTICE" under the hero is flat `bg-emerald` with champagne figures
+over gold labels, as the studio asked. `.surface-emerald` — the layered gradient
+panel it used to be — is gone with every other gradient.
 
 ### Surfaces
 
-- `.surface-sage` — the dimensional green plinth: radial gold glow off the top edge, a tonal gradient down the band, an edge vignette. Use it for any large green block (Testimonials, Founder, the mobile index, the intro screen) rather than a flat `bg-sage` fill — a flat rectangle between two other flat rectangles is the "pasted in" problem in a lighter costume. The amplitudes inside it are far smaller than the old dark version's, because at this value a 4% shift is as visible as a 20% shift was on near-black.
-- `.surface-sage-deep` — the same material one step down, for the figures strip that carries the hero's imagery.
-- `.overlay-paper` — graded paper veil for setting type over a photograph on a light page (Contact), closed with a green edge and a floor. Heaviest under the heading, thinning across the frame, so the image stays legibly an image. The enquiry form gets its own glass panel rather than more veil — it is high-frequency DETAIL, not brightness, that makes 12px labels unreadable on a photograph, and thickening the veil is how this section became a white rectangle twice.
-- `.stage-cyclorama` — the lit green sweep Selected Works stands its ring on: sweep, floor, key light and horizon in four layers. **It must be on the PINNED element, not the section** — the section is as tall as the whole scroll the pin consumes, so a gradient there is stretched over five screens and only its palest top is ever visible.
-- `.ring-floor` / `.ring-reflect` — the ring's footprint disc and the mirrored copy under each card. See the Selected Works section below.
-- `.ring-stage` / `.ring-3d` / `.ring-face` — the three properties CSS has and Tailwind does not that make the Selected Works cylinder work: `perspective` on the stage, `preserve-3d` + `rotateY` on the ring, and the per-face swing out to the radius. Read the note in `globals.css` before touching the transform order on `.ring-face`; it is not interchangeable.
+There are almost none left, and that is the point. What survives:
 
-Both `.surface-emerald` and `.overlay-emerald` are **gone**. They were the dark
-green panel and the dark green photo wash; see the light-only rule above.
+- `.ring-stage` / `.ring-3d` / `.ring-face` — the three properties CSS has and
+  Tailwind does not that make the Selected Works cylinder work: `perspective` on
+  the stage, `preserve-3d` + `rotateY` on the ring, and the per-face swing out to
+  the radius. Read the note in `globals.css` before touching the transform order
+  on `.ring-face`; it is not interchangeable.
+- `.ring-floor` / `.ring-reflect` — the ring's footprint disc and the mirrored
+  copy under each card.
+- `.vine` — the draw-on for the gold ornament. See **The ornament** below.
+- `.glass-bar` / `.glass-bar-dark` / `.glass-bar-light` — the chrome's material.
+
+Deleted, and not to be reintroduced: `.surface-emerald`, `.surface-sage`,
+`.surface-sage-deep`, `.surface-moss`, `.stage-cyclorama`, `.overlay-paper`,
+`.overlay-emerald-room`, `.overlay-emerald`, `.sheet-grid`, `.bloom*`. Every one
+was a gradient on a ground.
+
+## The ornament
+
+[`components/ui/Ornament.tsx`](components/ui/Ornament.tsx), placed by
+[`components/ui/SheetTexture.tsx`](components/ui/SheetTexture.tsx) — a gold vine
+with leaves and a five-petalled blossom, drawn on when a chapter enters view.
+
+It replaced a drawing grid, and the reason is worth keeping: **a grid is a
+filler.** It is what you reach for when a space needs something and you have not
+decided what — it belongs to the wireframe the design came out of, not to the
+brand it is for. The mark is a phoenix drawn in a single gold line, so the
+ornament is drawn in a single gold line. Same weight, same colour, same hand.
+
+It is the only decorative element on the site and it is used identically in every
+chapter. That is what makes it a system rather than a garnish.
+
+Four things that are load-bearing:
+
+- **`pathLength="1"` on every path.** It normalises the dash arithmetic so one
+  keyframe draws every path 0→1 regardless of its real length; without it each
+  path needs its own measured length in JS, on every resize. The stagger is
+  `animation-delay` per element, so the stem draws first and the leaves open
+  behind it.
+- **It draws once**, on an `IntersectionObserver` that disconnects immediately. A
+  vine that keeps animating is a loading spinner.
+- **It hangs ~44% off the page edge.** Placed fully inside its box the large one
+  runs straight through the Contact heading and the contact details. Bleeding it
+  also makes it read correctly — what stays on screen is the outer edge of
+  something larger growing in from the margin, which is how a marginal flourish
+  behaves in print. Contained, it reads as a sticker.
+- **Desktop only.** It works because it hangs into a gutter, and a phone has no
+  gutter. Same rule `<Spine />` follows.
+
+`<SheetTexture />` is `absolute`, so every caller must put its content in a
+positioned wrapper — positioned elements paint above static ones regardless of
+DOM order. That requirement is why it is a component rather than a `::before` on
+each section: it fails loudly in review instead of quietly at a breakpoint nobody
+screenshotted.
+
+## Chapter 01 is a centred statement with a 3D plate
+
+`<Practice />`. The heading is centred, set one weight up (`font-medium` — the
+one place on the site that departs from the single 400 weight, because this is
+the page's masthead statement and the step is doing work), and owns the full
+width. The pull quote and the standfirst sit under it on the same axis; nothing
+was cut, they moved from a right-hand column.
+
+Under it, a wide photograph laid back in 3D that stands up as you scroll to it:
+`rotateX` 14°→0 while it rises, with the image drifting the other way inside its
+frame. Perspective on the wrapper, transform on the child — perspective applies
+to an element's *children*, so both on one element gives a skew rather than a
+rotation.
+
+That is deliberately the same language as `<SelectedWorks />`. A site whose only
+3D moment is one section reads as a section with a gimmick in it; two, built from
+the same parts, read as how this site handles pictures.
 
 ## Typography
 
@@ -344,6 +415,49 @@ flipped about the box's **own centre** — flipping about its top edge moves the
 back on top of the card, because a transform moves the element and not just what
 is drawn in it.
 
+## The paper
+
+[`components/ui/SheetTexture.tsx`](components/ui/SheetTexture.tsx) — one
+component, in every chapter, carrying two layers.
+
+Editorial layouts leave large areas of ground uncovered by design; that is what
+the white space IS. The failure is when uncovered reads as **unused**, which
+happens easily on near-achromatic grounds because a flat pale rectangle has
+nothing for the eye to rest on. The answer is not more content — it is to give
+the paper a texture, the way a heavy stock has one: something you notice when you
+look at it and not before.
+
+- **The ruling** — a drawing grid at 88px, 5.5% of the brand green. It is the
+  site's own language: sections are numbered sheets, `<Spine />` is the sheet's
+  margin, `<SectionHeading />` is its title block. Radially masked, because an
+  unmasked grid to the edges reads as a wireframe someone forgot to remove.
+- **The blooms** — two soft lights, one brand green and one gold, drifting slowly
+  in opposite corners. This is what stops a near-achromatic ground from being
+  flat: it gives the paper a direction the light comes from, so empty areas have
+  a gradient across them instead of one value.
+
+They are deliberately the same two layers in every chapter. A texture that
+changes between sections is decoration; a texture that does not is a **material**
+— which is the difference between the site feeling assembled and feeling made of
+something.
+
+Two implementation notes that are load-bearing:
+
+- **Radial gradients, not `filter: blur()`.** A blur over half a viewport makes
+  the compositor allocate and blur a buffer on every repaint; a gradient is drawn
+  once and then only transformed. Same picture, and one of them runs on a phone.
+- **It is `absolute`, so every caller must put its content in a positioned
+  wrapper.** Positioned elements paint above static ones regardless of DOM order,
+  so a static sibling after it disappears underneath. That requirement is why it
+  is a component rather than a `::before` on each section — it fails loudly in
+  review instead of quietly at a breakpoint nobody screenshotted.
+
+Blurring a busy warm photograph and tinting it neutral is the other reliable way
+to manufacture mud, and the Contact form panel hit it: `.glass-bar-dark` over a
+restaurant full of pendant lights averaged to a brown-olive smear. That panel is
+a **surface** now — near the emerald ground it sits on, with a champagne rim —
+so its colour is decided by the palette rather than by whatever was in the shot.
+
 ## The spine
 
 [`components/layout/Spine.tsx`](components/layout/Spine.tsx) — a fixed hairline
@@ -377,8 +491,57 @@ Three things it has to get right:
 
 It also carries a soft radial plate behind the label, because two sections run
 their content full-bleed through the gutter (the testimonial row and the services
-track both start at x=0) and 12px letterspaced type at 55% charcoal disappears
-into a photograph.
+track both start at x=0) and 12px letterspaced type disappears into a photograph.
+**That plate has to size against the label, not against its centring parent** —
+it was `h-[130%]` on a flex box with `inset-y-0`, which resolved to 130% of the
+VIEWPORT and painted a pale column down the left edge of every page.
+
+### It is a thread, not a progress bar
+
+A progress bar answers "how far through am I". A thread with a NODE for every
+chapter answers "how far through *what*" — it shows the whole story at once: six
+chapters, their relative lengths, which are behind you, which is current, how
+much is left. That is the difference between a scroll indicator and a narrative
+device, and it is the shape the reference sites use: Eladio Dieste's page hangs
+its entire timeline off one unbroken vertical line with a node at each date and
+content alternating either side of it.
+
+The node positions are the sections' real document offsets, so the thread is a
+true map rather than six evenly spaced dots — chapter 02 is the longest thing on
+the page and its gap on the thread is visibly the longest gap.
+
+Mechanics worth keeping: the drawn line is a `scaleY` from the top (a transform,
+not a height, so it composites instead of forcing layout), and the reading head
+is a separate element because scaling the line would squash it.
+
+### The rule that reaches
+
+`<SectionHeading />`'s gold hairline used to be a 40px stub inside the container's
+gutter. From `lg` it runs from the page edge instead (`-ml-16` cancels
+`<PageContainer />`'s padding), so it **crosses the thread**. Every chapter's
+heading is physically joined to the line running down the page, and the relation
+between "this section" and "the document" is something you can see rather than
+something you infer from a matching number.
+
+Before changing a section's overflow: `overflow-hidden` clips this at x=0, which
+is where it wants to stop, so it is safe. Horizontal padding on a section
+*wrapper* rather than on `<PageContainer />` would clip it short.
+
+## Chapters, and why they are renumbered
+
+`<Founder />` and `<WhyUs />` are commented out of `app/page.tsx` at the studio's
+request. Both components are intact — nothing was deleted, so restoring either is
+a one-line change.
+
+The renumbering that came with it is not bookkeeping. With those two gone the
+remaining sheets ran 01, 02, 03, 04, 07, 08, and a document that skips two
+numbers is visibly a document with pages torn out. Every `index` on a
+`<SectionHeading />`, the list in `<Spine />`, and `NAV_LINKS` (which lost the
+"Why Us" entry, or it would scroll nowhere) now agree on 01–06.
+
+**If a section is added or removed, three things have to move together:** the
+section's own `index`, the `SHEETS` list in `<Spine />`, and its step on the arc
+— including the two neighbours' gradients, which are what hide the seams.
 
 ## Where this lives in code
 

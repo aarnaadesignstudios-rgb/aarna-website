@@ -11,7 +11,7 @@
  *    scrub on a scaleY / DrawSVG line).
  *  - Highlight the active step as it reaches the viewport centre.
  */
-import { PageContainer, SectionHeading } from "@/components/ui";
+import { PageContainer, SectionHeading, SheetTexture } from "@/components/ui";
 import { PROCESS_STEPS } from "@/constants";
 import { useReveal } from "@/hooks";
 import { cn } from "@/utils/cn";
@@ -23,8 +23,21 @@ export default function Process() {
     /* Padding cut from py-24/32/40. The four stages occupied the upper third
        of the section and the rest was empty cream, which is what made the
        spacing read as uneven in the first place. */
-    <section id="process" className="bg-mist py-20 text-charcoal md:py-24 lg:py-28">
-      <PageContainer>
+    /* Step four of the arc — see the note on `.surface-moss` in globals.css.
+       Flat rather than graded, and that is deliberate: <Testimonials /> above
+       closes on `sage-deep` and <Services /> below opens on it, so a flat
+       `sage-deep` here joins them with no boundary at either end. The gradient
+       work is done by the neighbours. */
+    <section
+      id="process"
+      data-chrome="dark"
+      className="relative bg-emerald py-20 text-cream md:py-24 lg:py-28"
+    >
+      <SheetTexture />
+
+      {/* `relative z-10`: <SheetTexture /> is absolutely positioned, so a
+          static sibling after it would paint UNDERNEATH it. */}
+      <PageContainer className="relative z-10">
         {/* Centred on request. `align="center"` centres the eyebrow row and
             the title; the lead measure below is centred by the same switch. */}
         <SectionHeading
@@ -32,6 +45,7 @@ export default function Process() {
           eyebrow="Process"
           title="How we work"
           align="center"
+          tone="dark"
           className="max-w-full"
         />
 
@@ -56,14 +70,14 @@ export default function Process() {
             item would land in the wrong place. */}
         <ol
           ref={listRef}
-          className="mx-auto mt-14 grid list-none grid-cols-1 gap-y-14 border-t border-emerald/15 p-0 pt-14 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0"
+          className="mx-auto mt-14 grid list-none grid-cols-1 gap-y-14 border-t border-cream/20 p-0 pt-14 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0"
         >
           {PROCESS_STEPS.map((step, i) => (
             <li
               key={step.id}
               data-reveal
               className={cn(
-                "flex flex-col items-center gap-4 border-emerald/15 px-4 text-center sm:px-8",
+                "flex flex-col items-center gap-4 border-cream/20 px-4 text-center sm:px-8",
                 // 2-up: a rule before the right-hand column of each row.
                 i % 2 === 1 && "sm:border-l",
                 // 4-up: one continuous set of verticals. The first column
@@ -76,13 +90,13 @@ export default function Process() {
               <span className="font-serif text-5xl leading-none text-gold md:text-6xl">
                 {step.step}
               </span>
-              <h3 className="font-serif text-2xl text-emerald md:text-3xl">
+              <h3 className="font-serif text-2xl text-cream md:text-3xl">
                 {step.title}
               </h3>
               {/* Held to a measure, and centred within it. Without the cap the
                   four paragraphs are four different widths and the row stops
                   looking evenly divided however equal the columns are. */}
-              <p className="mx-auto max-w-[30ch] text-charcoal/70">
+              <p className="mx-auto max-w-[30ch] text-cream/70">
                 {step.description}
               </p>
             </li>
