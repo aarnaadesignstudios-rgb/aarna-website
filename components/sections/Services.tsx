@@ -108,7 +108,7 @@ export default function Services() {
     <section
       ref={sectionRef}
       id="services"
-      className="relative bg-cream text-charcoal"
+      className="relative bg-mist text-charcoal"
     >
       <div ref={pinRef} className="flex flex-col overflow-hidden lg:h-screen">
         <PageContainer className="shrink-0 pt-24 pb-8 md:pt-28">

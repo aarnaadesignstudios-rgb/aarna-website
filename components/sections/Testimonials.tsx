@@ -4,10 +4,21 @@
  * A full section with its own sheet number: client proof earns a place in the
  * document's index rather than being a decorative ticker between two sections.
  *
- * The emerald ground is doing real work here. Both neighbours (<SelectedWorks />
- * and <Process />) are light, so this lands as a dark plinth in the middle of
- * the page — the same treatment <Founder /> gets — and the gold-on-emerald
- * cards read as the brand rather than as a generic testimonial grid.
+ * ── The dark plinth is gone ───────────────────────────────────────────────
+ *
+ * This used to argue that its emerald ground was "doing real work": both
+ * neighbours are light, so a dark band in the middle of the page read as a
+ * plinth. On its own that was true. On the page it was not — <Founder /> made
+ * exactly the same argument two sections later, the figures strip made it a
+ * third time, and the result was a page that changed ground four times on the
+ * way down and looked assembled from two different sites.
+ *
+ * So the plinth stays and its value does not. `surface-sage` is the brand
+ * emerald at 5% into cream: still recognisably the green section, still
+ * distinct from the cream above and below it, and now within 6% of their
+ * value instead of 80% below them. The cards come with it — `tone="light"`
+ * puts the quotes in emerald on white, which is the treatment every other
+ * card on the site already uses.
  *
  * One row, carrying all eight quotes. It was briefly two opposed rows, which
  * filled the section but asked the eye to track two things at once and made the
@@ -38,9 +49,11 @@ export default function Testimonials() {
     <section
       id="testimonials"
       aria-label="What our clients say"
-      /* Dark band — see the note in components/layout/Navbar.tsx. */
-      data-chrome="dark"
-      className="surface-emerald overflow-hidden border-y border-gold/15 py-14 text-cream md:py-16 lg:py-20"
+      /* No `border-y`. `.surface-sage` opens and closes on the ground colour
+         of the sections either side of it, so there is no edge left to draw —
+         and a hairline there would put the boundary back that the gradient
+         exists to remove. See the note in styles/globals.css. */
+      className="surface-sage overflow-hidden py-14 text-charcoal md:py-16 lg:py-20"
     >
       <PageContainer>
         <SectionHeading
@@ -51,13 +64,12 @@ export default function Testimonials() {
             <>
               We design for the moment of handover, but also for everything
               that comes after.
-              <span className="mt-3 block italic text-cream/60">
+              <span className="mt-3 block italic text-charcoal/55">
                 These are the people who live, work and gather in our spaces.
               </span>
             </>
           }
           meta={`${TESTIMONIALS.length} clients`}
-          tone="dark"
           className="max-w-full"
         />
       </PageContainer>
@@ -69,6 +81,7 @@ export default function Testimonials() {
           items={TESTIMONIALS}
           direction="left"
           speed="normal"
+          tone="light"
         />
       </div>
     </section>

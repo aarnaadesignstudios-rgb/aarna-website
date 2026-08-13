@@ -74,13 +74,27 @@ export default function Practice() {
           plinth under the hero's imagery. Deliberately outside
           <PageContainer /> so the emerald runs edge to edge; the list inside
           pours back through it to keep the page's left/right rhythm. */}
-      {/* `data-chrome="dark"` — this strip, not the paper section around it,
-          is what the masthead floats over as the hero scrolls away. See
-          components/layout/Navbar.tsx. */}
-      <div
-        data-chrome="dark"
-        className="surface-emerald relative z-10 border-y border-gold/25 py-7 md:py-8"
-      >
+      {/* ── The plinth is light now ──────────────────────────────────────
+          This was a full-bleed `surface-emerald` band with gold figures, and
+          it is the first thing under the hero — so the page opened on a
+          photograph, then a near-black green bar, then paper. Three grounds in
+          the first screen and a half, one of which shared nothing with the
+          other two.
+
+          It is still a plinth and it is still green: `surface-sage-deep` is
+          the brand emerald mixed 10% into cream, which keeps the band reading
+          as the darkest step on the page without leaving the page's own value
+          range. The figures move to emerald, where the brand colour now
+          carries the type rather than the background — the same argument
+          SectionHeading has always made for its titles.
+
+          `data-chrome="dark"` is gone with it: the masthead reads this strip
+          as it scrolls past the hero, and it is no longer a dark band. */}
+      {/* `border-t` only, and gold. The top edge butts a photograph and wants
+          a drawn line — that is what makes the plinth read as a mount under the
+          picture. The bottom has none: `.surface-sage-deep` already dissolves
+          into the paper of this section. */}
+      <div className="surface-sage-deep relative z-10 border-t border-gold/35 py-7 md:py-8">
         <PageContainer>
           <motion.ul
             aria-label="The studio in numbers"
@@ -95,7 +109,7 @@ export default function Practice() {
                 key={stat.id}
                 variants={fadeUp}
                 className={cn(
-                  "flex flex-col items-center border-gold/20 px-3 text-center",
+                  "flex flex-col items-center border-emerald/12 px-3 text-center",
                   // 2-up: rule between the pair, and across the rows.
                   i % 2 === 1 && "border-l",
                   i >= 2 && "border-t pt-7",
@@ -113,10 +127,16 @@ export default function Practice() {
                     the last Bodoni on the site outside the wordmark, which is
                     why a row of figures never sat easily above labels set in
                     Cormorant. See styles/globals.css. */}
-                <p className="type-figure m-0 whitespace-nowrap text-[1.5rem] leading-none tracking-tight text-gold-soft md:text-[1.75rem] xl:text-3xl">
+                {/* Emerald figures, charcoal labels — the same two inks every
+                    other light section on the site uses. The figures were
+                    `gold-soft` and the labels `gold`, both of which need a dark
+                    ground: champagne on sage is around 1.6:1, and a 12px
+                    uppercase label at that contrast is decorative rather than
+                    readable. */}
+                <p className="type-figure m-0 whitespace-nowrap text-[1.5rem] leading-none tracking-tight text-emerald md:text-[1.75rem] xl:text-3xl">
                   {stat.value}
                 </p>
-                <p className="m-0 mt-2.5 font-label leading-normal text-gold">
+                <p className="m-0 mt-2.5 font-label leading-normal text-charcoal/55">
                   {stat.label}
                 </p>
               </motion.li>
@@ -125,7 +145,11 @@ export default function Practice() {
         </PageContainer>
       </div>
 
-      <PageContainer className="relative z-10 pt-20 md:pt-24 lg:pt-28">
+      {/* Was pt-20/24/28. The strip above now fades into this ground instead
+          of ending on a rule, so the section no longer needs to clear a hard
+          edge before it starts — and 112px of nothing under a plinth was a
+          third of the empty space the review flagged. */}
+      <PageContainer className="relative z-10 pt-12 md:pt-14 lg:pt-16">
         <SectionHeading
           index="01"
           eyebrow="The Practice"

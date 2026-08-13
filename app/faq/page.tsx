@@ -46,7 +46,7 @@ export default function FaqPage() {
       <main>
         {/* pt clears the fixed masthead — this page has no hero to sit under
             it, so the space has to be made explicitly. */}
-        <section className="bg-cream pt-36 pb-20 text-charcoal md:pt-44 md:pb-24">
+        <section className="bg-mist pt-36 pb-20 text-charcoal md:pt-44 md:pb-24">
           <PageContainer>
             <SectionHeading
               eyebrow="FAQ"

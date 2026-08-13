@@ -265,7 +265,7 @@ export default function SectionTransition() {
              out of frame in both directions; without it the page briefly gains
              something to scroll sideways to, which is the exact bug this whole
              change is here to remove. */
-          className="surface-emerald pointer-events-auto fixed inset-0 z-70 flex items-center justify-center overflow-hidden"
+          className="surface-sage pointer-events-auto fixed inset-0 z-70 flex items-center justify-center overflow-hidden"
           initial={{ y: card.direction > 0 ? "100%" : "-100%" }}
           animate={{ y: "0%" }}
           exit={{ y: card.direction > 0 ? "-100%" : "100%" }}
@@ -302,13 +302,15 @@ export default function SectionTransition() {
             {/* The index between two gold hairlines — the centred variant of
                 the rule that opens every section on the site. */}
             <span className="flex items-center gap-4">
-              <span aria-hidden className="block h-px w-12 bg-gold/70" />
-              {card.index && <span className="font-label text-gold">{card.index}</span>}
-              <span aria-hidden className="block h-px w-12 bg-gold/70" />
+              <span aria-hidden className="block h-px w-12 bg-gold/80" />
+              {card.index && (
+                <span className="font-label text-gold-ink">{card.index}</span>
+              )}
+              <span aria-hidden className="block h-px w-12 bg-gold/80" />
             </span>
 
             {card.label && (
-              <span className="font-serif text-[2.6rem] leading-[1.05] tracking-tight text-cream sm:text-6xl lg:text-7xl">
+              <span className="font-serif text-[2.6rem] leading-[1.05] tracking-tight text-emerald sm:text-6xl lg:text-7xl">
                 {card.label}
               </span>
             )}

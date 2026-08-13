@@ -78,7 +78,7 @@ export default function PhotographyPage() {
         </section>
 
         {/* ── The lead ────────────────────────────────────────────────────── */}
-        <section className="bg-cream py-20 text-charcoal md:py-24 lg:py-28">
+        <section className="bg-mist py-20 text-charcoal md:py-24 lg:py-28">
           <PageContainer>
             <div className="grid gap-y-12 lg:grid-cols-[1.35fr_1fr] lg:gap-x-20">
               <div>
@@ -109,17 +109,16 @@ export default function PhotographyPage() {
         </section>
 
         {/* ── Method ──────────────────────────────────────────────────────── */}
-        <section className="surface-emerald border-y border-gold/15 py-20 text-cream md:py-24">
+        <section className="surface-sage py-20 text-charcoal md:py-24">
           <PageContainer>
             <SectionHeading
               eyebrow="Approach"
               title="Four things every frame has to do"
-              tone="dark"
               meta="Method"
               className="max-w-full"
             />
 
-            <div className="mt-14 grid grid-cols-1 gap-y-12 border-t border-cream/15 pt-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
+            <div className="mt-14 grid grid-cols-1 gap-y-12 border-t border-emerald/12 pt-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
               {PHOTOGRAPHY_SCOPE.map((item, i) => (
                 <Reveal
                   key={item.id}
@@ -130,16 +129,16 @@ export default function PhotographyPage() {
                     // Process section uses, so the two read as one system.
                     (i % 2 === 1 ? "sm:border-l " : "") +
                     (i === 0 ? "lg:border-l-0 lg:pl-0 " : "lg:border-l ") +
-                    "border-cream/15 sm:px-7 lg:px-8"
+                    "border-emerald/12 sm:px-7 lg:px-8"
                   }
                 >
-                  <span className="font-label text-gold">
+                  <span className="font-label text-gold-ink">
                     {item.index}
                   </span>
-                  <h3 className="mt-4 font-serif text-2xl md:text-[1.7rem]">
+                  <h3 className="mt-4 font-serif text-2xl text-emerald md:text-[1.7rem]">
                     {item.title}
                   </h3>
-                  <p className="mt-3 max-w-[34ch] text-cream/70">
+                  <p className="mt-3 max-w-[34ch] text-charcoal/70">
                     {item.body}
                   </p>
                 </Reveal>

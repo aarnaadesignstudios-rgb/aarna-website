@@ -40,7 +40,7 @@ export default function SpotlightCard({
   children,
   className,
   radius = 260,
-  surface = "bg-cream",
+  surface = "bg-mist",
   border = "border-current/10 hover:border-gold/40",
 }: SpotlightCardProps) {
   const ref = useRef<HTMLDivElement>(null);

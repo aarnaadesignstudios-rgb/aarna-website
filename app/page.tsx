@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 
 import LoadingScreen from "@/components/sections/LoadingScreen";
 import Navbar from "@/components/layout/Navbar";
+import Spine from "@/components/layout/Spine";
 import Hero from "@/components/sections/Hero";
 import Practice from "@/components/sections/Practice";
 import WhyUs from "@/components/sections/WhyUs";
@@ -40,6 +41,11 @@ export default function Home() {
       <LoadingScreen />
 
       <Navbar />
+      {/* The drawing-sheet margin that runs the length of the page. It is what
+          makes the sections read as one document rather than eight blocks — see
+          the note in components/layout/Spine.tsx. Home only: it reports on
+          numbered sheets, and /faq and /photography have none. */}
+      <Spine />
 
       <main>
         <Hero />

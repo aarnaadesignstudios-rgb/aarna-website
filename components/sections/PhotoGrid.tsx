@@ -101,7 +101,11 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                 onClick={() => setOpenIndex(i)}
                 aria-label={`Open image ${i + 1} of ${frames.length}`}
                 className={cn(
-                  "group relative block w-full cursor-pointer overflow-hidden rounded-2xl bg-emerald-deep",
+                  // `bg-stone`, not `bg-emerald-deep`: this is the colour that
+                  // shows for the moment before the photograph decodes, and a
+                  // near-black green tile flashing in a light grid is a worse
+                  // artefact than the load itself.
+                  "group relative block w-full cursor-pointer overflow-hidden rounded-2xl bg-stone",
                   frame.aspect
                 )}
               >
@@ -132,7 +136,15 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Photograph"
-            className="fixed inset-0 z-100 flex flex-col bg-ink/96 backdrop-blur-sm"
+            /* ── A light lightbox ────────────────────────────────────────
+               This was `bg-ink/96`. A dark viewer is the conventional choice
+               for photographs and it is the one thing on the site that could
+               have argued for staying dark — but the brief was light only,
+               with no exceptions, so it is paper with the same blur. The
+               photograph is `object-contain` on a near-opaque ground either
+               way; what changes is that closing it no longer flashes the page
+               from near-black to cream. */
+            className="fixed inset-0 z-100 flex flex-col bg-paper/97 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -140,7 +152,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
             onClick={close}
           >
             <div className="flex shrink-0 items-center justify-between px-6 py-5 md:px-10">
-              <span className="font-label text-cream/60">
+              <span className="font-label text-charcoal/55">
                 {String((openIndex ?? 0) + 1).padStart(2, "0")} /{" "}
                 {String(frames.length).padStart(2, "0")}
               </span>
@@ -149,7 +161,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                 type="button"
                 aria-label="Close"
                 onClick={close}
-                className="cursor-pointer text-cream/70 transition-colors duration-300 hover:text-gold"
+                className="cursor-pointer text-charcoal/60 transition-colors duration-300 hover:text-gold-ink"
               >
                 <FiX size={24} />
               </button>
@@ -184,7 +196,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                   e.stopPropagation();
                   step(-1);
                 }}
-                className="cursor-pointer font-label text-cream/60 transition-colors duration-300 hover:text-gold"
+                className="cursor-pointer font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
               >
                 ← Previous
               </button>
@@ -194,7 +206,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                   e.stopPropagation();
                   step(1);
                 }}
-                className="cursor-pointer font-label text-cream/60 transition-colors duration-300 hover:text-gold"
+                className="cursor-pointer font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
               >
                 Next →
               </button>

@@ -80,12 +80,14 @@ const TONE: Record<
     role: "text-charcoal/50",
     rule: "border-emerald/10",
   },
+  // Kept for any band that sits over photography (the /photography hero, say);
+  // nothing on the home page uses it any more. <Testimonials /> was its one
+  // caller and that section is light now — see the note at the top of it.
   dark: {
-    // The card has to lift off the emerald without becoming a grey box on a
-    // brand-coloured ground. A ~7% cream wash carries that on its own at small
-    // sizes, but across a card this wide it needs the gold hairline to hold an
-    // edge — at 4% and a cream-tinted border the cards read as smudges rather
-    // than as panels.
+    // The card has to lift off a dark ground without becoming a grey box on it.
+    // A ~7% cream wash carries that on its own at small sizes, but across a
+    // card this wide it needs the gold hairline to hold an edge — at 4% and a
+    // cream-tinted border the cards read as smudges rather than as panels.
     card: "bg-cream/[0.07] text-cream",
     border: "border-gold/20 hover:border-gold/55",
     glyph: "text-gold/50",
@@ -110,7 +112,9 @@ export default function InfiniteMovingCards({
   direction = "left",
   speed = "slow",
   pauseOnHover = true,
-  tone = "dark",
+  // The site is light throughout, so light is the default a caller gets by
+  // omission. It was `dark` while the page still had emerald bands on it.
+  tone = "light",
   className,
 }: InfiniteMovingCardsProps) {
   const ink = TONE[tone];

@@ -39,12 +39,32 @@ export interface ImageCycleFrame {
   position?: string;
 }
 
+/**
+ * How one frame becomes the next.
+ *
+ * `dissolve` — the original: the incoming frame fades up over the outgoing one.
+ * Calm, and effectively invisible as motion; at a slow cadence the stack reads
+ * as a single photograph that keeps changing its mind.
+ *
+ * `wipe` — the incoming frame is UNCOVERED from the right edge leftward while
+ * its own content slides the other way. Two things make this read as a cut in a
+ * film rather than as a CSS effect: the moving edge (an eye tracks an edge, it
+ * does not track a change in opacity), and the counter-slide, which means the
+ * new frame arrives already in motion instead of sitting still behind a
+ * travelling mask. Directional on purpose — it sweeps in from the right, the
+ * same direction the projects rotate in from in <SelectedWorks />, so the whole
+ * page agrees about which way "next" is.
+ */
+export type ImageCycleTransition = "dissolve" | "wipe";
+
 interface ImageCycleProps {
   frames: ImageCycleFrame[];
-  /** How long a frame is held on screen, in ms (excluding the dissolve). */
+  /** How long a frame is held on screen, in ms (excluding the transition). */
   holdMs?: number;
-  /** How long one frame takes to dissolve into the next, in ms. */
+  /** How long one frame takes to become the next, in ms. */
   fadeMs?: number;
+  /** How one frame becomes the next. See {@link ImageCycleTransition}. */
+  transition?: ImageCycleTransition;
   /** Responsive sizes hint passed to every frame. */
   sizes?: string;
   /**
@@ -113,12 +133,49 @@ function driftFor(i: number) {
  */
 const PORTRAIT_ZOOM = "[--frame-zoom:1.3] sm:[--frame-zoom:1]";
 
+/**
+ * ── The opening frame, published ──────────────────────────────────────────
+ *
+ * <LoadingScreen /> renders the hero's FIRST frame inside its own window, and
+ * then opens that window to full-bleed rather than dissolving the panel away —
+ * so the loader resolves into the hero instead of getting out of its way.
+ *
+ * That only works if the two are the same picture in every respect: the same
+ * source, the same `sizes` (so it is one network request and the hero's copy is
+ * a cache hit), the same portrait zoom, and the same starting pose. Three
+ * constants rather than three copies, because a mismatch here would not look
+ * like a bug — it would look like a jump at the exact moment the site is
+ * introducing itself.
+ */
+export { PORTRAIT_ZOOM as FRAME_ZOOM_CLASS };
+
+/** The `sizes` every frame is requested at. */
+export const FRAME_SIZES = "(max-width: 639px) 160vw, 100vw";
+
+/** Frame 0's pose before the cycle releases it — `scale(1.05)`, zoom folded in. */
+export const FRAME_OPENING_POSE = withZoom(DRIFTS[0].from);
+
+/**
+ * The wipe's easing and its counter-slide distance.
+ *
+ * A near-symmetric in-out curve, deliberately steeper than the site's editorial
+ * ease: the moving edge should leave and arrive softly but cross the frame
+ * decisively, which is what makes it read as a cut. The site's own
+ * `ease-editorial` (0.22, 1, 0.36, 1) puts almost all of its travel in the first
+ * third, so the edge is across the screen before the eye has found it.
+ */
+const WIPE_EASE = "cubic-bezier(0.72, 0, 0.22, 1)";
+
+/** How far the incoming frame's content slides while it is uncovered. */
+const WIPE_SLIDE = "5%";
+
 export default function ImageCycle({
   frames,
   holdMs = 4000,
   fadeMs = 1200,
+  transition = "dissolve",
   // 160vw on phones so the zoomed crop still resolves sharply.
-  sizes = "(max-width: 639px) 160vw, 100vw",
+  sizes = FRAME_SIZES,
   startDelayMs = 0,
   onFrameChange,
   className,
@@ -238,8 +295,30 @@ export default function ImageCycle({
     onFrameChangeRef.current?.(current);
   }, [current]);
 
+  const wipingNow = transition === "wipe" && outgoing >= 0;
+
   return (
     <div ref={rootRef} className={cn("absolute inset-0", PORTRAIT_ZOOM, className)}>
+      {/* ── The edge ────────────────────────────────────────────────────────
+          A single champagne hairline riding the wipe's leading edge, keyed on
+          the frame so it re-runs on every cut.
+
+          It is a full-width element carrying a right-hand border, translated
+          from 0 to -100%, rather than a 1px element with an animated `left`.
+          Same picture, and this version is a compositor transform on one
+          element instead of a layout property being recalculated for 640ms.
+
+          The duration and easing are the wipe's own, so the line sits on the
+          clip's edge for the whole crossing instead of drifting away from it. */}
+      {wipingNow && (
+        <span
+          key={`edge-${current}`}
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 left-0 z-3 w-full border-r border-gold-soft/70"
+          style={{ animation: `wipe-edge ${fadeMs}ms ${WIPE_EASE} forwards` }}
+        />
+      )}
+
       {frames.map((frame, i) => {
         // Frames past the horizon aren't in the DOM yet — see `mountedThrough`.
         if (i > mountedThrough) return null;
@@ -248,8 +327,21 @@ export default function ImageCycle({
         const isOutgoing = i === outgoing;
         const drift = driftFor(i);
         // Deferred reset: everything that isn't on screen waits for the
-        // dissolve to end before dropping out or returning to its start pose.
+        // transition to end before dropping out or returning to its start pose.
         const afterDissolve = `0ms linear ${fadeMs}ms`;
+
+        const wiping = transition === "wipe";
+        /**
+         * Nothing has advanced yet, so frame 0 is showing its opening pose.
+         *
+         * The wipe must not run on it. <LoadingScreen /> opens a window onto a
+         * pixel-identical copy of this exact frame and hands over by matching
+         * it, so anything animating the frame underneath at that moment shows
+         * up as a tear at the handover. It only wipes from the SECOND frame on,
+         * which is also the only time a wipe means anything — there is nothing
+         * underneath the first one to be uncovered from.
+         */
+        const opening = outgoing < 0;
 
         return (
           <div
@@ -257,35 +349,73 @@ export default function ImageCycle({
             aria-hidden={!isCurrent}
             className="absolute inset-0"
             style={{
-              opacity: isCurrent ? 1 : 0,
+              // In wipe mode the frame is revealed by its clip, so opacity is
+              // left alone — cross-fading a wipe softens the moving edge into a
+              // gradient and loses the whole point of it. Frames that are
+              // neither current nor outgoing are clipped to nothing anyway;
+              // opacity 0 on them is belt and braces.
+              opacity: wiping ? (isCurrent || isOutgoing ? 1 : 0) : isCurrent ? 1 : 0,
               zIndex: isCurrent ? 2 : isOutgoing ? 1 : 0,
-              transition: isCurrent
-                ? `opacity ${fadeMs}ms ease-in-out`
-                : `opacity ${afterDissolve}`,
+              // The clip is the wipe. `inset(0 0 0 100%)` collapses the frame
+              // against its own right edge; animating the left inset to 0
+              // uncovers it leftward across the screen. The outgoing frame
+              // holds at `inset(0)` underneath until the wipe has finished and
+              // only then snaps back to collapsed — same deferred reset the
+              // dissolve uses, and for the same reason.
+              clipPath: wiping
+                ? isCurrent || isOutgoing
+                  ? "inset(0 0 0 0)"
+                  : "inset(0 0 0 100%)"
+                : undefined,
+              transition: wiping
+                ? isCurrent && !opening
+                  ? `clip-path ${fadeMs}ms ${WIPE_EASE}`
+                  : `clip-path ${afterDissolve}`
+                : isCurrent
+                  ? `opacity ${fadeMs}ms ease-in-out`
+                  : `opacity ${afterDissolve}`,
             }}
           >
+            {/* ── The counter-slide ──────────────────────────────────────
+                Its own element, because a transform on the clipping layer
+                above would drag the clip along with it and the wipe's edge
+                would travel with the picture instead of across it. */}
             <div
               className="absolute inset-0"
               style={{
-                transform: isCurrent && started ? drift.to : drift.from,
-                // The move runs for the whole time the frame is on screen.
-                transition: isCurrent
-                  ? `transform ${holdMs + fadeMs}ms linear`
-                  : `transform ${afterDissolve}`,
-                // Only the two composited frames are worth promoting.
-                willChange: isCurrent || isOutgoing ? "transform" : undefined,
+                transform:
+                  wiping && !isCurrent ? `translate3d(${WIPE_SLIDE}, 0, 0)` : undefined,
+                transition:
+                  wiping && isCurrent && !opening
+                    ? `transform ${fadeMs}ms ${WIPE_EASE}`
+                    : wiping
+                      ? `transform ${afterDissolve}`
+                      : undefined,
               }}
             >
-              <Media
-                src={frame.image}
-                alt={frame.alt}
-                // The first frame is the hero's LCP; the rest are fetched as
-                // soon as they mount, which is one frame before their turn.
-                priority={i === 0}
-                eager={i > 0}
-                sizes={sizes}
-                objectPosition={frame.position}
-              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  transform: isCurrent && started ? drift.to : drift.from,
+                  // The move runs for the whole time the frame is on screen.
+                  transition: isCurrent
+                    ? `transform ${holdMs + fadeMs}ms linear`
+                    : `transform ${afterDissolve}`,
+                  // Only the two composited frames are worth promoting.
+                  willChange: isCurrent || isOutgoing ? "transform" : undefined,
+                }}
+              >
+                <Media
+                  src={frame.image}
+                  alt={frame.alt}
+                  // The first frame is the hero's LCP; the rest are fetched as
+                  // soon as they mount, which is one frame before their turn.
+                  priority={i === 0}
+                  eager={i > 0}
+                  sizes={sizes}
+                  objectPosition={frame.position}
+                />
+              </div>
             </div>
           </div>
         );

@@ -13,10 +13,10 @@ import type { ReactNode } from "react";
 import { cn } from "@/utils/cn";
 import PageContainer from "./PageContainer";
 
-type Tone = "cream" | "stone" | "emerald" | "charcoal" | "transparent";
+type Tone = "mist" | "stone" | "emerald" | "charcoal" | "transparent";
 
 const TONE_CLASSES: Record<Tone, string> = {
-  cream: "bg-cream text-charcoal",
+  mist: "bg-mist text-charcoal",
   stone: "bg-stone text-charcoal",
   emerald: "bg-emerald text-cream",
   charcoal: "bg-charcoal text-cream",

@@ -30,13 +30,43 @@
  */
 let played = false;
 
+/**
+ * Who wants to know the moment the intro is over.
+ *
+ * <Hero /> does, and for a reason that only shows up once the loader started
+ * opening a window onto the hero's own first frame: the hero must hold that
+ * frame perfectly still until the handover, and the handover is NOT at a fixed
+ * time — the loader waits for the photograph, up to `INTRO.revealWaitCapMs`. A
+ * hero timed off the clock instead of off this signal begins its slow zoom while
+ * the loader is still waiting, and the two copies of the same picture drift
+ * apart by a few percent — which is visible, at the exact moment the site is
+ * introducing itself, as a jump.
+ */
+const listeners = new Set<() => void>();
+
 export function introHasPlayed() {
   return played;
+}
+
+/**
+ * Subscribe to "the intro is finished".
+ *
+ * Fires once, and only for the load that actually played an intro; a subscriber
+ * that arrives late should check `introHasPlayed()` first.
+ */
+export function onIntroCleared(fn: () => void) {
+  listeners.add(fn);
+  // Returns void, not the Set's boolean, so it can be a React effect cleanup.
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 /** Called by <LoadingScreen /> when the timeline actually finishes. */
 export function markIntroPlayed() {
   played = true;
+  for (const fn of listeners) fn();
+  listeners.clear();
 }
 
 /**

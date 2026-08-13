@@ -13,11 +13,11 @@
 import Mark from "./Mark";
 import { cn } from "@/utils/cn";
 
-type Tone = "emerald" | "cream" | "charcoal";
+type Tone = "emerald" | "mist" | "charcoal";
 
 const TONE: Record<Tone, string> = {
   emerald: "bg-emerald text-cream",
-  cream: "bg-cream text-charcoal",
+  mist: "bg-mist text-charcoal",
   charcoal: "bg-charcoal text-cream",
 };
 

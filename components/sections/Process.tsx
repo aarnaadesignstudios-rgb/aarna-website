@@ -23,7 +23,7 @@ export default function Process() {
     /* Padding cut from py-24/32/40. The four stages occupied the upper third
        of the section and the rest was empty cream, which is what made the
        spacing read as uneven in the first place. */
-    <section id="process" className="bg-cream py-20 text-charcoal md:py-24 lg:py-28">
+    <section id="process" className="bg-mist py-20 text-charcoal md:py-24 lg:py-28">
       <PageContainer>
         {/* Centred on request. `align="center"` centres the eyebrow row and
             the title; the lead measure below is centred by the same switch. */}

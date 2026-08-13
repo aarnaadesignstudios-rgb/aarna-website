@@ -60,13 +60,13 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
           isEven ? "lg:order-2 lg:pl-4" : "lg:order-1 lg:pr-4"
         )}
       >
-        <span className="font-label text-gold">
+        <span className="font-label text-gold-ink">
           {project.category} · {project.year}
         </span>
-        <h3 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">
+        <h3 className="mt-4 font-serif text-4xl leading-tight text-emerald md:text-5xl">
           {project.title}
         </h3>
-        <p className="mt-3 font-label text-cream/50">
+        <p className="mt-3 font-label text-charcoal/50">
           {project.location}
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function FeaturedProjects() {
   return (
     <section
       id="projects"
-      className="surface-emerald overflow-hidden border-y border-gold/15 py-24 text-cream md:py-32 lg:py-40"
+      className="surface-sage overflow-hidden py-24 text-charcoal md:py-32 lg:py-40"
     >
       <PageContainer>
         <SectionHeading

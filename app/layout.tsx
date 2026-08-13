@@ -62,7 +62,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0c402d",
+  /* The colour a mobile browser paints its own chrome. It was the brand
+     emerald, which put a near-black green bar above a light page — the site
+     read as dark before a single pixel of it had rendered. It is `--color-cream`
+     now, which is what <body> actually is, so the address bar continues the
+     page instead of capping it. `colorScheme: "light"` was already correct and
+     is what stops the UA from restyling form controls for a dark theme. */
+  themeColor: "#f6f2e9",
   colorScheme: "light",
 };
 

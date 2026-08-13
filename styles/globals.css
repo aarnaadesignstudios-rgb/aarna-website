@@ -16,9 +16,17 @@
      from this one value so nothing drifts off-brand. */
   --color-gold: #c9a932; /* Warm Gold — accent, sampled from the logo */
   --color-gold-soft: #dac36c; /* Champagne gold — same hue/sat, lifted to 64% L */
-  --color-cream: #f6f2e9; /* Cream White — light surface */
-  --color-charcoal: #1c1b18; /* Charcoal — ink / dark surface */
-  --color-stone: #e4ddd0; /* Light Stone — alt light surface */
+  /* ── `cream` is INK now, not a ground ─────────────────────────────
+     It was both: the page background AND the colour of type set over
+     photography. Those two jobs want different colours now that the grounds
+     are green — a ground has to belong to the palette, and type over a warm
+     daylit interior wants to stay warm or it reads as a colour cast on the
+     photograph. So `cream` keeps the warm value and does only the second job
+     (the hero caption, the masthead over the hero, the chapter card), and
+     `mist` above is the ground that replaced it. */
+  --color-cream: #f6f2e9; /* Cream White — type over photography */
+  --color-charcoal: #1c1b18; /* Charcoal — body ink */
+  --color-stone: #dcdccc; /* Warm olive-linen — the one warm ground (<WhyUs />) */
 
   /* ── The neutral the palette was missing ──────────────────────────
      Every scrim, overlay and gradient on this site used to be built from
@@ -34,12 +42,54 @@
      longer allowed on top of a photograph. */
   --color-ink: #0a0a09;
 
-  /* Near-white with the faintest warm cast — lighter than `cream`, which is
-     itself lighter than `stone`. Gives the light half of the page three
-     steps instead of two, so <Practice /> can sit brighter than the sections
-     around it rather than duller. Deliberately not pure #fff: on a page whose
-     other surfaces are all warm, a true white reads as a hole. */
-  --color-paper: #fcfbf8;
+  /* ── The grounds are GREEN ─────────────────────────────────────
+     Every light surface on the site is now a desaturated cut of the brand
+     hue, not a warm off-white.
+
+     This is the second correction to the same problem, in the opposite
+     direction. The first pass took the green OUT of the grounds because the
+     page was alternating cream with near-black emerald slabs. That fixed the
+     jump and lost the brand: five warm off-whites with green type on them is
+     a beige site with a green logo, and the note back was exactly that —
+     more green, and it should feel like one thing.
+
+     So the green moved from being four bands to being the paper itself.
+     `emerald` is hsl(158 68% 15%); each of these is that hue held between 84°
+     and 100° (the olive side, which is where a desaturated green has to sit
+     to stay a NEUTRAL rather than becoming mint) at 12–22% saturation. On
+     screen they read as sage, celadon, and eucalyptus. Nothing on the page is
+     off-white any more, which is why the sections stopped looking like
+     separate documents: they are all cut from the same colour.
+
+       paper     #f5f8f3  brightest — <Practice />
+       mist      #eaf0e6  the default ground: body, Process, Services, Works
+       sage      #dbe4d5  plinth — Testimonials, Founder, the mobile index
+       sage-deep #c9d5c2  deepest — the figures strip under the hero
+       stone     #dcdccc  the one warm-olive step, for <WhyUs />
+
+     Gold is the only warm thing left, which is the point — it now has a cool
+     ground to be warm against instead of competing with four beiges. */
+  --color-paper: #f5f8f3;
+  --color-mist: #eaf0e6;
+
+  /* The two plinth steps. Same hue family as the grounds above, two and three
+     steps down, so a plinth is a change of VALUE inside one colour rather
+     than a change of colour — which is what stopped these sections reading
+     as imported. See the note on `--color-paper`. */
+  --color-sage: #dbe4d5;
+  --color-sage-deep: #c9d5c2;
+
+  /* ── Gold that survives a light ground ────────────────────────────────
+     `--color-gold` is sampled from the logo and is a ~2:1 contrast against
+     cream — fine as a hairline, a display accent or small type on a DARK
+     band, and unreadable as running type on paper.
+
+     Now that there are no dark bands left, one heading still has to be gold:
+     the client marked the Contact title in it specifically. This is the same
+     hue and saturation dropped to 40% lightness, which reads as antique gold
+     at display size and clears 5:1 on every light surface above. Use it for
+     gold TYPE on light; keep `--color-gold` for rules, marks and glows. */
+  --color-gold-ink: #7c6413;
 
   /* Typography ------------------------------------------------------ */
   /* Font family CSS vars are injected by next/font in app/layout.tsx.
@@ -103,7 +153,7 @@
   }
 
   body {
-    background-color: var(--color-cream);
+    background-color: var(--color-mist);
     color: var(--color-charcoal);
     font-family: var(--font-sans);
     font-size: var(--text-body);
@@ -317,28 +367,147 @@ html.lenis body {
     display: none;
   }
 
-  /* Rich emerald SURFACE (opaque) — replaces flat green fills.
-     Layered: faint champagne-gold glow at top, tonal emerald gradient, and a
-     soft edge vignette. Reads as deep, dimensional velvet rather than flat. */
-  .surface-emerald {
-    background-color: var(--color-emerald);
+  /* ── The green plinth ─────────────────────────────────────────
+     Testimonials and Founder. Three ingredients, and the third is new:
+
+       1. a warm glow off the top edge — the only warm thing on a cool ground
+       2. an emerald vignette into the corners, so the band has a centre
+       3. ── IT FADES AT BOTH ENDS ──
+          The band opens and closes on `mist`, the ground of the sections above
+          and below it, and only reaches full `sage` 22% of the way in.
+
+     (3) is what replaced `border-y border-emerald/12`. A hairline is an
+     ANNOUNCEMENT: it says a new document starts here, which is the opposite of
+     what these sections need — the note back was that every section should
+     feel connected. With the ends dissolved there is no boundary to see; the
+     page simply deepens in colour for a while and comes back. It works against
+     any of the light grounds because they are all within 6% of each other now.
+
+     The amplitudes are small on purpose: at this value a 4% shift is as
+     visible as a 20% shift was on the near-black version this replaced. */
+  .surface-sage {
+    background-color: var(--color-sage);
     background-image:
       radial-gradient(
-        85% 55% at 50% -5%,
-        color-mix(in srgb, var(--color-gold-soft) 12%, transparent) 0%,
-        transparent 60%
+        90% 60% at 50% -10%,
+        color-mix(in srgb, var(--color-gold-soft) 26%, transparent) 0%,
+        transparent 62%
       ),
       radial-gradient(
-        120% 130% at 50% 42%,
-        transparent 52%,
-        color-mix(in srgb, var(--color-emerald-deep) 55%, transparent) 100%
+        130% 120% at 50% 45%,
+        transparent 42%,
+        color-mix(in srgb, var(--color-emerald) 16%, transparent) 100%
       ),
       linear-gradient(
-        168deg,
-        var(--color-emerald-light) 0%,
-        var(--color-emerald) 42%,
-        var(--color-emerald-deep) 100%
+        180deg,
+        var(--color-mist) 0%,
+        var(--color-sage) 22%,
+        var(--color-sage) 76%,
+        var(--color-mist) 100%
       );
+  }
+
+  /* The same material one step down, for the figures strip directly under the
+     hero photograph.
+
+     Only the BOTTOM end dissolves here. The top edge butts against a
+     photograph, and a photograph already has a hard edge — fading into one
+     just looks like the image is dirty. So that edge keeps its gold hairline
+     (the plinth reads as a mount under the picture) and the bottom melts into
+     the paper of <Practice />. */
+  .surface-sage-deep {
+    background-color: var(--color-sage-deep);
+    background-image:
+      radial-gradient(
+        80% 140% at 50% -20%,
+        color-mix(in srgb, var(--color-gold-soft) 30%, transparent) 0%,
+        transparent 70%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-emerald) 8%, var(--color-sage-deep)) 0%,
+        var(--color-sage-deep) 62%,
+        var(--color-paper) 100%
+      );
+  }
+
+  /* ── The cyclorama ──────────────────────────────────────────
+     The ground <SelectedWorks /> stands the ring on.
+
+     The first version of that section was a flat `mist` rectangle with an arc
+     of photographs floating in the middle of it, and the note back named the
+     two things wrong with it exactly: too much empty space, and not enough
+     green. They are one problem. An arc of cards needs a ROOM — without one
+     the space around it is not composition, it is just unused page.
+
+     So this is a photographer's cyclorama: a lit sweep that curves from a
+     bright centre down into deep brand green at the floor and the corners.
+     Four layers, bottom of the stack first:
+
+       · the SWEEP    — emerald into every corner, brightest just above centre
+                        where the front card sits. This is the layer doing the
+                        "more green": at the outer edge it resolves to about
+                        #8da698, a true mid sage, and it covers the whole frame
+       · the FLOOR     — the bottom third deepens further, so the cards read as
+                        standing on something rather than hanging
+       · the KEY LIGHT — a warm gold pool from above, off-centre, which is what
+                        stops the sweep reading as a flat gradient
+       · the HORIZON   — a single soft band where floor meets sweep
+
+     The centre stays light on purpose. Photographs have to sit ON this, and
+     the moment the middle goes dark the section is a dark band again — the
+     thing that was wrong two revisions ago. Green owns the frame; the middle of
+     the frame stays paper. */
+  /* ── Desktop only ──────────────────────────────────────────────
+     The cyclorama is a 100vh STAGE. Below `lg` the section releases its pin
+     and becomes a ~5000px vertical stack, and the same gradient stretched over
+     that puts its deep green end under the last three project titles — which
+     are `emerald`, because on a phone there is no light-centre/dark-floor
+     composition for them to be `cream` against. Flat ground there instead.
+
+     Written as a media query inside the rule rather than as a `lg:` variant
+     because this is a hand-authored class in @layer utilities, not an
+     `@utility`, so Tailwind will not generate variants for it. */
+  .stage-cyclorama {
+    background-color: var(--color-mist);
+  }
+
+  @media (min-width: 1024px) {
+    .stage-cyclorama {
+      background-image:
+      /* horizon */
+      linear-gradient(
+        180deg,
+        transparent 58%,
+        color-mix(in srgb, var(--color-gold-soft) 16%, transparent) 63%,
+        transparent 68%
+      ),
+      /* key light */
+      radial-gradient(
+        55% 42% at 44% 6%,
+        color-mix(in srgb, var(--color-gold-soft) 34%, transparent) 0%,
+        transparent 74%
+      ),
+      /* floor */
+      linear-gradient(
+        180deg,
+        transparent 50%,
+        color-mix(in srgb, var(--color-emerald) 44%, transparent) 100%
+      ),
+      /* sweep.
+         The extent is 78% x 66% rather than 105% x 82%. That looks like a
+         detail and it is the whole difference between this reading as green and
+         reading as off-white: a radial gradient's last stop sits at its
+         EXTENT, so at 105% the deep emerald was only reached out past the
+         corners of the box and almost none of it was ever on screen. Pulled in,
+         the green resolves to about #769485 well inside the frame. */
+      radial-gradient(
+        78% 66% at 50% 38%,
+        color-mix(in srgb, var(--color-paper) 96%, transparent) 0%,
+        color-mix(in srgb, var(--color-mist) 55%, transparent) 42%,
+        color-mix(in srgb, var(--color-emerald) 52%, transparent) 100%
+      );
+    }
   }
 
   /* ── Liquid glass ─────────────────────────────────────────────────────
@@ -459,18 +628,201 @@ html.lenis body {
     );
   }
 
-  /* Rich emerald OVERLAY (translucent) — for tinting over imagery. */
-  /* Translucent veil for tinting over imagery.
-     Now neutral, with only a trace of emerald left in the centre so the
-     brand is still present without the photograph turning green. At 84%
-     emerald it was not a veil at all — it was a green fill with a picture
-     faintly visible behind it. */
-  .overlay-emerald {
+  /* ── Veil for type over a photograph, on a LIGHT page ──────────────────
+     <Contact /> sets its enquiry form over an interior photograph. It used to
+     do that under `.overlay-emerald` — a near-opaque dark green wash with the
+     picture faintly behind it and cream type on top, which is the single
+     largest dark area on the site after the hero.
+
+     This is the same idea inverted: paper, heavy enough that charcoal and
+     emerald type sit on it at full contrast, light enough that the
+     photograph is still legibly a photograph. It is graded rather than flat
+     (brighter where the type sits, thinner toward the right and bottom) so
+     the image reads as a room the page is standing in rather than as a
+     texture behind a panel. */
+  .overlay-paper {
+    background-image:
+      /* The type's own ground: heaviest at the left, where the heading and the
+         details sit, thinning across so the room stays a room. */
+      linear-gradient(
+        100deg,
+        color-mix(in srgb, var(--color-paper) 88%, transparent) 0%,
+        color-mix(in srgb, var(--color-paper) 66%, transparent) 44%,
+        color-mix(in srgb, var(--color-paper) 40%, transparent) 100%
+      ),
+      /* A floor, as in the cyclorama. The colophon row sits on it. */
+      linear-gradient(
+        180deg,
+        transparent 44%,
+        color-mix(in srgb, var(--color-emerald) 42%, transparent) 100%
+      ),
+      /* ── The green edge ───────────────────────────────────────────
+         Same device as `.stage-cyclorama`, and here for the same reason: with
+         only the paper veil above, this section came out as the palest thing on
+         the site — the page ended on a near-white rectangle with a ghost of a
+         photograph in it, which is the "too much white space" note exactly, in
+         the one place it matters most because it is the last thing anyone sees.
+
+         The veil is thinner now and the frame is closed with brand green, so
+         the enquiry sits in a lit green room rather than on a blank sheet. The
+         extent is kept inside the box (85% x 78%) for the reason the cyclorama's
+         had to be: a radial gradient reaches its last stop at its EXTENT, so an
+         over-100% extent puts the colour off-screen. */
+      radial-gradient(
+        82% 72% at 38% 30%,
+        transparent 0%,
+        color-mix(in srgb, var(--color-sage) 46%, transparent) 48%,
+        color-mix(in srgb, var(--color-emerald) 58%, transparent) 100%
+      );
+  }
+
+  /* ── The 3D stage ─────────────────────────────────────────────────────
+     Used by <SelectedWorks />, whose nine projects sit on the faces of an
+     invisible cylinder. Three properties have to be here rather than inline
+     because Tailwind has no utility that spells them, and all three are
+     load-bearing:
+
+       · `perspective` on the stage, NOT on the ring. Perspective applies to
+         an element's children, so putting it on the rotating element itself
+         would give each card its own vanishing point and the ring would
+         shear instead of turn.
+       · `preserve-3d` on the ring, so the cards keep their z depth instead
+         of being flattened into the ring's own plane. This is the one
+         property that separates a real cylinder from nine skewed rectangles.
+       · `perspective-origin` centred, so the front card is seen square-on.
+
+     `--ring-r` is the cylinder's radius and is set from the component. */
+  .ring-stage {
+    /* Shorter than the 1500px it started at. Perspective is the dial that
+       controls how much CHARACTER the 3D has: at 1500 the arc was almost an
+       orthographic row of cards, technically rotating and reading as flat.
+       1250 foreshortens the flanks hard enough that the cylinder is legible
+       as a solid object. Below ~1000 the near edge of the front card starts
+       to keystone visibly and it reads as a fisheye. */
+    perspective: 1250px;
+    perspective-origin: 50% 44%;
+  }
+
+  .ring-3d {
+    transform-style: preserve-3d;
+    /* Outermost first:
+         translateZ(-r)  pull the cylinder back by its own radius, so the front
+                         face lands on the perspective plane at scale 1
+         rotateX(tilt)   the CAMERA's tilt. Outside the spin, so it tilts the
+                         whole turntable rather than wobbling each face. Driven
+                         by the pointer, and by a fixed downward bias so the
+                         floor is visible at rest
+         rotateY(rot)    the spin, from scroll */
+    /* ── The tilt vars are UNITLESS numbers, multiplied by 1deg here ─────
+       GSAP interpolates a custom property by parsing its COMPUTED value, and a
+       property that is only ever referenced through a `var(..., 0deg)` fallback
+       has no computed value — `getPropertyValue` returns "" and the tween has
+       no start point. Declaring them as plain numbers (set to 0 inline on the
+       element, see the component) means GSAP animates them as numbers and the
+       unit is applied here, where it cannot go wrong. */
+    transform: translateZ(calc(-1 * var(--ring-r, 700px)))
+      /* The +7 is a fixed downward bias on top of the pointer's contribution,
+         and it is what makes the floor visible AT ALL: a plane at rotateX(90°)
+         seen by a camera on the same axis is edge-on, which draws as a line.
+         At 4° the ellipse was still a hairline. 7° opens it enough to read as a
+         footprint without the cards leaning back far enough to look like they
+         are falling over. */
+      rotateX(calc((var(--ring-tilt, 0) + 7) * 1deg))
+      rotateY(calc(var(--ring-rot, 0deg) + var(--ring-yaw, 0) * 1deg));
+  }
+
+  .ring-face {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* Order is the whole behaviour here, and it is not interchangeable:
+         translate(-50%,-50%)  put this face's centre on the ring's axis
+         rotateY(--face-a)     swing its own frame round to its station
+         translateZ(...)       push it out to the cylinder's surface.
+                               `--ring-spread` scales that radius and is what
+                               the entrance animates: at 0.3 every card is
+                               nested near the axis, at 1 the ring is open
+         translateY(--face-y)  ride it up or down the cylinder. After the
+                               rotation, but rotateY leaves the Y axis alone,
+                               so this stays a plain vertical move and the
+                               face does not leave the surface
+         scale(--face-s)       size it in its own plane, last, so the scale
+                               cannot alter where on the ring it sits */
+    transform: translate(-50%, -50%) rotateY(var(--face-a, 0deg))
+      translateZ(calc(var(--ring-r, 700px) * var(--ring-spread, 1)))
+      translateY(var(--face-y, 0px)) scale(var(--face-s, 1));
+    /* A face past 90° is showing its back. The component fades those out, but
+       this is the belt-and-braces version — a mirrored photograph flashing
+       through the middle of the ring is the ugliest failure mode here. */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* ── The floor ─────────────────────────────────────────────
+     A disc laid flat at the foot of the cards, inside the 3D context, so
+     perspective draws it as an ellipse.
+
+     This is the cheapest large gain in the whole section. A ring of cards with
+     nothing under it is an arrangement; the same ring with its footprint drawn
+     is an OBJECT standing in a space, and the eye reads the depth immediately
+     instead of having to infer it from the foreshortening. One element.
+
+     `translateY` before `rotateX(90deg)`: the drop has to happen along the
+     ring's own vertical axis while that axis is still vertical. Rotate first
+     and the same translate pushes the disc away from the camera instead of
+     down. */
+  .ring-floor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--ring-r, 700px) * 2);
+    height: calc(var(--ring-r, 700px) * 2);
+    margin: calc(var(--ring-r, 700px) * -1) 0 0 calc(var(--ring-r, 700px) * -1);
+    border-radius: 50%;
+    transform: translateY(var(--floor-y, 240px)) rotateX(90deg);
+    border: 1px solid color-mix(in srgb, var(--color-emerald) 34%, transparent);
     background-image: radial-gradient(
-      120% 100% at 50% 0%,
-      color-mix(in srgb, var(--color-emerald) 55%, transparent) 0%,
-      color-mix(in srgb, var(--color-ink) 88%, transparent) 100%
+      closest-side,
+      color-mix(in srgb, var(--color-emerald) 26%, transparent) 0%,
+      color-mix(in srgb, var(--color-emerald) 9%, transparent) 62%,
+      transparent 100%
     );
+  }
+
+  /* ── The reflection ──────────────────────────────────────
+     A mirrored copy of the photograph hanging below each card, faded out
+     downward. It sits inside the face, so it inherits the face's rotation for
+     free — a reflection that did not turn with its card would be the tell.
+
+     `scaleY(-1)` with the origin at the top edge flips it in place. The mask
+     does the rest of the work: a reflection that reaches full strength reads
+     as a second photograph, and one that stops too early reads as a smudge.
+     38% of the card's height, from 34% opacity to nothing.
+
+     Same `src` as the card above it, so this costs no extra network — it is
+     the same optimised URL and a guaranteed cache hit. */
+  .ring-reflect {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 32%;
+    overflow: hidden;
+    /* Flipped about its OWN CENTRE, not its top edge. About the top edge the
+       box itself lands back on top of the card — a transform moves the element,
+       not just its contents — and the reflection appears over the photograph
+       instead of under it. About the centre the box stays where it was
+       positioned and only what is drawn inside it is mirrored. */
+    transform: scaleY(-1);
+    opacity: 0.3;
+    /* The mask is applied in LOCAL space and then flipped with everything else,
+       so "to bottom" here reads as "to visual top". Local top (= visual bottom,
+       furthest from the card) is transparent; local bottom (= visual top, where
+       the reflection meets the card) is solid. Getting this backwards produces a
+       reflection that is brightest where it should have faded out, which looks
+       like a rendering fault rather than a mirror. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 86%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 86%);
   }
 
   /* Infinite horizontal marquee (two duplicated tracks, translate -50%). */
@@ -507,6 +859,24 @@ html.lenis body {
   /* Pause on hover for a considered, interactive feel. */
   .marquee-group:hover .animate-marquee {
     animation-play-state: paused;
+  }
+
+  /* The hairline that rides the hero's wipe. See <ImageCycle />.
+     Starts flush with the right edge of the frame and crosses to the left,
+     fading out as it arrives so it does not stack up against the edge of the
+     screen at the end of every cut. */
+  @keyframes wipe-edge {
+    from {
+      transform: translateX(0);
+      opacity: 0.85;
+    }
+    82% {
+      opacity: 0.85;
+    }
+    to {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
   }
 }
 

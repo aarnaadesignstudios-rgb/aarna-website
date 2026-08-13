@@ -32,14 +32,19 @@
  * alternates between the two all the way down. So the bar reads the band behind
  * it and flips its own palette.
  *
- * Dark bands declare themselves with `data-chrome="dark"` (hero, the figures
- * strip, Testimonials, Founder, Contact); light is the default, so most
- * sections say nothing. Detection is a rect overlap test against those few
- * elements rather than a hit test or a luminance sample, because it stays
- * correct for the cases that break the alternatives — the emerald strip nested
- * inside a paper section, and Contact, whose backdrop is a photograph under a
- * gradient overlay and whose computed background-color is therefore
- * transparent.
+ * Dark bands declare themselves with `data-chrome="dark"`; light is the
+ * default, so most sections say nothing. There used to be five declarations —
+ * hero, the figures strip, Testimonials, Founder and Contact — and the site is
+ * light throughout now, so the list is down to the two places where the backdrop
+ * is a full-bleed PHOTOGRAPH: the home hero and the /photography hero. Nothing
+ * else on either page needs cream chrome.
+ *
+ * The mechanism stays exactly as it was, and is worth keeping at two callers
+ * rather than being replaced with something simpler, because those two are
+ * precisely the case that defeats the alternatives: a hit test or a luminance
+ * sample cannot read a hero whose computed background-color is `bg-ink` behind
+ * a photograph of unknown brightness. Detection is a rect overlap test against
+ * the declared elements.
  *
  * ── Layout: a 3-column grid, not a centred absolute ───────────────────────
  *
@@ -639,9 +644,10 @@ export default function Navbar() {
       {/* ── Full-screen index ────────────────────────────────────────────
           Deliberately NOT the transparent glass the bar is made of: this one
           has to hold seven 32–60px words over whatever section you happened
-          to open it on, and a 14% veil cannot do that. It is the dark
-          emerald surface the rest of the site uses for full-bleed panels,
-          with the blur kept so the page still reads faintly behind it.
+          to open it on, and a 14% veil cannot do that. It is the SAGE surface
+          the site uses for its full-bleed panels — it was the dark emerald
+          one until the site went light throughout — with the blur kept so the
+          page still reads faintly behind it.
           `data-lenis-prevent` keeps this subtree scrollable while the page
           underneath is frozen. */}
       <AnimatePresence>
@@ -651,7 +657,7 @@ export default function Navbar() {
             aria-modal="true"
             aria-label="Menu"
             data-lenis-prevent
-            className="surface-emerald glass-bar fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain text-cream"
+            className="surface-sage glass-bar fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain text-charcoal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -660,7 +666,7 @@ export default function Navbar() {
             <div className="flex shrink-0 items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 md:px-10">
               <span className="flex min-w-0 items-center gap-3">
                 <Mark size={30} />
-                <span className="truncate font-display text-[0.95rem] leading-none font-semibold tracking-[0.015em] text-gold-soft sm:text-[1.15rem]">
+                <span className="truncate font-display text-[0.95rem] leading-none font-semibold tracking-[0.015em] text-emerald sm:text-[1.15rem]">
                   {SITE.name}
                 </span>
               </span>
@@ -668,10 +674,10 @@ export default function Navbar() {
                 type="button"
                 aria-label="Close menu"
                 onClick={() => setMenuOpen(false)}
-                className="group relative size-10 shrink-0 cursor-pointer rounded-full border border-cream/15 transition-colors duration-500 ease-editorial hover:bg-cream/10"
+                className="group relative size-10 shrink-0 cursor-pointer rounded-full border border-emerald/20 transition-colors duration-500 ease-editorial hover:bg-emerald/6"
               >
-                <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-cream transition-colors duration-500 group-hover:bg-gold" />
-                <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-cream transition-colors duration-500 group-hover:bg-gold" />
+                <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-emerald transition-colors duration-500 group-hover:bg-gold-ink" />
+                <span className="absolute top-1/2 left-1/2 block h-px w-5 -translate-x-1/2 -translate-y-1/2 -rotate-45 bg-emerald transition-colors duration-500 group-hover:bg-gold-ink" />
               </button>
             </div>
 
@@ -719,10 +725,10 @@ export default function Navbar() {
                     }}
                     className="group flex items-baseline gap-4 md:gap-8"
                   >
-                    <span className="font-label text-gold/70">
+                    <span className="font-label text-gold-ink/75">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="font-serif text-[2rem] leading-[1.15] transition-all duration-500 ease-editorial group-hover:translate-x-2 group-hover:text-gold sm:text-4xl md:text-6xl">
+                    <span className="font-serif text-[2rem] leading-[1.15] text-emerald transition-all duration-500 ease-editorial group-hover:translate-x-2 group-hover:text-gold-ink sm:text-4xl md:text-6xl">
                       {link.label}
                     </span>
                   </SmoothLink>
@@ -730,14 +736,14 @@ export default function Navbar() {
               ))}
             </motion.ul>
 
-            <div className="flex shrink-0 flex-col gap-2 border-t border-cream/15 px-5 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:px-14 md:py-7">
+            <div className="flex shrink-0 flex-col gap-2 border-t border-emerald/15 px-5 py-6 sm:px-6 md:flex-row md:items-center md:justify-between md:px-14 md:py-7">
               <a
                 href={`mailto:${SITE.email}`}
-                className="font-label text-gold transition-colors duration-500 hover:text-gold-soft"
+                className="font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
               >
                 {SITE.email}
               </a>
-              <span className="font-label text-cream/50">
+              <span className="font-label text-charcoal/50">
                 {SITE.address}
               </span>
             </div>
