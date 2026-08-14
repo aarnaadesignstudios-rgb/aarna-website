@@ -254,6 +254,41 @@ export default function LoadingScreen() {
         return;
       }
 
+      /**
+       * ── The flight ──────────────────────────────────────────────────
+       *
+       * A FLIP between two elements that never meet in the tree: this panel is
+       * a sibling of the masthead, mounted and unmounted on its own clock, so
+       * the two are matched by attribute rather than by ref.
+       *
+       * Returns the transform that lands `fromSel` exactly on `toSel` — centre
+       * on centre, scaled by width. Width rather than height because both pairs
+       * are the same artwork at different sizes, so one ratio is the whole
+       * relationship; matching height as well would only introduce a rounding
+       * disagreement between the mark (square) and the wordmark (a line of
+       * type whose box includes its descenders).
+       *
+       * If the masthead is not in the DOM — it is not, on a route without one —
+       * this degrades to the lift the intro used to do, so the panel still has
+       * a way out.
+       */
+      const flight = (fromSel: string, toSel: string) => {
+        const from = root.querySelector<HTMLElement>(fromSel);
+        const to = document.querySelector<HTMLElement>(toSel);
+        if (!from || !to) return { y: -26, opacity: 0.85 };
+
+        const a = from.getBoundingClientRect();
+        const b = to.getBoundingClientRect();
+        if (!a.width || !b.width) return { y: -26, opacity: 0.85 };
+
+        return {
+          x: b.left + b.width / 2 - (a.left + a.width / 2),
+          y: b.top + b.height / 2 - (a.top + a.height / 2),
+          scale: b.width / a.width,
+          transformOrigin: "50% 50%",
+        };
+      };
+
       const tl = gsap.timeline({ onComplete: finish });
 
       tl
@@ -339,17 +374,27 @@ export default function LoadingScreen() {
           },
           cue.name
         )
-        // ── The lockup leads the panel out ────────────────────────────
-        // It starts lifting 150ms before the panel does and travels a fraction
-        // of the distance, so for the length of the wipe there are two layers
-        // moving at different speeds. That difference is the whole effect: it
-        // makes the panel read as a sheet being drawn off the lockup, rather
-        // than as one flat rectangle sliding away with a logo printed on it.
-        .to(
-          "[data-lockup]",
-          { y: -26, opacity: 0.85, duration: 0.55, ease: "power2.in" },
-          cue.lift
-        )
+        // ── The brand flies into the masthead ─────────────────────────
+        //
+        // It used to lift 26px and fade. Now the mark and the wordmark travel
+        // to the exact position they occupy in the masthead and stop there, so
+        // the intro does not get out of the page's way — it PUTS the brand
+        // where the brand lives. Nothing about the site's identity appears from
+        // nowhere; the first thing on screen becomes the thing in the corner.
+        //
+        // Measured, never guessed: `flight` reads both rects at the moment the
+        // tween is built, so it is correct at any viewport, any font-size step
+        // and any of the masthead's three responsive mark sizes. See the note
+        // on `flight` above.
+        //
+        // The two travel INDEPENDENTLY, which is what makes this a morph rather
+        // than a move: in the intro they are stacked vertically with a
+        // photograph between them, and in the masthead they sit side by side.
+        // One transform on their shared parent could not do that.
+        .to("[data-mark]", { ...flight("[data-mark]", "[data-brand-mark]"), duration: 0.95, ease: "power3.inOut" }, cue.lift)
+        .to("[data-name]", { ...flight("[data-name]", "[data-brand-name]"), duration: 0.95, ease: "power3.inOut" }, cue.lift)
+        // The rule is the intro's own furniture and has nowhere to go.
+        .to("[data-rule]", { opacity: 0, duration: 0.4, ease: "none" }, cue.lift)
         // ── The window opens onto the page ────────────────────────────
         // The clip goes to `inset(0)`, so the photograph inside — which has not
         // moved or resized once — simply becomes the full screen. The panel is
@@ -377,6 +422,16 @@ export default function LoadingScreen() {
           "[data-counter]",
           { opacity: 0, duration: 0.3, ease: "none" },
           cue.dissolve + 0.15
+        )
+        // ── The handover ──────────────────────────────────────────────
+        // The flying copies fade out exactly as the masthead's own brand fades
+        // in (see `brandReady` in components/layout/Navbar.tsx). They are at
+        // the same position and the same scale by then, so the crossfade is
+        // invisible — what a visitor sees is one brand that arrived and stayed.
+        .to(
+          ["[data-mark]", "[data-name]"],
+          { opacity: 0, duration: 0.28, ease: "none" },
+          cue.dissolve + INTRO.dissolveDuration * 0.72
         );
 
       // ── The gate ────────────────────────────────────────────────────
@@ -429,6 +484,9 @@ export default function LoadingScreen() {
     <div
       ref={rootRef}
       aria-hidden
+      /* The masthead looks for this to decide whether to wait for the brand to
+         be flown in or just show its own — see components/layout/Navbar.tsx. */
+      data-intro
       /* ── The intro is light too ──────────────────────────────────────────
          This was `surface-emerald`: the first thing anyone saw on the site was
          a near-black green screen for three seconds, which then handed over to

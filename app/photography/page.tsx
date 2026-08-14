@@ -51,6 +51,7 @@ export default function PhotographyPage() {
         <section
           /* Dark band — see the note in components/layout/Navbar.tsx. */
           data-chrome="dark"
+          data-hero
           className="relative flex h-[78vh] min-h-[520px] items-end overflow-hidden bg-ink text-cream"
         >
           <div className="absolute inset-0">

@@ -46,14 +46,16 @@ export interface ImageCycleFrame {
  * Calm, and effectively invisible as motion; at a slow cadence the stack reads
  * as a single photograph that keeps changing its mind.
  *
- * `wipe` — the incoming frame is UNCOVERED from the right edge leftward while
- * its own content slides the other way. Two things make this read as a cut in a
- * film rather than as a CSS effect: the moving edge (an eye tracks an edge, it
- * does not track a change in opacity), and the counter-slide, which means the
- * new frame arrives already in motion instead of sitting still behind a
- * travelling mask. Directional on purpose — it sweeps in from the right, the
- * same direction the projects rotate in from in <SelectedWorks />, so the whole
- * page agrees about which way "next" is.
+ * `wipe` — the incoming frame is UNCOVERED from one edge while its own content
+ * slides the other way, with a champagne hairline riding the moving edge. Two
+ * things make this read as a cut in a film rather than as a CSS effect: the
+ * moving edge (an eye tracks an edge, it does not track a change in opacity),
+ * and the counter-slide, which means the new frame arrives already in motion
+ * instead of sitting still behind a travelling mask.
+ *
+ * The edge it comes from ROTATES through all four sides — see
+ * `WIPE_DIRECTIONS`. One direction, repeated, is learned by the second lap and
+ * stops being watched.
  */
 export type ImageCycleTransition = "dissolve" | "wipe";
 
@@ -167,7 +169,71 @@ export const FRAME_OPENING_POSE = withZoom(DRIFTS[0].from);
 const WIPE_EASE = "cubic-bezier(0.72, 0, 0.22, 1)";
 
 /** How far the incoming frame's content slides while it is uncovered. */
-const WIPE_SLIDE = "5%";
+const WIPE_SLIDE = 5;
+
+/**
+ * ── The cut comes from a different side every time ────────────────────────
+ *
+ * The wipe used to be one direction — always right to left. Four frames, four
+ * identical cuts, and by the second lap the eye has learned it and stops
+ * looking. A cycle of four sides means the opening screen never repeats a move
+ * inside one pass of the work.
+ *
+ * The order is right → bottom → left → top: opposite sides alternate, so no two
+ * consecutive cuts share an axis. Running them round the compass instead
+ * (right → bottom → left → top is that, but right → top → left → bottom is not)
+ * would put two vertical cuts next to each other and read as a wobble.
+ *
+ * Each direction needs three things kept in agreement, which is why they live
+ * in one table rather than in three `if` branches:
+ *
+ *   `collapsed`  the clip that hides the frame, pinned to the edge it enters
+ *                from. `inset()` is top/right/bottom/left, so collapsing an
+ *                incoming frame against its right edge is `0 0 0 100%`
+ *   `slide`      the counter-move of its content, on the axis it travels and
+ *                pointing back the way it came
+ *   `edge`       the border side the champagne hairline is drawn on, and the
+ *                translation that carries it across — as custom properties,
+ *                so one keyframe serves all four (see `wipe-edge` in
+ *                styles/globals.css)
+ */
+const WIPE_DIRECTIONS = [
+  {
+    collapsed: "inset(0 0 0 100%)",
+    slide: `translate3d(${WIPE_SLIDE}%, 0, 0)`,
+    edgeClass: "border-r",
+    edgeVars: { "--edge-tx": "-100%", "--edge-ty": "0%" },
+  },
+  {
+    collapsed: "inset(100% 0 0 0)",
+    slide: `translate3d(0, ${WIPE_SLIDE}%, 0)`,
+    edgeClass: "border-b",
+    edgeVars: { "--edge-tx": "0%", "--edge-ty": "-100%" },
+  },
+  {
+    collapsed: "inset(0 100% 0 0)",
+    slide: `translate3d(-${WIPE_SLIDE}%, 0, 0)`,
+    edgeClass: "border-l",
+    edgeVars: { "--edge-tx": "100%", "--edge-ty": "0%" },
+  },
+  {
+    collapsed: "inset(0 0 100% 0)",
+    slide: `translate3d(0, -${WIPE_SLIDE}%, 0)`,
+    edgeClass: "border-t",
+    edgeVars: { "--edge-tx": "0%", "--edge-ty": "100%" },
+  },
+] as const;
+
+/**
+ * Which way frame `i` enters.
+ *
+ * Keyed on the FRAME, not on a running counter, so a given project always
+ * arrives the same way however many laps have been made — a cut that changes
+ * direction between laps reads as a bug rather than as choreography.
+ */
+function directionFor(i: number) {
+  return WIPE_DIRECTIONS[i % WIPE_DIRECTIONS.length] ?? WIPE_DIRECTIONS[0];
+}
 
 export default function ImageCycle({
   frames,
@@ -314,8 +380,14 @@ export default function ImageCycle({
         <span
           key={`edge-${current}`}
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 z-3 w-full border-r border-gold-soft/70"
-          style={{ animation: `wipe-edge ${fadeMs}ms ${WIPE_EASE} forwards` }}
+          className={cn(
+            "pointer-events-none absolute inset-0 z-3 border-gold-soft/70",
+            directionFor(current).edgeClass
+          )}
+          style={{
+            ...directionFor(current).edgeVars,
+            animation: `wipe-edge ${fadeMs}ms ${WIPE_EASE} forwards`,
+          } as React.CSSProperties}
         />
       )}
 
@@ -365,7 +437,7 @@ export default function ImageCycle({
               clipPath: wiping
                 ? isCurrent || isOutgoing
                   ? "inset(0 0 0 0)"
-                  : "inset(0 0 0 100%)"
+                  : directionFor(i).collapsed
                 : undefined,
               transition: wiping
                 ? isCurrent && !opening
@@ -383,8 +455,7 @@ export default function ImageCycle({
             <div
               className="absolute inset-0"
               style={{
-                transform:
-                  wiping && !isCurrent ? `translate3d(${WIPE_SLIDE}, 0, 0)` : undefined,
+                transform: wiping && !isCurrent ? directionFor(i).slide : undefined,
                 transition:
                   wiping && isCurrent && !opening
                     ? `transform ${fadeMs}ms ${WIPE_EASE}`

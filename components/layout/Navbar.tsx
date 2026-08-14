@@ -88,7 +88,7 @@ import { INTRO, NAV_LINKS, SITE } from "@/constants";
 import { Mark, SmoothLink } from "@/components/ui";
 import { useIsomorphicLayoutEffect } from "@/hooks";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
-import { introDelay } from "@/lib/intro";
+import { introDelay, introHasPlayed, onIntroCleared } from "@/lib/intro";
 import { setSmoothScrollPaused } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
 
@@ -123,7 +123,7 @@ const MotionSmoothLink = motion.create(SmoothLink);
  * dropped so labels sit at full ink, and a tight shadow over the dark bands to
  * separate type from image. The brand wordmark is deliberately untouched.
  */
-const BAR_LABEL ="font-label font-bold";
+const BAR_LABEL = "font-label font-bold";
 /** Lifts 12px type off live photography without reading as a glow. */
 const ON_IMAGE = "[text-shadow:0_1px_10px_rgba(10,10,9,0.55)]";
 
@@ -180,10 +180,7 @@ function NavItem({
       onPointerEnter={() => onHover(href)}
       onFocus={() => onHover(href)}
       onBlur={() => onHover(null)}
-      className={cn(
-        "group relative block py-1.5 whitespace-nowrap",
-        BAR_LABEL
-      )}
+      className={cn("group relative block py-1.5 whitespace-nowrap", BAR_LABEL)}
     >
       {/* The sliding pill. One instance across the whole list — `layoutId`
           moves it from wherever it is to here, so it reads as one object
@@ -203,7 +200,7 @@ function NavItem({
             "absolute -inset-x-1.5 -inset-y-0.5 -z-10 rounded-full",
             onDark
               ? "bg-cream/12 shadow-[inset_0_1px_0_rgba(246,242,233,0.22)]"
-              : "bg-emerald/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
+              : "bg-emerald/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]",
           )}
           transition={{ type: "spring", stiffness: 420, damping: 34 }}
         />
@@ -225,7 +222,7 @@ function NavItem({
             // gold on hover is what marks a link as live, and the gold `active`
             // state is what marks the current section.
             active ? "text-gold" : onDark ? "text-cream" : "text-emerald",
-            onDark && ON_IMAGE
+            onDark && ON_IMAGE,
           )}
         >
           {label}
@@ -235,7 +232,7 @@ function NavItem({
           className={cn(
             "absolute inset-0 block translate-y-[130%] transition-transform duration-500 ease-editorial group-hover:translate-y-0",
             onDark ? "text-gold-soft" : "text-emerald",
-            onDark && ON_IMAGE
+            onDark && ON_IMAGE,
           )}
         >
           {label}
@@ -252,6 +249,26 @@ export default function Navbar() {
   const [compact, setCompact] = useState(false);
   /** Is the band currently behind the bar a dark one? Drives the palette. */
   const [onDark, setOnDark] = useState(true);
+  /**
+   * ── The navigation is withheld over the opening screen ────────────────
+   *
+   * On the hero the bar carries only the mark and the invitation. The links
+   * arrive when the hero is behind you.
+   *
+   * The reasoning is the hero's own: it is a full-bleed photograph with no
+   * headline, and its whole argument is that the first thing a visitor reads is
+   * the architecture. Six navigation labels across the top of it are the one
+   * thing on that screen competing with the picture — and they are also the
+   * least useful they will ever be, because nobody navigates a site they have
+   * not been introduced to yet. Once the work has been shown, they become worth
+   * having, and they appear.
+   *
+   * Starts TRUE so a route with no hero (and the server render) shows a
+   * complete bar; the effect below only ever takes it away.
+   */
+  const [pastHero, setPastHero] = useState(true);
+  /** Has the intro handed the brand over? See the note on the brand below. */
+  const [brandReady, setBrandReady] = useState(introHasPlayed);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeId, setActiveId] = useState<string>("");
   const [hovered, setHovered] = useState<string | null>(null);
@@ -299,15 +316,22 @@ export default function Navbar() {
     /** Absolute document-space ranges of the bands that want cream chrome. */
     let bands: Array<{ top: number; bottom: number }> = [];
     let scrollHeight = document.documentElement.scrollHeight;
+    /**
+     * Where the opening screen ends, in document space, or null on a route that
+     * has no hero — in which case the navigation is simply always shown.
+     */
+    let heroBottom: number | null = null;
 
     const measureBands = () => {
       const y = window.scrollY;
       bands = Array.from(
-        document.querySelectorAll<HTMLElement>('[data-chrome="dark"]')
+        document.querySelectorAll<HTMLElement>('[data-chrome="dark"]'),
       ).map((el) => {
         const r = el.getBoundingClientRect();
         return { top: r.top + y, bottom: r.bottom + y };
       });
+      const hero = document.querySelector<HTMLElement>("[data-hero]");
+      heroBottom = hero ? hero.getBoundingClientRect().bottom + y : null;
       scrollHeight = document.documentElement.scrollHeight;
     };
 
@@ -328,6 +352,15 @@ export default function Navbar() {
         const top = rect.top + y;
         const bottom = rect.bottom + y;
         setOnDark(bands.some((b) => b.top < bottom && b.bottom > top));
+
+        /**
+         * The links come in once the BAR has cleared the hero, not once the
+         * scroll position has — `bottom` is the bar's own lower edge in
+         * document space. Measuring off `window.scrollY` instead would swap the
+         * bar over while the hero was still behind it, which is the one frame
+         * where it looks like a glitch rather than a reveal.
+         */
+        setPastHero(heroBottom === null || bottom >= heroBottom);
       }
     };
 
@@ -373,7 +406,7 @@ export default function Navbar() {
           if (entry.isIntersecting) setActiveId(entry.target.id);
         });
       },
-      { rootMargin: "-30% 0px -60% 0px" }
+      { rootMargin: "-30% 0px -60% 0px" },
     );
 
     sections.forEach((el) => observer.observe(el));
@@ -426,7 +459,7 @@ export default function Navbar() {
       if (specularFrame.current !== null)
         cancelAnimationFrame(specularFrame.current);
     },
-    []
+    [],
   );
 
   /**
@@ -440,6 +473,43 @@ export default function Navbar() {
    * baked into the variants — see the note on `barContentsFor`.
    */
   const introWait = introDelay(INTRO.navbarMs);
+
+  /**
+   * ── The brand must never be able to stay hidden ─────────────────────
+   *
+   * It waits for the intro to fly it in, and `onIntroCleared` only ever fires
+   * for a load that actually PLAYED an intro. <LoadingScreen /> is rendered
+   * from `app/page.tsx` alone — so on `/faq`, on `/photography`, and on any
+   * direct load of a route without one, that signal never comes and the brand
+   * would sit at opacity 0 for the whole visit.
+   *
+   * Two ways out, because this is the site's name and it failing open is not
+   * acceptable:
+   *
+   *   · no `[data-intro]` in the DOM means nothing is going to deliver it, so
+   *     show it on the spot. That covers every route but `/`
+   *   · a timer past the latest the intro could possibly finish, in case one is
+   *     present but never completes
+   */
+  useEffect(() => {
+    if (brandReady) return;
+
+    if (!document.querySelector("[data-intro]")) {
+      setBrandReady(true);
+      return;
+    }
+
+    const off = onIntroCleared(() => setBrandReady(true));
+    const failsafe = window.setTimeout(
+      () => setBrandReady(true),
+      INTRO.clearedMs + INTRO.revealWaitCapMs + 600,
+    );
+
+    return () => {
+      off();
+      window.clearTimeout(failsafe);
+    };
+  }, [brandReady]);
 
   const isActive = (href: string) =>
     href.startsWith("#") ? activeId === href.slice(1) : pathname === href;
@@ -468,7 +538,7 @@ export default function Navbar() {
       }}
       className={cn(
         "fixed inset-x-0 top-0 z-50 px-3 transition-[padding] duration-500 ease-editorial sm:px-4 md:px-6 lg:px-8",
-        scrolled ? "pt-2 md:pt-3" : "pt-3 md:pt-5"
+        scrolled ? "pt-2 md:pt-3" : "pt-3 md:pt-5",
       )}
     >
       <motion.nav
@@ -482,12 +552,33 @@ export default function Navbar() {
           // `overflow-hidden` keeps the sheen, the specular and the progress
           // hairline inside the rounded shape — without it each one paints
           // square corners back on.
-          "glass-bar relative mx-auto grid max-w-[1560px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden rounded-[18px] border px-3 transition-[padding,border-color,background-color,box-shadow] duration-700 ease-editorial sm:gap-4 sm:px-4 md:px-6",
-          onDark
-            ? "glass-bar-dark border-cream/18"
-            : "glass-bar-light border-emerald/12",
-          onDark && scrolled && "border-cream/24",
-          scrolled ? "py-2" : "py-2.5 md:py-3.5"
+          "relative mx-auto grid max-w-[1560px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden rounded-[18px] px-3 transition-[padding,border-color,background-color,box-shadow] duration-700 ease-editorial sm:gap-4 sm:px-4 md:px-6",
+          /* ── There is no BAR over the hero ────────────────────────────
+             Not a transparent one, not a faint one — none. The glass, its
+             border, its shadow and its two light layers are all withheld until
+             the hero is behind us, so the opening screen carries exactly three
+             things: the mark, the name and the invitation, floating on the
+             photograph.
+
+             That is the same argument the hero itself makes. It is a full-bleed
+             photograph with no headline, on the principle that the first thing
+             a visitor reads is the architecture — and a slab of frosted glass
+             across the top of it is the one element on that screen competing
+             with the picture. Past the hero the bar has a job (it separates
+             chrome from a page that is now scrolling under it) and it appears.
+
+             `border` is applied with the glass rather than always, or the bar
+             leaves a hairline rectangle floating on the hero. */
+          pastHero
+            ? cn(
+                "glass-bar border",
+                onDark
+                  ? "glass-bar-dark border-cream/18"
+                  : "glass-bar-light border-emerald/12",
+                onDark && scrolled && "border-cream/24",
+              )
+            : "border-transparent",
+          scrolled ? "py-2" : "py-2.5 md:py-3.5",
         )}
       >
         {/* Glass layers. Both are inert and sit under the content. */}
@@ -495,7 +586,7 @@ export default function Navbar() {
           aria-hidden
           className={cn(
             "glass-sheen pointer-events-none absolute inset-0 z-0 transition-opacity duration-700",
-            onDark ? "opacity-100" : "opacity-0"
+            pastHero && onDark ? "opacity-100" : "opacity-0",
           )}
         />
         <div
@@ -504,7 +595,8 @@ export default function Navbar() {
           style={{ opacity: 0 }}
           className={cn(
             "pointer-events-none absolute inset-0 z-0 transition-opacity duration-500 ease-editorial",
-            onDark ? "glass-specular" : "glass-specular-light"
+            !pastHero && "hidden",
+            onDark ? "glass-specular" : "glass-specular-light",
           )}
         />
 
@@ -516,7 +608,24 @@ export default function Navbar() {
               across the wordmark. It is the one measurement in this bar that
               cannot be reasoned about from the markup, so: below 1280 the
               trigger is the navigation, and the full index is one tap away. */}
-          <ul className="hidden list-none items-center gap-4 p-0 xl:flex 2xl:gap-6">
+          {/* `aria-hidden` and `inert` while withheld, not just transparent —
+              an invisible link that still takes focus is a keyboard trap, and
+              a screen reader would read a navigation the page is not offering.
+              `inert` is the one attribute that removes both at once.
+
+              As a real boolean, not `inert=""`: React 19 supports `inert`
+              natively and warns that an empty string is treated as FALSE —
+              which would have silently left the trap in place. */}
+          <ul
+            aria-hidden={!pastHero}
+            inert={!pastHero}
+            className={cn(
+              "hidden list-none items-center gap-4 p-0 transition-all duration-700 ease-editorial xl:flex 2xl:gap-6",
+              pastHero
+                ? "translate-x-0 opacity-100"
+                : "pointer-events-none -translate-x-2 opacity-0",
+            )}
+          >
             {INLINE_LINKS.map((link) => (
               <motion.li key={link.href} variants={barItem}>
                 <NavItem
@@ -531,47 +640,90 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <motion.button
-            variants={barItem}
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(true)}
+          {/* Below `xl` this trigger IS the navigation, so it goes with the
+              links. That does mean the opening screen offers no way to navigate
+              on a phone except the invitation — which is what was asked for, and
+              is survivable because the very next scroll brings it back. */}
+          {/* ── The gating is on a WRAPPER, not on the button ─────────────
+              The button is a `motion.button` carrying the bar's entrance
+              variant, and that variant animates `opacity` — which framer writes
+              as an INLINE style. An inline style beats a class, so an
+              `opacity-0` utility on this element is silently ignored and the
+              trigger stayed fully visible over the hero while the links beside
+              it (a plain `<ul>`, no variant) hid correctly.
+
+              A plain wrapper owns the withholding; framer keeps owning the
+              button's own arrival. The two never write the same property. */}
+          <span
             className={cn(
-              "group flex size-9 shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-full border transition-colors duration-500 ease-editorial xl:hidden",
-              onDark
-                ? "border-cream/20 hover:bg-cream/10"
-                : "border-emerald/15 hover:bg-emerald/6"
+              "transition-all duration-700 ease-editorial xl:hidden",
+              pastHero
+                ? "scale-100 opacity-100"
+                : "pointer-events-none scale-90 opacity-0",
             )}
           >
-            {/* Two rules of unequal length that swap on hover — the bar's
+            <motion.button
+              variants={barItem}
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              tabIndex={pastHero ? undefined : -1}
+              onClick={() => setMenuOpen(true)}
+              className={cn(
+                "group flex size-9 shrink-0 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-full border ease-editorial",
+                onDark
+                  ? "border-cream/20 hover:bg-cream/10"
+                  : "border-emerald/15 hover:bg-emerald/6",
+              )}
+            >
+              {/* Two rules of unequal length that swap on hover — the bar's
                 quietest animation, and the only one on the trigger. */}
-            <span
-              className={cn(
-                "block h-px w-4 transition-all duration-500 ease-editorial group-hover:w-5",
-                onDark ? "bg-cream" : "bg-emerald"
-              )}
-            />
-            <span
-              className={cn(
-                "block h-px w-5 transition-all duration-500 ease-editorial group-hover:w-3",
-                onDark ? "bg-cream" : "bg-emerald"
-              )}
-            />
-          </motion.button>
+              <span
+                className={cn(
+                  "block h-px w-4 transition-all duration-500 ease-editorial group-hover:w-5",
+                  onDark ? "bg-cream" : "bg-emerald",
+                )}
+              />
+              <span
+                className={cn(
+                  "block h-px w-5 transition-all duration-500 ease-editorial group-hover:w-3",
+                  onDark ? "bg-cream" : "bg-emerald",
+                )}
+              />
+            </motion.button>
+          </span>
         </div>
 
         {/* ── Centre track: the brand ─────────────────────────────────────
             Centred by the grid, not by absolute positioning — see the note
             at the top of the file. `min-w-0` lets this track give way before
             it can push the edge controls off the bar. */}
+        {/* ── It is not visible until the intro has delivered it ─────────
+            The loader flies its own copy of the mark and the wordmark into
+            exactly this spot and fades it out on arrival. If this one were
+            already painted underneath, the last frame of that flight would be
+            two overlapping wordmarks — so it holds at zero until the intro
+            signals cleared, and the two crossfade at the same position and
+            scale, which is invisible.
+
+            `brandReady` is true from the first render when the intro is not
+            playing at all (a return visit, or any route that is not `/`). */}
         <MotionSmoothLink
           variants={barItem}
           href="#hero"
           aria-label={`${SITE.name} — back to top`}
-          className="group relative z-10 flex min-w-0 items-center justify-center gap-2 sm:gap-3"
+          style={{ opacity: brandReady ? 1 : 0 }}
+          className="group relative z-10 flex min-w-0 items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 ease-out"
         >
-          <span className="inline-flex shrink-0 transition-transform duration-700 ease-editorial group-hover:scale-108">
+          {/* `data-brand-mark` / `data-brand-name` are what <LoadingScreen />
+              measures to fly its own mark and wordmark into this position at
+              the end of the intro — see the note there. They are attributes
+              rather than refs because the two components never meet: the
+              loader is a sibling, mounted and unmounted on its own clock. */}
+          <span
+            data-brand-mark
+            className="inline-flex shrink-0 transition-transform duration-700 ease-editorial group-hover:scale-108"
+          >
             <Mark size={markSize} priority />
           </span>
           {/* The name carries the brand, so it is set to be read: a full
@@ -584,9 +736,10 @@ export default function Navbar() {
               gold display type on cream is about 2:1 contrast, which is the
               reason gold is not a text colour on this site. */}
           <span
+            data-brand-name
             className={cn(
               "block font-display text-[0.72rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap transition-all duration-700 ease-editorial group-hover:opacity-80 min-[360px]:text-[0.82rem] min-[400px]:text-[0.92rem] sm:text-[1.15rem] lg:text-[1.4rem]",
-              onDark ? "text-gold-soft" : "text-emerald"
+              onDark ? "text-gold-soft" : "text-emerald",
             )}
           >
             {SITE.name}
@@ -608,7 +761,7 @@ export default function Navbar() {
               BAR_LABEL,
               onDark
                 ? "border-gold/50 text-gold-soft hover:text-emerald"
-                : "border-emerald/25 text-emerald hover:text-cream"
+                : "border-emerald/25 text-emerald hover:text-cream",
             )}
           >
             {/* Gold on dark, emerald on light — the fill sweeps up from the
@@ -618,7 +771,7 @@ export default function Navbar() {
               aria-hidden
               className={cn(
                 "absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-500 ease-editorial group-hover:scale-y-100",
-                onDark ? "bg-gold" : "bg-emerald"
+                onDark ? "bg-gold" : "bg-emerald",
               )}
             />
             <span className="hidden sm:inline">Enquire</span>
@@ -636,7 +789,7 @@ export default function Navbar() {
           aria-hidden
           className={cn(
             "absolute inset-x-0 bottom-0 z-10 h-px origin-left scale-x-0",
-            onDark ? "bg-gold/70" : "bg-emerald/45"
+            onDark ? "bg-gold/70" : "bg-emerald/45",
           )}
         />
       </motion.nav>

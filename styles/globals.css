@@ -768,20 +768,51 @@ html.lenis body {
   }
 
 
+  /* ── The blueprint's strokes ──────────────────────────────────
+     <Blueprint /> in chapter 01.
+
+     `pathLength="1"` on every path normalises the dash arithmetic so a single
+     dash-array of 1 hides any stroke regardless of its real length — which is
+     what lets the component set one number per element and nothing else.
+
+     The OFFSET is not set here. It used to be a 17s infinite keyframe pair
+     (draw, hold, un-draw) on six desynchronised clocks, and that was the whole
+     problem with the section: a drawing that is never finished is never
+     legible, so at any moment a third of the sheet was missing and nobody could
+     tell it was a house. It is scrubbed against scroll position now and written
+     from JS — see the note at the top of the component. Perpetual motion
+     reveals nothing; a scrubbed draw is progressive disclosure.
+
+     Resting state is hidden, so nothing flashes complete before the scrub's
+     first pass. */
+  .bp-sheet path,
+  .bp-sheet circle,
+  .bp-sheet ellipse {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  .bp-sheet text[data-g] {
+    opacity: 0;
+  }
+
   /* The hairline that rides the hero's wipe. See <ImageCycle />.
      Starts flush with the right edge of the frame and crosses to the left,
      fading out as it arrives so it does not stack up against the edge of the
      screen at the end of every cut. */
   @keyframes wipe-edge {
     from {
-      transform: translateX(0);
+      transform: translate3d(0, 0, 0);
       opacity: 0.85;
     }
     82% {
       opacity: 0.85;
     }
     to {
-      transform: translateX(-100%);
+      /* The travel comes from the direction table in <ImageCycle />, so this
+         one keyframe serves all four sides. Four near-identical keyframes
+         would be four places to forget when the easing changes. */
+      transform: translate3d(var(--edge-tx, -100%), var(--edge-ty, 0%), 0);
       opacity: 0;
     }
   }

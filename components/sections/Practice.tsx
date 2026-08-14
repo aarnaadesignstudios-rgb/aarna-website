@@ -26,6 +26,18 @@
  * two that remain are the studio's own words. That is the whole justification
  * for the cut — there is now less on the page, and all of it is real.
  *
+ * ── The plate is gone; the blueprint replaced it ──────────────────────────
+ *
+ * A wide photograph used to stand up out of the page on a 3D plate below the
+ * statement. The studio did not want that kind of image here, so it is removed
+ * along with the scrubbed timeline that drove it.
+ *
+ * The backdrop behind the statement is now a house plan drawn in gold pencil
+ * (<Blueprint />) — masked so it stays behind the words and never on them. It
+ * is the better fit for the section anyway: this chapter is the studio talking
+ * about how it works, and a drawing is what that looks like. The photographs
+ * belong in chapter 02, which is entirely made of them.
+ *
  * The figures strip above is unchanged in structure, but every figure in it
  * was corrected (see STATS) and it no longer counts up: two of the five values
  * are not numbers any more.
@@ -36,97 +48,24 @@
  * the flipping word on its own line always. The line count therefore cannot
  * depend on which word is up, so the heading can never jump as it flips.
  */
-import { useRef } from "react";
 import { motion } from "framer-motion";
 
 import {
+  Blueprint,
   LayoutTextFlip,
-  Media,
   PageContainer,
   SectionHeading,
   SheetTexture,
 } from "@/components/ui";
-import { gsap } from "@/lib/gsap";
-import { useIsomorphicLayoutEffect } from "@/hooks";
-import {
-  EASE_EDITORIAL,
-  fadeUp,
-  staggerContainer,
-  VIEWPORT_ONCE,
-} from "@/animations/variants";
+import { fadeUp, staggerContainer, VIEWPORT_ONCE } from "@/animations/variants";
 import { STATS } from "@/constants";
 import { cn } from "@/utils/cn";
 
-/** A hairline that draws along its length. */
-function Rule({ className }: { className?: string }) {
-  return (
-    <motion.span
-      aria-hidden
-      className={cn("block h-px origin-left", className)}
-      variants={{ hidden: { scaleX: 0 }, visible: { scaleX: 1 } }}
-      initial="hidden"
-      whileInView="visible"
-      viewport={VIEWPORT_ONCE}
-      transition={{ duration: 1.1, ease: EASE_EDITORIAL }}
-    />
-  );
-}
-
 export default function Practice() {
-  const plateRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * ── The plate ─────────────────────────────────────────────────────────
-   *
-   * The photograph under the statement is laid BACK in 3D and stands up as you
-   * scroll to it: `rotateX` from 14° to 0 while it rises and its own image
-   * drifts the other way inside its frame.
-   *
-   * It is the same language as <SelectedWorks />, deliberately — that chapter
-   * is a ring of photographs on a turntable, and a site whose only 3D moment is
-   * one section reads as a section with a gimmick in it. Two, built from the
-   * same parts (a `perspective` on the wrapper, a `rotateX` on the child, an
-   * inner counter-drift), read as how this site handles pictures.
-   *
-   * The perspective lives on the wrapper and the rotation on the child, for the
-   * same reason the ring's does: perspective applies to an element's CHILDREN,
-   * so putting both on one element gives you a skew rather than a rotation.
-   */
-  useIsomorphicLayoutEffect(() => {
-    const plate = plateRef.current;
-    if (!plate) return;
-
-    const ctx = gsap.context(() => {
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: plate,
-            // Starts before the plate is on screen and finishes once it is
-            // comfortably inside it, so the whole move happens while it is
-            // being looked at rather than half of it below the fold.
-            start: "top 92%",
-            end: "top 42%",
-            scrub: 1,
-          },
-        })
-        .fromTo(
-          "[data-plate-face]",
-          { rotateX: 14, y: 56, scale: 0.94 },
-          { rotateX: 0, y: 0, scale: 1, ease: "none" },
-          0
-        )
-        // The image inside drifts against the frame for the whole travel, so
-        // the plate has parallax as well as depth.
-        .fromTo("[data-plate-image]", { yPercent: -8 }, { yPercent: 6, ease: "none" }, 0);
-    }, plate);
-
-    return () => ctx.revert();
-  }, []);
-
   return (
     <section
       id="practice"
-      className="relative overflow-hidden bg-paper pb-20 text-charcoal md:pb-24 lg:pb-28"
+      className="relative overflow-hidden bg-paper text-charcoal"
     >
       {/* Figures strip — full-bleed, flush to the TOP of the section, so it
           lands directly between the hero and the statement and reads as a
@@ -193,7 +132,7 @@ export default function Practice() {
                   "md:border-t-0 md:pt-0",
                   i === 0 ? "md:border-l-0" : "md:border-l",
                   // The odd fifth figure closes the bottom row while stacked.
-                  i === STATS.length - 1 && "col-span-2 md:col-span-1"
+                  i === STATS.length - 1 && "col-span-2 md:col-span-1",
                 )}
               >
                 {/* `whitespace-nowrap`: "Pan India" and "2 Lakh" are two words
@@ -223,15 +162,44 @@ export default function Practice() {
           of ending on a rule, so the section no longer needs to clear a hard
           edge before it starts — and 112px of nothing under a plinth was a
           third of the empty space the review flagged. */}
-      <PageContainer className="relative z-10 pt-12 md:pt-14 lg:pt-16">
-        <SectionHeading
-          index="01"
-          eyebrow="The Practice"
-          align="center"
-          className="max-w-full"
-        />
+      {/* ── The sheet ────────────────────────────────────────────────────
+          Everything below the figures strip is one drawing sheet, and the
+          blueprint fills it. It used to sit inside the statement block, which
+          is ~420px tall against a plan that is nearly twice that — so the plan
+          was cropped to fragments and had to be given negative insets and
+          extra section padding to fight its way out.
 
-        {/* ── Centred, and the heading owns the width ────────────────────
+          Wrapping the whole light half of the chapter instead means the plan
+          has the room it needs by construction, and the section's padding goes
+          back to being about the type. The strip stays outside it, because a
+          plan bleeding onto that emerald band reads as a drawing escaping its
+          page.
+
+          `relative` here and `z-10` on the container below is what keeps the
+          plan behind: an absolutely positioned element paints over any STATIC
+          sibling that follows it, regardless of DOM order. Same note as
+          components/ui/SheetTexture.tsx. */}
+      {/* ── The padding lives HERE, not on the section ───────────────────
+          <Blueprint /> is `inset-0` of this wrapper, so the wrapper's height is
+          the height the plan is drawn at. With the bottom padding on the
+          <section> instead, this box was only as tall as its own content —
+          measured at 444px against a 1600x780 sheet, which fitted the drawing
+          to 57% and made its annotation too small to read as annotation.
+
+          Moving the padding inside gives the sheet the whole light half of the
+          chapter. The space is not empty: the drawing is in it. */}
+      <div className="relative pb-32 md:pb-40 lg:pb-48">
+        <Blueprint />
+
+        <PageContainer className="relative z-10 pt-12 md:pt-14 lg:pt-16">
+          <SectionHeading
+            index="01"
+            eyebrow="The Practice"
+            align="center"
+            className="max-w-full"
+          />
+
+          {/* ── Centred, and the heading owns the width ────────────────────
             This was a two-column row: the statement on the left at 1.5fr, the
             studio's words on the right at 1fr. The note was to centre it, set
             the heading a little bolder, and let the heading have the space.
@@ -245,107 +213,84 @@ export default function Practice() {
             `max-w-[22ch]` on the quote and `[46ch]` on the paragraph: centred
             text has to be held to a measure or the ragged edges on BOTH sides
             stop reading as a shape. */}
-        <div className="mt-14 flex flex-col items-center text-center md:mt-16">
-          <h2 className="font-serif leading-[1.02] tracking-[-0.025em] text-emerald">
-            <LayoutTextFlip
-              text="Design is the brand of our"
-              words={[
-                "creativity",
-                "imagination",
-                "innovation",
-                "vision",
-                "artistry",
-              ]}
-              duration={3000}
-              // `block` at every width: the phrase owns its line and the word
-              // owns the next, so the line count cannot change as it flips and
-              // the heading can never jump mid-read.
-              //
-              // `font-medium` is the "a little bolder" the studio asked for,
-              // and it is the ONE place on the site that departs from the
-              // single 400 weight every other heading uses (see the type note
-              // in styles/globals.css). It is here rather than in the base
-              // layer because this is the page's masthead statement and the
-              // step is doing work; applied globally, 500 closes Cormorant's
-              // counters at the sizes the section titles run at.
-              phraseClassName="block font-medium text-[2.4rem] md:text-[3.4rem] lg:text-[4rem] xl:text-[4.8rem] 2xl:text-[5.4rem]"
-              /* The flipping word is part of this sentence, so it is set in the
+          <div className="relative mt-14 flex flex-col items-center text-center md:mt-16">
+            {/* ── The statement arrives ──────────────────────────────────
+              A masked rise, once, on enter. The chapter's whole idea is that a
+              drawing is being made while you read — and until now the reading
+              half of that had no arrival at all: the heading was simply already
+              there while the plan drew itself behind it.
+
+              `overflow-hidden` on the wrapper with the heading translated from
+              inside it: the line rises out of its own edge rather than fading
+              in on the spot, which is the same gesture the hero's project
+              caption and the Works title both use. */}
+          <motion.h2
+            initial={{ y: "34%", opacity: 0 }}
+            whileInView={{ y: "0%", opacity: 1 }}
+            viewport={VIEWPORT_ONCE}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 font-serif leading-[1.02] tracking-[-0.025em] text-emerald"
+          >
+              <LayoutTextFlip
+                text="Design is the brand of our"
+                words={[
+                  "creativity",
+                  "imagination",
+                  "innovation",
+                  "vision",
+                  "artistry",
+                ]}
+                duration={3000}
+                // `block` at every width: the phrase owns its line and the word
+                // owns the next, so the line count cannot change as it flips and
+                // the heading can never jump mid-read.
+                //
+                // `font-medium` is the "a little bolder" the studio asked for,
+                // and it is the ONE place on the site that departs from the
+                // single 400 weight every other heading uses (see the type note
+                // in styles/globals.css). It is here rather than in the base
+                // layer because this is the page's masthead statement and the
+                // step is doing work; applied globally, 500 closes Cormorant's
+                // counters at the sizes the section titles run at.
+                phraseClassName="block font-medium text-[2.4rem] md:text-[3.4rem] lg:text-[4rem] xl:text-[4.8rem] 2xl:text-[5.4rem]"
+                /* The flipping word is part of this sentence, so it is set in the
                  same face — italic and gold to mark it, not a second
                  typeface. */
-              wordClassName="font-serif font-medium italic text-gold text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
-            />
-          </h2>
-
-          <Rule className="mt-10 w-24 bg-gold" />
-
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={VIEWPORT_ONCE}
-            className="flex flex-col items-center"
-          >
-            <motion.p
-              variants={fadeUp}
-              className="mt-9 max-w-[34ch] font-serif text-[1.6rem] leading-[1.3] tracking-tight text-emerald md:text-[2rem]"
-            >
-              &ldquo;Every space has a story. Our work begins by listening to
-              it.&rdquo;
-            </motion.p>
-
-            <motion.p
-              variants={fadeUp}
-              className="mt-6 max-w-[46ch] text-charcoal/70"
-            >
-              From the first conversation to the final detail, we approach
-              design as a process of discovery. We understand the context,
-              challenge assumptions, refine the idea and translate it into
-              spaces that are purposeful, expressive and enduring.
-            </motion.p>
-          </motion.div>
-        </div>
-
-        {/* ── The plate ──────────────────────────────────────────────────
-            A wide photograph that stands up out of the page as you reach it.
-            See the note on the timeline above.
-
-            `perspective` on the wrapper, the transform on the child — and a
-            generous 1400px, because a plate this wide keystones badly at the
-            shorter perspective the ring uses. */}
-        <div
-          ref={plateRef}
-          className="mt-16 md:mt-20 lg:mt-24"
-          style={{ perspective: "1400px", perspectiveOrigin: "50% 0%" }}
-        >
-          <div
-            data-plate-face
-            className="relative aspect-16/9 w-full overflow-hidden rounded-2xl bg-emerald-deep will-change-transform md:aspect-2/1"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            {/* Oversized and offset, so the counter-drift never exposes an
-                edge — the image is 124% of the frame's height and travels 14%
-                of that across the whole scroll. */}
-            <div
-              data-plate-image
-              className="absolute inset-x-0 -top-[12%] h-[124%] will-change-transform"
-            >
-              <Media
-                src="/images/hero/AWC.jpg"
-                alt="AWC — the studio's work"
-                sizes="100vw"
+                wordClassName="font-serif font-medium italic text-gold text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
               />
-            </div>
+            </motion.h2>
 
-            {/* A gold hairline inside the frame, so the plate reads as a
-                mounted print rather than as a bleed. */}
-            <span
-              aria-hidden
-              className="absolute inset-0 rounded-2xl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-gold)_38%,transparent)]"
-            />
+            {/* ── One rule, not two ────────────────────────────────────────
+              There used to be a `<Rule className="mt-10 w-24 bg-gold" />` here.
+              <LayoutTextFlip /> already draws a gold rule under the flipping
+              word (it is `border-b border-gold/50` on the word's own box, so it
+              measures exactly as wide as whichever word is showing) — so this
+              added a SECOND gold rule 40px under the first, and most of the gap
+              the studio asked to close was the space that second rule needed.
+
+              Removing it closes the gap and fixes the doubled hairline in one
+              go. The quote now sits `mt-7` under the statement.
+
+              The standfirst that followed it — "From the first conversation to
+              the final detail…" — is removed at the studio's request. */}
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={VIEWPORT_ONCE}
+              className="relative z-10 flex flex-col items-center"
+            >
+              <motion.p
+                variants={fadeUp}
+                className="mt-7 max-w-[34ch] font-serif text-[1.6rem] leading-[1.3] tracking-tight text-emerald md:text-[2rem]"
+              >
+                &ldquo;Every space has a story. Our work begins by listening to
+                it.&rdquo;
+              </motion.p>
+            </motion.div>
           </div>
-        </div>
-
-      </PageContainer>
+        </PageContainer>
+      </div>
     </section>
   );
 }

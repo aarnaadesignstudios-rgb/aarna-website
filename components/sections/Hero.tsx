@@ -145,6 +145,12 @@ export default function Hero() {
          and flips its own palette to suit. Light is the default; only dark
          bands declare themselves. See components/layout/Navbar.tsx. */
       data-chrome="dark"
+      /* `data-hero` is what the masthead watches to know when to bring its
+         navigation in — see components/layout/Navbar.tsx. It is a separate
+         attribute from `data-chrome` on purpose: that one says "this band is
+         dark", which several bands now are, and this one says "this is the
+         opening screen", which exactly one is. */
+      data-hero
       className="relative flex h-screen min-h-[640px] w-full items-end overflow-hidden bg-ink text-cream"
     >
       {/* Background imagery.
