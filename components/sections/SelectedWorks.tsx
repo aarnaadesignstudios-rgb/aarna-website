@@ -87,13 +87,23 @@ import {
   SmoothLink,
 } from "@/components/ui";
 import { WORKS } from "@/constants";
+import type { Work } from "@/types";
 import { smoothScrollTo } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
 
-const COUNT = WORKS.length;
+/**
+ * ── The count is not a module constant any more ──────────────────────────
+ *
+ * It used to be `WORKS.length`, read once at import. The projects can now come
+ * from Sanity, so the number of them is only known per render — and the ring's
+ * whole geometry is derived from it: the angle between faces, where the dwell
+ * lands, how far the pin scrolls, which index the counter shows.
+ *
+ * `WORKS` stays as the default, so a caller that passes nothing gets exactly
+ * the ring that was here before.
+ */
 
-/** Degrees between two neighbouring faces. Nine projects, so 40°. */
-const STEP = 360 / COUNT;
+
 
 /**
  * How far from the front a face is still drawn.
@@ -185,15 +195,28 @@ function smootherstep(x: number) {
 }
 
 /** Scroll progress (0–1) → ring position in faces, with the dwell above. */
-function ringPosition(progress: number) {
-  const raw = Math.max(0, Math.min(1, progress)) * (COUNT - 1);
+function ringPosition(progress: number, count: number) {
+  const raw = Math.max(0, Math.min(1, progress)) * (count - 1);
   const from = Math.floor(raw);
   // The last face has nothing to travel toward, so it is its own answer.
-  if (from >= COUNT - 1) return COUNT - 1;
+  if (from >= count - 1) return count - 1;
   return from + smootherstep(raw - from);
 }
 
-export default function SelectedWorks() {
+export default function SelectedWorks({
+  works = WORKS,
+}: {
+  /**
+   * The commissions to show. Defaults to the ones committed in
+   * `constants/content.ts`, which is what the site falls back to whenever
+   * Sanity is unconfigured, empty or unreachable — see sanity/lib/content.ts.
+   */
+  works?: Work[];
+}) {
+  const count = works.length;
+  /** Degrees between neighbouring faces. */
+  const step = 360 / count;
+
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
@@ -238,12 +261,12 @@ export default function SelectedWorks() {
     const ring = ringRef.current;
     if (!ring) return;
 
-    ring.style.setProperty("--ring-rot", `${-t * STEP}deg`);
+    ring.style.setProperty("--ring-rot", `${-t * step}deg`);
 
     facesRef.current.forEach((face, i) => {
       if (!face) return;
 
-      const rel = fromFront((i - t) * STEP);
+      const rel = fromFront((i - t) * step);
       const away = Math.abs(rel);
 
       // Aerial perspective: the further round the ring a face is, the more of
@@ -283,16 +306,18 @@ export default function SelectedWorks() {
     // ring's dwell, so it stalls at each project and lurches between them,
     // which on a progress bar reads as a stuck page rather than as easing.
     if (progressRef.current) {
-      const shown = linear ?? t / (COUNT - 1);
+      const shown = linear ?? t / (count - 1);
       progressRef.current.style.width = `${Math.max(0, Math.min(1, shown)) * 100}%`;
     }
 
     const idx = Math.round(t);
-    if (idx !== activeRef.current && idx >= 0 && idx < COUNT) {
+    if (idx !== activeRef.current && idx >= 0 && idx < count) {
       activeRef.current = idx;
       setActive(idx);
     }
-  }, []);
+    // `count` and `step` are the ring's geometry and they come from the props
+    // now, so this cannot claim an empty dependency list any more.
+  }, [count, step]);
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -317,7 +342,7 @@ export default function SelectedWorks() {
        * shorter and the ring spins faster than the eye can read a photograph;
        * much longer and the section outstays its welcome.
        */
-      const distance = () => COUNT * window.innerHeight * 0.62;
+      const distance = () => count * window.innerHeight * 0.62;
 
       const st = ScrollTrigger.create({
         trigger: section,
@@ -326,7 +351,7 @@ export default function SelectedWorks() {
         pin,
         scrub: 1,
         invalidateOnRefresh: true,
-        onUpdate: (self) => apply(ringPosition(self.progress), self.progress),
+        onUpdate: (self) => apply(ringPosition(self.progress, count), self.progress),
         onRefresh: () => apply(posRef.current),
       });
       stRef.current = st;
@@ -416,14 +441,14 @@ export default function SelectedWorks() {
 
   /** Bring project `i` to the front of the ring. */
   const jump = (i: number) => {
-    const target = Math.max(0, Math.min(COUNT - 1, i));
+    const target = Math.max(0, Math.min(count - 1, i));
     const st = stRef.current;
 
     // Pinned (desktop): the ring's position IS the scroll position, so this has
     // to travel through the scroller or the two would disagree the moment the
     // next wheel event arrived.
     if (st) {
-      smoothScrollTo(st.start + (target / (COUNT - 1)) * (st.end - st.start));
+      smoothScrollTo(st.start + (target / (count - 1)) * (st.end - st.start));
       return;
     }
 
@@ -432,11 +457,11 @@ export default function SelectedWorks() {
     if (card) smoothScrollTo(card, { offset: -90 });
   };
 
-  const current = WORKS[active] ?? WORKS[0];
+  const current = works[active] ?? works[0];
 
   /** One project's photograph, used by both the ring and the mobile stack. */
   const photo = (i: number) => {
-    const work = WORKS[i];
+    const work = works[i];
     if (!work) return null;
     return (
       <SmoothLink
@@ -455,6 +480,10 @@ export default function SelectedWorks() {
           src={work.image}
           alt={work.title}
           sizes="(max-width: 1024px) 100vw, 30vw"
+          /* The focal point the studio set in the CMS. Undefined for the
+             committed constants, which are centred — see the note on
+             `objectPosition` in types/index.ts. */
+          objectPosition={work.objectPosition}
           className="scale-[1.04] transition-transform duration-[1400ms] ease-editorial group-hover:scale-[1.12]"
         />
 
@@ -500,7 +529,7 @@ export default function SelectedWorks() {
    * tab stop to the same project is noise.
    */
   const reflection = (i: number) => {
-    const work = WORKS[i];
+    const work = works[i];
     if (!work) return null;
     return (
       <div aria-hidden className="ring-reflect">
@@ -520,6 +549,7 @@ export default function SelectedWorks() {
             src={work.image}
             alt=""
             sizes="(max-width: 1024px) 100vw, 30vw"
+            objectPosition={work.objectPosition}
             className="scale-[1.04]"
           />
           {/* The reflection takes the ground's colour faster than the card does
@@ -564,7 +594,7 @@ export default function SelectedWorks() {
             eyebrow="Selected Works"
             tone="dark"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
-              COUNT
+              count
             ).padStart(2, "0")}`}
           />
         </PageContainer>
@@ -641,7 +671,7 @@ export default function SelectedWorks() {
                 where they touch it. */}
             <div aria-hidden className="ring-floor" />
 
-            {WORKS.map((work, i) => (
+            {works.map((work, i) => (
               <div
                 key={work.id}
                 ref={(el) => {
@@ -650,7 +680,7 @@ export default function SelectedWorks() {
                 className="ring-face h-[clamp(330px,52vh,540px)] w-[clamp(250px,30vw,450px)] will-change-transform"
                 style={
                   {
-                    "--face-a": `${i * STEP}deg`,
+                    "--face-a": `${i * step}deg`,
                     "--face-y": `${RISE[i % RISE.length] ?? 0}vh`,
                   } as React.CSSProperties
                 }
@@ -718,7 +748,7 @@ export default function SelectedWorks() {
 
         {/* ── The stack (below lg) ───────────────────────────────────────── */}
         <div className="flex flex-col gap-10 px-6 pt-6 pb-14 md:px-10 lg:hidden">
-          {WORKS.map((work, i) => (
+          {works.map((work, i) => (
             <article
               key={work.id}
               ref={(el) => {
@@ -753,7 +783,7 @@ export default function SelectedWorks() {
           </div>
           <div className="flex items-start justify-between gap-8">
             <div className="flex flex-wrap gap-x-6 gap-y-1 font-label">
-              {WORKS.map((work, i) => (
+              {works.map((work, i) => (
                 <button
                   key={work.id}
                   type="button"

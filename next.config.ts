@@ -14,13 +14,19 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   images: {
-    // Remote placeholder images are used during Phase 1.
-    // TODO: Replace remote patterns with locally optimised assets in /public/images.
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
+      /**
+       * Where CMS photography is served from. `<Media />` routes these through
+       * Sanity's own resizer rather than Next's (see that component), but the
+       * host still has to be allow-listed — next/image refuses any remote URL
+       * it has not been told about, loader or no loader.
+       */
+      { protocol: "https", hostname: "cdn.sanity.io" },
+      /**
+       * Stock stand-ins, still in `constants/content.ts` until the studio's own
+       * photography replaces them. This entry goes when the last one does.
+       */
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

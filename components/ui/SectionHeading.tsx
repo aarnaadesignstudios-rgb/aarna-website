@@ -32,9 +32,9 @@
  * The title is a plain string; use "\n" for deliberate line breaks.
  */
 import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
-import { fadeUp, VIEWPORT_ONCE } from "@/animations/variants";
+import { EASE_EDITORIAL, fadeUp, VIEWPORT_ONCE } from "@/animations/variants";
 import { cn } from "@/utils/cn";
 import TextReveal from "./TextReveal";
 
@@ -70,6 +70,47 @@ interface SectionHeadingProps {
   titleClassName?: string;
 }
 
+/**
+ * How a chapter announces itself.
+ *
+ * The rule draws along its length, then the number and the name rise out of
+ * their own edges. Three parts, about 0.6s end to end, once.
+ *
+ * A MASKED RISE rather than a fade, because it is the gesture the rest of the
+ * site already uses for type arriving — the hero's project caption, the Works
+ * title, the statement in chapter 01. A fade would have been less work and
+ * would have made the chapter mark the one piece of type on the page that
+ * behaves differently from every other.
+ *
+ * Once, via VIEWPORT_ONCE. A heading that re-animates every time it is scrolled
+ * back past stops reading as an arrival and starts reading as a loop.
+ */
+const chapterMark: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+
+/** Drawn, not faded. The origin is set per side at the call site. */
+const chapterRule: Variants = {
+  hidden: { scaleX: 0 },
+  visible: {
+    scaleX: 1,
+    transition: { duration: 0.7, ease: EASE_EDITORIAL },
+  },
+};
+
+/**
+ * The rise. 105%, not 100%: a descender sits below the baseline, so a glyph
+ * translated exactly its own height still shows its tail above the mask edge.
+ */
+const chapterItem: Variants = {
+  hidden: { y: "105%" },
+  visible: {
+    y: "0%",
+    transition: { duration: 0.62, ease: EASE_EDITORIAL },
+  },
+};
+
 export default function SectionHeading({
   index,
   eyebrow,
@@ -94,81 +135,114 @@ export default function SectionHeading({
       {(eyebrow || meta) && (
         <motion.div
           className={cn(
-            "flex flex-wrap items-center gap-x-6 gap-y-2",
+            "flex flex-wrap items-end gap-x-6 gap-y-3",
             meta ? "justify-between" : "",
             align === "center" && "justify-center"
           )}
-          variants={fadeUp}
+          variants={chapterMark}
           initial="hidden"
           whileInView="visible"
           viewport={VIEWPORT_ONCE}
         >
-          <span className="flex items-center gap-3.5">
-            {/* ── The hairline that opens every chapter, and now REACHES ────
+          <span className="flex items-center gap-4 sm:gap-5">
+            {/* The hairline that opens every chapter, and REACHES.
+
                 It used to be a 40px stub sitting inside the container's left
                 gutter. At `lg` it runs from the page edge instead: `-ml-16`
-                cancels <PageContainer />'s `lg:px-16`, and the width is that
-                64px plus the original 40.
+                cancels the container's `lg:px-16`, and the width is that 64px
+                plus the original 40.
 
                 That is not a flourish. <Spine /> draws the story's thread at
-                x=28px, and this rule now crosses it — so every chapter's
-                heading is physically joined to the thread running down the
-                page, and the connection between "this section" and "the
-                document" is something you can see rather than something you
-                have to infer from a matching number.
+                x=28px and this rule crosses it, so every chapter's heading is
+                physically joined to the thread running down the page.
 
                 Only from `lg`, because that is where the spine exists; below it
                 the rule stays the stub it was, since a hairline running off the
                 edge of a phone screen just looks like a clipped element.
 
-                The one thing to know before changing a section's overflow: a
-                section with `overflow-hidden` clips this at x=0, which is
-                exactly where it wants to stop, so it is safe. A section with
-                horizontal padding of its own on the WRAPPER, rather than on
-                <PageContainer />, would clip it short. */}
-            <span
+                It draws along its length rather than fading, which is why it
+                carries its own origin — see `chapterRule`. */}
+            <motion.span
+              variants={chapterRule}
               className={cn(
-                "block h-px w-10 shrink-0 bg-gold",
-                // The reach only applies to a LEFT-ranged heading. On a centred
-                // one the rule is mirrored either side of the label, and a
-                // negative margin on one of the pair would pull the whole block
-                // off the page's axis — the centring is the point there.
+                "block h-px w-10 shrink-0 origin-left bg-gold",
                 align === "left" && "lg:-ml-16 lg:w-[6.5rem]"
               )}
             />
-            <span className="font-label">
-              {index && <span className="text-gold">{index}</span>}
-              {index && eyebrow && (
-                <span className={dark ? "text-cream/40" : "text-charcoal/35"}>
-                  {" "}
-                  &mdash;{" "}
+
+            {/* The chapter mark: the number set large, the name small beside
+                it, on a shared baseline.
+
+                The brief was that a reader should be able to tell which section
+                they are in without the label competing with that section's own
+                heading. A NUMERAL is how you get both. At 3rem it is the
+                second-largest thing in the block and legible at a glance, and
+                it still cannot overpower a title, because a number carries no
+                sentence for the eye to read. Setting the WORDS larger instead
+                would have produced two headings arguing with each other.
+
+                Gold, which is the site's quietest ink on paper — the same
+                reason gold is never a body colour here works in reverse for a
+                figure this size.
+
+                `type-figure` for lining numerals: Cormorant defaults to
+                old-style, where 0 sits at x-height and 1, 3, 4, 7 and 9 hang
+                below the baseline, so "01" would set as "o1" with a dropped
+                stem. */}
+            <span className="flex items-baseline gap-3 sm:gap-4">
+              {index && (
+                <span className="block overflow-hidden pb-[0.06em]">
+                  <motion.span
+                    variants={chapterItem}
+                    className="type-figure block text-[2rem] leading-[0.85] tracking-tight text-gold md:text-[2.5rem] lg:text-[3rem]"
+                  >
+                    {index}
+                  </motion.span>
                 </span>
               )}
               {eyebrow && (
-                <span className={dark ? "text-cream/55" : "text-charcoal/55"}>
-                  {eyebrow}
+                <span className="block overflow-hidden pb-[0.14em]">
+                  <motion.span
+                    variants={chapterItem}
+                    className={cn(
+                      // Stepped up from the site's 12px label: small enough to
+                      // stay subordinate to the numeral, large enough that the
+                      // section's NAME reads at a glance rather than only when
+                      // it is looked for.
+                      "font-label block text-[0.78rem] tracking-[0.2em] md:text-[0.86rem]",
+                      dark ? "text-cream/70" : "text-charcoal/60"
+                    )}
+                  >
+                    {eyebrow}
+                  </motion.span>
                 </span>
               )}
             </span>
+
             {/* Mirrored rule, centred headings only. The single left-hand rule
                 is what makes the label read as the START of a line, which is
                 right when the heading is ranged left and wrong when it is
                 centred — there it just makes a symmetrical block look as
                 though it has slipped. */}
             {align === "center" && (
-              <span aria-hidden className="block h-px w-10 shrink-0 bg-gold" />
+              <motion.span
+                aria-hidden
+                variants={chapterRule}
+                className="block h-px w-10 shrink-0 origin-right bg-gold"
+              />
             )}
           </span>
 
           {meta && (
-            <span
+            <motion.span
+              variants={chapterItem}
               className={cn(
                 "font-label",
                 dark ? "text-cream/50" : "text-charcoal/45"
               )}
             >
               {meta}
-            </span>
+            </motion.span>
           )}
         </motion.div>
       )}

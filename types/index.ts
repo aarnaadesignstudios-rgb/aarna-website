@@ -91,6 +91,14 @@ export interface Work {
   year?: string;
   description: string;
   image: string;
+  /**
+   * Art direction for the crop, as a CSS `object-position` value.
+   *
+   * Set from the photograph's hotspot when the project comes from Sanity — see
+   * sanity/lib/image.ts. Undefined means centred, which is what every
+   * hand-authored entry in `constants/content.ts` uses.
+   */
+  objectPosition?: string;
   /** CSS width for the panel — intentionally uneven for editorial rhythm. */
   width: string;
 }

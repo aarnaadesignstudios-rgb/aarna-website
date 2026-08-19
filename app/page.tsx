@@ -8,6 +8,7 @@ import Practice from "@/components/sections/Practice";
 import Services from "@/components/sections/Services";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
+import { getWorks } from "@/sanity/lib/content";
 
 /**
  * Below-the-fold, heavier sections are code-split via dynamic import so their
@@ -31,7 +32,20 @@ const SelectedWorks = dynamic(() => import("@/components/sections/SelectedWorks"
  * studio does and the invitation to hire them. Removing it also closes the
  * dead band of space that sat underneath it.
  */
-export default function Home() {
+/**
+ * ── Server component, so the CMS read happens here ──────────────────────
+ *
+ * <SelectedWorks /> is a client component — it owns the ring's GSAP timeline —
+ * so it cannot fetch. The projects are read here and handed down as a prop,
+ * which is also why `getWorks()` can be `server-only`: nothing in the browser
+ * bundle ever touches a Sanity client.
+ *
+ * With no Sanity project configured this returns the constants and the page is
+ * byte-for-byte what it was. See sanity/lib/content.ts.
+ */
+export default async function Home() {
+  const works = await getWorks();
+
   return (
     <>
       {/* Intro overlays everything until it dissolves. */}
@@ -68,7 +82,7 @@ export default function Home() {
       <main>
         <Hero />
         <Practice />
-        <SelectedWorks />
+        <SelectedWorks works={works} />
         <Testimonials />
         <Process />
         {/* <Founder /> — commented out at the studio's request. */}

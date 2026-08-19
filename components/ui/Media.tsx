@@ -8,11 +8,28 @@
  * The parent must be `position: relative` with a defined size — pair with the
  * aspect-ratio utilities on the wrapping element.
  *
+ * ── Two sources, one component ───────────────────────────────────────────
+ *
+ * `src` is either a path in `/public` or a Sanity CDN URL, and each gets the
+ * pipeline that suits it:
+ *
+ *   · a LOCAL file goes through Next's optimiser, which is the right tool for
+ *     something sitting on the same disk as the build
+ *   · a SANITY url is resized by Sanity instead, via the loader. Without that,
+ *     Next would fetch the 2400px original and re-encode it — paying twice for
+ *     the same work, and on Vercel spending image-optimisation quota to
+ *     reprocess something a CDN already served as AVIF
+ *
+ * The switch is a URL check rather than a prop, so no caller has to know or
+ * care which kind of image it was handed. That is what kept this integration
+ * to one component instead of the nine that render photographs.
+ *
  * TODO (future phases):
  *  - Generate and pass real blurDataURL placeholders per asset.
- *  - Add optional `priority` art-direction for above-the-fold hero media.
  */
 import Image from "next/image";
+
+import { isSanityUrl, sanityLoader } from "@/sanity/lib/image";
 import { cn } from "@/utils/cn";
 
 interface MediaProps {
@@ -57,6 +74,8 @@ export default function Media({
       src={src}
       alt={alt}
       fill
+      // See the note above. Local files keep Next's own pipeline.
+      loader={isSanityUrl(src) ? sanityLoader : undefined}
       // Lazy by default; hero opts in to priority, clipped media to eager.
       priority={priority}
       loading={priority ? undefined : eager ? "eager" : "lazy"}
