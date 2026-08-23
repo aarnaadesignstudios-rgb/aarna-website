@@ -133,7 +133,6 @@ export default function Services() {
       >
         <PageContainer className="shrink-0 pt-24 pb-8 md:pt-28">
           <SectionHeading
-            index="05"
             eyebrow="Services"
             title="What we do"
             tone="dark"

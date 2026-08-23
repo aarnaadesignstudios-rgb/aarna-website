@@ -29,7 +29,6 @@ export default function WhyUs() {
     >
       <PageContainer>
         <SectionHeading
-          index="06"
           eyebrow="Why Us"
           title="Six reasons clients trust the studio"
           meta="Six principles"

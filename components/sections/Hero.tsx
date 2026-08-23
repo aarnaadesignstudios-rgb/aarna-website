@@ -52,6 +52,7 @@ import { FiArrowDown } from "react-icons/fi";
 import { ImageCycle, PageContainer, SmoothLink } from "@/components/ui";
 import { fadeScale } from "@/animations/variants";
 import { HERO_SLIDES, INTRO, SITE } from "@/constants";
+import type { HeroSlide } from "@/types";
 import { gsap } from "@/lib/gsap";
 import { introDelay, introHasPlayed, onIntroCleared } from "@/lib/intro";
 import { useIsomorphicLayoutEffect } from "@/hooks";
@@ -70,7 +71,19 @@ const MotionSmoothLink = motion.create(SmoothLink);
 const HOLD_MS = 1400;
 const WIPE_MS = 620;
 
-export default function Hero() {
+/**
+ * `slides` comes from the CMS, and defaults to the studio's own four.
+ *
+ * The default is what makes the prop safe to leave off: <Hero /> is rendered
+ * from a server component that reads Sanity, but it is also the component a
+ * developer reaches for in isolation, and neither should have to know whether
+ * a Content Lake exists. See sanity/lib/content.ts.
+ */
+interface HeroProps {
+  slides?: HeroSlide[];
+}
+
+export default function Hero({ slides = HERO_SLIDES }: HeroProps) {
   const heroRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState(0);
 
@@ -133,7 +146,7 @@ export default function Hero() {
     return () => ctx.revert();
   }, []);
 
-  const current = HERO_SLIDES[frame] ?? HERO_SLIDES[0];
+  const current = slides[frame] ?? slides[0];
 
   return (
     <section
@@ -174,7 +187,7 @@ export default function Hero() {
               Ken Burns move has to be readable as a move, both of which stop
               being true somewhere under 1.8s. */}
           <ImageCycle
-            frames={HERO_SLIDES}
+            frames={slides}
             /* Released by the loader's own completion, not by a clock — see
                `handedOver` above. The fallback is deliberately later than the
                latest the loader could possibly finish. */
@@ -283,7 +296,7 @@ export default function Hero() {
             aria-hidden
             className="mt-6 flex items-center gap-2 [text-shadow:none]"
           >
-            {HERO_SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <span
                 key={slide.id}
                 className="relative block h-px w-8 overflow-hidden bg-cream/30 md:w-9"

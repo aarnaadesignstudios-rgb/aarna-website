@@ -193,7 +193,6 @@ export default function Practice() {
 
         <PageContainer className="relative z-10 pt-12 md:pt-14 lg:pt-16">
           <SectionHeading
-            index="01"
             eyebrow="The Practice"
             align="center"
             className="max-w-full"

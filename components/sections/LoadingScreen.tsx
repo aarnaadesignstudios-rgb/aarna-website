@@ -73,6 +73,7 @@ import Image from "next/image";
 
 import { useIsomorphicLayoutEffect } from "@/hooks";
 import { HERO_SLIDES, INTRO, SITE } from "@/constants";
+import type { HeroSlide } from "@/types";
 import {
   FRAME_OPENING_POSE,
   FRAME_SIZES,
@@ -135,7 +136,18 @@ const REVEAL_WAIT_CAP_S = INTRO.revealWaitCapMs / 1000;
  * rather than when it starts, so navigating away mid-intro does not cost the
  * next visitor their first impression.
  */
-export default function LoadingScreen() {
+/**
+ * The intro shows the hero's FIRST frame inside a window and opens that window
+ * to full bleed, so this has to be handed the same list the hero is handed.
+ * Letting it keep reading the constants while the hero read the CMS would put
+ * a different photograph on each side of the handover — the one moment on the
+ * site where two images are guaranteed to be compared directly.
+ */
+interface LoadingScreenProps {
+  slides?: HeroSlide[];
+}
+
+export default function LoadingScreen({ slides = HERO_SLIDES }: LoadingScreenProps) {
   const [visible, setVisible] = useState(!introHasPlayed());
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -478,7 +490,7 @@ export default function LoadingScreen() {
 
   if (!visible) return null;
 
-  const frame = HERO_SLIDES[0];
+  const frame = slides[0] ?? HERO_SLIDES[0];
 
   return (
     <div

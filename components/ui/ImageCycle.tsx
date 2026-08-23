@@ -401,6 +401,20 @@ export default function ImageCycle({
         // Deferred reset: everything that isn't on screen waits for the
         // transition to end before dropping out or returning to its start pose.
         const afterDissolve = `0ms linear ${fadeMs}ms`;
+        /**
+         * The outgoing frame's clip is put back a beat LATER than everything
+         * else, and the beat matters.
+         *
+         * It has to stay fully revealed underneath for the whole crossing —
+         * that is what the incoming frame is being uncovered against — and then
+         * collapse the moment the crossing ends. Both are timed off `fadeMs`,
+         * so on paper they finish together; in practice two transitions ending
+         * on the same millisecond can land either side of a frame boundary, and
+         * losing that race would flash the background through for one frame.
+         * The frame is invisible under the fully-arrived incoming one by then,
+         * so waiting is free and racing is not.
+         */
+        const afterWipe = `0ms linear ${fadeMs + 80}ms`;
 
         const wiping = transition === "wipe";
         /**
@@ -430,19 +444,38 @@ export default function ImageCycle({
               zIndex: isCurrent ? 2 : isOutgoing ? 1 : 0,
               // The clip is the wipe. `inset(0 0 0 100%)` collapses the frame
               // against its own right edge; animating the left inset to 0
-              // uncovers it leftward across the screen. The outgoing frame
-              // holds at `inset(0)` underneath until the wipe has finished and
-              // only then snaps back to collapsed — same deferred reset the
-              // dissolve uses, and for the same reason.
+              // uncovers it leftward across the screen.
+              //
+              // ── Only the CURRENT frame is uncovered ────────────────────
+              //
+              // This used to read `isCurrent || isOutgoing`, on the reasoning
+              // that the outgoing frame must stay revealed underneath for the
+              // whole crossing. It must — but that is the deferred TRANSITION's
+              // job, not the value's. Holding the value at `inset(0)` as well
+              // meant a frame only ever collapsed once it was neither current
+              // nor outgoing.
+              //
+              // With three or more frames every frame passes through that state
+              // on the following cut, so it was always re-armed in time and the
+              // bug was invisible. With exactly TWO it never does: each frame
+              // goes straight from outgoing back to current, arrives already at
+              // `inset(0)`, and a transition whose start and end values are
+              // identical does not run. The first cut wiped, and every cut
+              // after it was a hard pop.
+              //
+              // Two is not a corner case — it is what a studio has after
+              // uploading a second hero image, which is exactly when this was
+              // found. Collapsing on `!isCurrent` re-arms the frame at the end
+              // of its own crossing and is correct for any count.
               clipPath: wiping
-                ? isCurrent || isOutgoing
+                ? isCurrent
                   ? "inset(0 0 0 0)"
                   : directionFor(i).collapsed
                 : undefined,
               transition: wiping
                 ? isCurrent && !opening
                   ? `clip-path ${fadeMs}ms ${WIPE_EASE}`
-                  : `clip-path ${afterDissolve}`
+                  : `clip-path ${afterWipe}`
                 : isCurrent
                   ? `opacity ${fadeMs}ms ease-in-out`
                   : `opacity ${afterDissolve}`,

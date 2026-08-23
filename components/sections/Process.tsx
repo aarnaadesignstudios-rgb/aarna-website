@@ -41,7 +41,6 @@ export default function Process() {
         {/* Centred on request. `align="center"` centres the eyebrow row and
             the title; the lead measure below is centred by the same switch. */}
         <SectionHeading
-          index="04"
           eyebrow="Process"
           title="How we work"
           align="center"

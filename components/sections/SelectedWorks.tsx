@@ -214,8 +214,18 @@ export default function SelectedWorks({
   works?: Work[];
 }) {
   const count = works.length;
-  /** Degrees between neighbouring faces. */
-  const step = 360 / count;
+  /**
+   * Degrees between neighbouring faces.
+   *
+   * Guarded against an empty list: `360 / 0` is Infinity, and the very next
+   * thing that happens to it is `-t * step` with t = 0 — which is 0 × Infinity,
+   * or NaN, written straight into `--ring-rot`. A transform with NaN in it is
+   * invalid, so the browser drops the whole declaration and the ring renders
+   * as nine coincident cards. `getWorks()` cannot return an empty array today,
+   * but a component that turns into a pile of cards because a caller passed
+   * `[]` should not be the way we find that out.
+   */
+  const step = count > 0 ? 360 / count : 0;
 
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
@@ -279,8 +289,26 @@ export default function SelectedWorks({
           ? (away / FADE_FROM) * 0.34
           : 0.34 + Math.min(1, (away - FADE_FROM) / (CUT_AT - FADE_FROM)) * 0.62;
 
+      const live = away <= LIVE_WITHIN;
       face.style.opacity = away >= CUT_AT ? "0" : "1";
-      face.style.pointerEvents = away <= LIVE_WITHIN ? "auto" : "none";
+      face.style.pointerEvents = live ? "auto" : "none";
+
+      // ── The card behind the front one is not a tab stop ────────────────
+      //
+      // `pointer-events: none` stops the MOUSE and does nothing whatsoever to
+      // the keyboard: without this, tabbing into the section walked all nine
+      // cards, four of which are at `opacity: 0` on the back half of the ring.
+      // Focus would land on a link that is not on screen, the browser would
+      // scroll to bring its box into view, and the pinned section would jump.
+      // Every one of those links points at #contact anyway, so nine of them
+      // was eight tab stops of noise even when they were visible.
+      //
+      // `inert` rather than `tabIndex = -1` on the anchor: it takes the whole
+      // subtree out of the tab order AND out of the accessibility tree in one
+      // property, so a screen reader is not read the back of the ring either.
+      // Assigning it unconditionally every frame would toggle an attribute on
+      // nine elements sixty times a second, hence the compare.
+      if (face.inert === live) face.inert = !live;
       face.style.setProperty("--face-haze", String(haze));
 
       // The gold sweep: a triangular falloff around SWEEP_PEAK on the incoming
@@ -306,7 +334,11 @@ export default function SelectedWorks({
     // ring's dwell, so it stalls at each project and lurches between them,
     // which on a progress bar reads as a stuck page rather than as easing.
     if (progressRef.current) {
-      const shown = linear ?? t / (count - 1);
+      // `count - 1` is the number of GAPS between projects, and with a single
+      // project there are none — the bare division is 0/0 = NaN, which assigns
+      // `width: NaN%`, an invalid declaration the browser drops. The rail then
+      // keeps whatever width it last had instead of tracking the scroll.
+      const shown = linear ?? (count > 1 ? t / (count - 1) : 1);
       progressRef.current.style.width = `${Math.max(0, Math.min(1, shown)) * 100}%`;
     }
 
@@ -318,6 +350,40 @@ export default function SelectedWorks({
     // `count` and `step` are the ring's geometry and they come from the props
     // now, so this cannot claim an empty dependency list any more.
   }, [count, step]);
+
+  /**
+   * Bring project `i` to the front of the ring.
+   *
+   * Declared ABOVE the effect that uses it, and memoised on `count`. It used to
+   * sit below as a plain `const`, which worked only by accident: the keydown
+   * listener closed over whichever `jump` existed on the first render and kept
+   * calling that one forever, so it also kept that render's `count`. Nothing
+   * broke while the projects were a module constant. They come from the CMS
+   * now, and a handler holding the project count from before the content
+   * arrived is exactly the kind of bug that only shows up in production.
+   */
+  const jump = useCallback(
+    (i: number) => {
+      const target = Math.max(0, Math.min(count - 1, i));
+      const st = stRef.current;
+
+      // Pinned (desktop): the ring's position IS the scroll position, so this
+      // has to travel through the scroller or the two would disagree the moment
+      // the next wheel event arrived.
+      if (st) {
+        // Same divide-by-zero as the rail above, and a worse failure: NaN here
+        // is passed to the scroller as a target position.
+        const frac = count > 1 ? target / (count - 1) : 0;
+        smoothScrollTo(st.start + frac * (st.end - st.start));
+        return;
+      }
+
+      // No pin — below `lg`, where the section is a stack. Scroll to the card.
+      const card = facesRef.current[target] ?? stackRef.current[target];
+      if (card) smoothScrollTo(card, { offset: -90 });
+    },
+    [count]
+  );
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -342,7 +408,16 @@ export default function SelectedWorks({
        * shorter and the ring spins faster than the eye can read a photograph;
        * much longer and the section outstays its welcome.
        */
-      const distance = () => count * window.innerHeight * 0.62;
+      // `count - 1` is the number of TRANSITIONS, which is what the scroll is
+      // actually spending itself on — nine projects have eight gaps between
+      // them. Multiplying by `count` billed one extra gap that does not exist,
+      // and the cost of it landed entirely on the degenerate end: a studio with
+      // a single project got 0.62 of a viewport of pinned scrolling in which
+      // absolutely nothing moves, because a one-face ring has nowhere to turn
+      // to. The trailing 0.35 is the beat the last project holds before the pin
+      // releases, so the section does not end on a cut.
+      const distance = () =>
+        window.innerHeight * (Math.max(0, count - 1) * 0.62 + 0.35);
 
       const st = ScrollTrigger.create({
         trigger: section,
@@ -372,7 +447,28 @@ export default function SelectedWorks({
       const ring = ringRef.current;
       let onPointerMove: ((e: PointerEvent) => void) | null = null;
 
-      if (stage && ring) {
+      /**
+       * ── What reduced motion switches off here, and what it does not ─────
+       *
+       * The site's global `prefers-reduced-motion` rule collapses CSS
+       * animations and transitions. It cannot touch either of the two things
+       * below, because both are GSAP writing a custom property frame by frame —
+       * there is no CSS animation for a media query to shorten.
+       *
+       * So they are switched off in JS: the pointer lean, which is motion the
+       * visitor did not ask for and the exact kind that provokes symptoms, and
+       * the opening spread, which is an unprompted 1.5s move of nine elements.
+       *
+       * The ring's ROTATION deliberately survives. It is not autonomous motion:
+       * it is scrubbed off the scroll position, moves only while the visitor
+       * moves, and stops the instant they stop. Reduced motion asks for nothing
+       * to move on its own, not for scrolling to stop working — and without the
+       * rotation the section would be a single photograph with eight
+       * unreachable ones behind it.
+       */
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (stage && ring && !reduced) {
         const tiltTo = gsap.quickTo(ring, "--ring-tilt", {
           duration: 0.7,
           ease: "power2.out",
@@ -413,6 +509,11 @@ export default function SelectedWorks({
             scrollTrigger: { trigger: section, start: "top 62%", once: true },
           }
         );
+      } else if (ring) {
+        // Reduced motion: the ring is simply already open. `--ring-spread` is
+        // declared as 1 on the element, so there is nothing to set — but say so
+        // rather than leaving a reader to work out that the missing `else` is
+        // deliberate and not a case that was forgotten.
       }
 
       return () => {
@@ -427,8 +528,33 @@ export default function SelectedWorks({
     // ←/→ steps between projects while the ring is on screen.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+
+      // ── Not while someone is typing ────────────────────────────────────
+      //
+      // This listener is on `window`, so it fired for every arrow key on the
+      // page — including the ones moving a caret through the enquiry form's
+      // fields. The section is over five viewports tall, so "is it on screen"
+      // stays true for a long stretch of the page and is not the guard it
+      // looks like. Pressing → to correct a typo would silently spin the ring
+      // and drag the page to another project.
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.isContentEditable ||
+          t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT")
+      ) {
+        return;
+      }
+      // A modified arrow is a browser or OS shortcut (back/forward, word-wise
+      // caret movement), never ours to take.
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+
       const r = section.getBoundingClientRect();
       if (r.bottom < 0 || r.top > window.innerHeight) return;
+
+      e.preventDefault();
       jump(activeRef.current + (e.key === "ArrowRight" ? 1 : -1));
     };
     window.addEventListener("keydown", onKey);
@@ -437,25 +563,7 @@ export default function SelectedWorks({
       window.removeEventListener("keydown", onKey);
       mm.revert();
     };
-  }, [apply]);
-
-  /** Bring project `i` to the front of the ring. */
-  const jump = (i: number) => {
-    const target = Math.max(0, Math.min(count - 1, i));
-    const st = stRef.current;
-
-    // Pinned (desktop): the ring's position IS the scroll position, so this has
-    // to travel through the scroller or the two would disagree the moment the
-    // next wheel event arrived.
-    if (st) {
-      smoothScrollTo(st.start + (target / (count - 1)) * (st.end - st.start));
-      return;
-    }
-
-    // No pin — below `lg`, where the section is a stack. Scroll to the card.
-    const card = facesRef.current[target] ?? stackRef.current[target];
-    if (card) smoothScrollTo(card, { offset: -90 });
-  };
+  }, [apply, jump]);
 
   const current = works[active] ?? works[0];
 
@@ -513,6 +621,23 @@ export default function SelectedWorks({
         <div
           aria-hidden
           className="absolute inset-0 rounded-xl shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-gold)_28%,transparent)]"
+          /* ── It fades with the card, and only most of the way ────────────
+             The haze washes the PHOTOGRAPH toward the ground colour as a face
+             turns away, and this rule used to sit on top of it at full
+             strength. So the furthest cards — the ones that are 84% emerald
+             and barely there — kept a hard gold edge, and at the end of the
+             arc where a face is a few pixels wide that edge WAS the face: a
+             bright vertical line standing on the ground with nothing inside
+             it, reading as a scratch on the render rather than as a panel
+             seen side-on.
+
+             Not all the way to zero, though. The whole reason for this rule is
+             that an edge-on card has no silhouette of its own, so fading it
+             out completely trades a scratch for a smear. At 0.7 of the haze
+             the furthest face keeps about 40% of its edge — enough to still
+             read as a rectangular object, not enough to draw attention to
+             itself. */
+          style={{ opacity: "calc(1 - var(--face-haze, 0) * 0.7)" }}
         />
       </SmoothLink>
     );
@@ -590,7 +715,6 @@ export default function SelectedWorks({
         {/* Header — the counter rides in the heading's title-block slot. */}
         <PageContainer className="relative z-20 shrink-0 pt-24 pb-2 md:pt-28">
           <SectionHeading
-            index="02"
             eyebrow="Selected Works"
             tone="dark"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
@@ -781,21 +905,70 @@ export default function SelectedWorks({
               className="absolute top-0 left-0 h-px w-0 bg-gold"
             />
           </div>
-          <div className="flex items-start justify-between gap-8">
-            <div className="flex flex-wrap gap-x-6 gap-y-1 font-label">
+          {/* ── The index: numerals, and deliberately not names ────────────
+              This was "01 AWC   02 Cha and Co   03 Kapali Mall Food Court …",
+              the full list of project names. Two things were wrong with it and
+              they compound:
+
+                · It WRAPPED. Nine names do not fit one line at any desktop
+                  width — measured, it was two rows at 1920 as much as at 1280 —
+                  and the second row was a ragged orphan of two items. At
+                  1536x864 that row's bottom landed at 875 inside an 864px
+                  viewport, so the last two projects were clipped by the pinned
+                  box. Not a squeeze: cut off.
+
+                · It got WORSE with content. The projects come from the CMS now.
+                  Nine names is already two rows; a studio publishing fifteen
+                  gets four, and the section's footer eats the ring. A layout
+                  that degrades as the client succeeds is not finished.
+
+              Numerals fix both permanently — the row's width is now
+              proportional to the project COUNT rather than to the length of
+              whatever anyone types into Sanity, so it holds one line to about
+              thirty projects. Nothing is lost by dropping the names, because
+              the active project's name is already set at 2.3rem directly above
+              this, and its category above that. The list was printing every
+              name a second time in 12px to say what the biggest type on the
+              screen was already saying.
+
+              The name is still there for anyone who wants it before clicking:
+              `title` gives the hover tooltip, `aria-label` gives screen readers
+              the name and the position, and `aria-current` marks the one that
+              is showing — none of which the old row had. */}
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 font-label sm:gap-x-5">
               {works.map((work, i) => (
                 <button
                   key={work.id}
                   type="button"
                   onClick={() => jump(i)}
+                  title={work.title}
+                  aria-label={`${work.title} — project ${i + 1} of ${count}`}
+                  aria-current={i === active ? "true" : undefined}
                   className={cn(
-                    "cursor-pointer py-4 transition-colors duration-300",
-                    i === active
-                      ? "text-cream"
-                      : "text-cream/55 hover:text-cream/85"
+                    "group relative cursor-pointer rounded-sm py-3.5 transition-colors duration-300",
+                    // The button is padded to a 44px touch target, so the UA's
+                    // default ring drew a tall box around a 12px numeral. Pull
+                    // it in to trace the type instead.
+                    "outline-offset-[-10px] focus-visible:outline-1 focus-visible:outline-gold",
+                    i === active ? "text-cream" : "text-cream/50 hover:text-cream/90"
                   )}
                 >
-                  {String(i + 1).padStart(2, "0")} {work.title}
+                  {String(i + 1).padStart(2, "0")}
+                  {/* The mark under the active numeral. A drawn rule rather
+                      than a dot or a box, because a hairline in gold is the
+                      section-heading gesture and the spine's, so the index
+                      reads as part of the same drawing. `scale-x` from the
+                      left, which the global reduced-motion rule flattens to an
+                      instant state change for free — one of the reasons this
+                      is a CSS transition and not a framer layout animation. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "absolute inset-x-0 bottom-2 block h-px origin-left bg-gold transition-transform duration-500 ease-editorial",
+                      i === active ? "scale-x-100" : "scale-x-0"
+                    )}
+                  />
                 </button>
               ))}
             </div>

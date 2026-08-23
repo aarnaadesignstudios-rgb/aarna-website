@@ -39,8 +39,6 @@ import { cn } from "@/utils/cn";
 import TextReveal from "./TextReveal";
 
 interface SectionHeadingProps {
-  /** Two-digit index, e.g. "03". Runs 01…10 down the page. */
-  index?: string;
   eyebrow?: string;
   /**
    * Omit for a label-only header. The pinned Works gallery needs just the
@@ -87,7 +85,7 @@ interface SectionHeadingProps {
  */
 const chapterMark: Variants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
 };
 
 /** Drawn, not faded. The origin is set per side at the call site. */
@@ -112,7 +110,6 @@ const chapterItem: Variants = {
 };
 
 export default function SectionHeading({
-  index,
   eyebrow,
   title,
   description,
@@ -170,54 +167,54 @@ export default function SectionHeading({
               )}
             />
 
-            {/* The chapter mark: the number set large, the name small beside
-                it, on a shared baseline.
+            {/* ── The chapter mark, and it is only the name now ─────────────
 
-                The brief was that a reader should be able to tell which section
-                they are in without the label competing with that section's own
-                heading. A NUMERAL is how you get both. At 3rem it is the
-                second-largest thing in the block and legible at a glance, and
-                it still cannot overpower a title, because a number carries no
-                sentence for the eye to read. Setting the WORDS larger instead
-                would have produced two headings arguing with each other.
+                The numeral that used to sit here is gone at the studio's
+                request. That removed the thing which was doing the work of
+                being visible from across the page, so the name has to do it
+                alone — and the obvious move, setting the words bigger, is
+                exactly the one that fails: two lines of large type stacked on
+                top of each other read as two headings arguing, which is the
+                problem the numeral was introduced to avoid in the first place.
 
-                Gold, which is the site's quietest ink on paper — the same
-                reason gold is never a body colour here works in reverse for a
-                figure this size.
+                So the presence is bought in WIDTH and INK instead of height:
 
-                `type-figure` for lining numerals: Cormorant defaults to
-                old-style, where 0 sits at x-height and 1, 3, 4, 7 and 9 hang
-                below the baseline, so "01" would set as "o1" with a dropped
-                stem. */}
-            <span className="flex items-baseline gap-3 sm:gap-4">
-              {index && (
-                <span className="block overflow-hidden pb-[0.06em]">
-                  <motion.span
-                    variants={chapterItem}
-                    className="type-figure block text-[2rem] leading-[0.85] tracking-tight text-gold md:text-[2.5rem] lg:text-[3rem]"
-                  >
-                    {index}
-                  </motion.span>
-                </span>
-              )}
-              {eyebrow && (
-                <span className="block overflow-hidden pb-[0.14em]">
-                  <motion.span
-                    variants={chapterItem}
-                    className={cn(
-                      // Stepped up from the site's 12px label: small enough to
-                      // stay subordinate to the numeral, large enough that the
-                      // section's NAME reads at a glance rather than only when
-                      // it is looked for.
-                      "font-label block text-[0.78rem] tracking-[0.2em] md:text-[0.86rem]",
-                      dark ? "text-cream/70" : "text-charcoal/60"
-                    )}
-                  >
-                    {eyebrow}
-                  </motion.span>
-                </span>
-              )}
-            </span>
+                  · 0.3em of tracking. "SELECTED WORKS" at 1rem tracked this
+                    far occupies as much of the line as it would at 2rem set
+                    solid, so it holds the top of the section — but it never
+                    competes for the eye with the title below, because nothing
+                    about it is TALL. Width reads as deliberate; height reads
+                    as loud.
+
+                  · Gold. This is the larger half of it. Gold is the site's
+                    chapter ink — the rule to its left, the spine's thread, the
+                    vines — so setting the name in it makes the mark and the
+                    rule one continuous gesture rather than a label sitting
+                    next to a line. It also permanently separates the chapter
+                    mark from body copy, which is charcoal everywhere.
+
+                  · ~1rem against a 3.75rem title: a ratio near 4:1, which is
+                    subordinate by any measure.
+
+                `gold-ink` on light, NOT `gold`. Raw `--color-gold` is ~2:1 on
+                paper — the palette's own note calls it unreadable as type on a
+                light ground and reserves it for rules and glows, which is
+                precisely what the hairline beside this is. `--color-gold-ink`
+                is the same hue held at 29% lightness for 4.8:1. On the emerald
+                bands the plain gold is the legible one, so the tone picks. */}
+            {eyebrow && (
+              <span className="block overflow-hidden pb-[0.16em]">
+                <motion.span
+                  variants={chapterItem}
+                  className={cn(
+                    "font-label block text-[0.82rem] leading-none tracking-[0.3em] md:text-[0.95rem] lg:text-[1rem]",
+                    dark ? "text-gold" : "text-gold-ink"
+                  )}
+                >
+                  {eyebrow}
+                </motion.span>
+              </span>
+            )}
 
             {/* Mirrored rule, centred headings only. The single left-hand rule
                 is what makes the label read as the START of a line, which is

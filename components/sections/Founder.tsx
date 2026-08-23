@@ -75,7 +75,6 @@ export default function Founder() {
           {/* Biography + signed philosophy */}
           <div className="lg:col-span-7">
             <SectionHeading
-              index="05"
               eyebrow="The Founder"
               title="Ar. Annpurna Kinha"
             />

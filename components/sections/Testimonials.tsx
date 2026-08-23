@@ -60,7 +60,6 @@ export default function Testimonials() {
 
       <PageContainer className="relative z-10">
         <SectionHeading
-          index="03"
           eyebrow="Testimonials"
           title="In their words"
           description={

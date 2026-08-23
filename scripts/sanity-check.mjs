@@ -130,34 +130,75 @@ try {
   const { result } = await res.json();
   console.log(`  ${PASS}  API reachable\n`);
 
-  const LABEL = {
-    work: "Projects",
-    heroSlide: "Hero images",
-    service: "Services",
-    photoFrame: "Photography page",
-    siteImages: "Site photographs",
+  // ── What each type is, and whether the SITE actually reads it ──────────
+  //
+  // This second column is the whole point of the table. Every one of these
+  // types has a schema, so every one of them is editable in the Studio and
+  // looks equally "connected" from in there. Only some are wired to a getter
+  // in sanity/lib/content.ts and a consumer in the page.
+  //
+  // Publishing into an unwired type is completely silent: the document saves,
+  // the Studio shows it, the count below goes up, and the site does not change
+  // by a single pixel. That is indistinguishable from a broken configuration
+  // unless something says so out loud, which is what `wired` is for.
+  const TYPES_INFO = {
+    work: { label: "Projects", wired: true, where: "Selected Works" },
+    heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
+    service: { label: "Services", wired: false, where: "Services" },
+    photoFrame: { label: "Photography page", wired: false, where: "/photography" },
+    siteImages: { label: "Site photographs", wired: false, where: "Practice, Contact" },
   };
+
   let total = 0;
+  const unwiredWithContent = [];
   for (const t of TYPES) {
     const n = result?.[t] ?? 0;
+    const { label, wired } = TYPES_INFO[t];
     total += n;
-    console.log(`      ${String(n).padStart(3)}  ${LABEL[t]}`);
+    if (n > 0 && !wired) unwiredWithContent.push(t);
+    const state = wired
+      ? n > 0
+        ? g("live")
+        : dim("live")
+      : n > 0
+        ? y("NOT WIRED")
+        : dim("not wired");
+    console.log(`      ${String(n).padStart(3)}  ${label.padEnd(18)} ${state}`);
   }
 
   console.log(bold("\n  What the site is rendering\n"));
-  if (result?.work > 0) {
+
+  for (const t of TYPES) {
+    const { label, wired, where } = TYPES_INFO[t];
+    const n = result?.[t] ?? 0;
+    if (!wired) continue;
     console.log(
-      `  ${PASS}  Selected Works is reading from Sanity ${dim(`(${result.work} projects)`)}`
+      n > 0
+        ? `  ${PASS}  ${where} is reading from Sanity ${dim(`(${n} × ${label.toLowerCase()})`)}`
+        : `  ${WARN}  ${where} is using constants/content.ts ${dim("(nothing published yet)")}`
     );
-  } else {
-    console.log(`  ${WARN}  Selected Works is still using constants/content.ts`);
+  }
+
+  // ── The failure this script exists to catch ────────────────────────────
+  if (unwiredWithContent.length) {
+    console.log(`\n  ${y("!")}  ${bold("Published content the site does not read")}\n`);
+    for (const t of unwiredWithContent) {
+      const { label, where } = TYPES_INFO[t];
+      console.log(
+        `      ${result[t]} × ${label} ${dim(`— ${where} still renders constants/content.ts`)}`
+      );
+    }
     console.log(
       dim(
-        "\n        The connection works — there are just no `work` documents yet.\n" +
-          "        Open /studio, add a Project, press Publish, and run this again.\n"
+        "\n        These types have a schema, so the Studio accepts and stores\n" +
+          "        them, but nothing on the site queries them yet. Editing them\n" +
+          "        changes nothing on screen. Wiring one takes a getter in\n" +
+          "        sanity/lib/content.ts and a prop from app/page.tsx — the same\n" +
+          "        shape as getWorks/getHeroSlides.\n"
       )
     );
   }
+
   if (total === 0) {
     console.log(
       dim(

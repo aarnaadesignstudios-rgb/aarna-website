@@ -8,7 +8,7 @@ import Practice from "@/components/sections/Practice";
 import Services from "@/components/sections/Services";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
-import { getWorks } from "@/sanity/lib/content";
+import { getHeroSlides, getWorks } from "@/sanity/lib/content";
 
 /**
  * Below-the-fold, heavier sections are code-split via dynamic import so their
@@ -44,12 +44,15 @@ const SelectedWorks = dynamic(() => import("@/components/sections/SelectedWorks"
  * byte-for-byte what it was. See sanity/lib/content.ts.
  */
 export default async function Home() {
-  const works = await getWorks();
+  // In parallel: two independent reads, and awaiting them in sequence would
+  // make the page's TTFB the SUM of two round trips to the Content Lake for no
+  // reason — neither query's input depends on the other's result.
+  const [works, slides] = await Promise.all([getWorks(), getHeroSlides()]);
 
   return (
     <>
       {/* Intro overlays everything until it dissolves. */}
-      <LoadingScreen />
+      <LoadingScreen slides={slides} />
 
       <Navbar />
       {/* The drawing-sheet margin that runs the length of the page. It is what
@@ -80,7 +83,7 @@ export default async function Home() {
           That right-hand column is the story arc — see the note on
           `.surface-moss` in styles/globals.css. */}
       <main>
-        <Hero />
+        <Hero slides={slides} />
         <Practice />
         <SelectedWorks works={works} />
         <Testimonials />

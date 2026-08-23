@@ -2,8 +2,8 @@ import "server-only";
 
 import { groq } from "next-sanity";
 
-import { WORKS } from "@/constants";
-import type { Work } from "@/types";
+import { HERO_SLIDES, WORKS } from "@/constants";
+import type { HeroSlide, Work } from "@/types";
 
 import { client } from "./client";
 import { resolvePhoto, type Photo } from "./image";
@@ -111,5 +111,65 @@ export async function getWorks(): Promise<Work[]> {
   } catch {
     // A photograph is never worth taking the page down for.
     return WORKS;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Hero
+   ──────────────────────────────────────────────────────────────────────── */
+
+const HERO_QUERY = groq`*[_type == "heroSlide"] | order(order asc, _createdAt asc) {
+  "id": coalesce(slug.current, _id),
+  title,
+  photo
+}`;
+
+type HeroDoc = { id: string; title: string; photo?: Photo };
+
+/**
+ * The opening screen's frames.
+ *
+ * Same three-way fallback as `getWorks()`, and the same reason: an empty
+ * `heroSlide` collection has to leave the studio's own four photographs in
+ * place rather than opening the site on a blank screen.
+ *
+ * ── Why a slide with no usable image is DROPPED, not rendered ────────────
+ *
+ * `resolvePhoto` returns null when the document has no asset — a slide saved
+ * with a name but no photograph yet, which is a normal half-finished state in
+ * a Studio. Rendering it would put an empty frame into a cycle that holds each
+ * one for two seconds, so the hero would go blank for two seconds on every
+ * pass. Dropping it means an unfinished slide is invisible until it is
+ * finished, and if that leaves nothing at all we fall back to the constants.
+ */
+export async function getHeroSlides(): Promise<HeroSlide[]> {
+  if (!client) return HERO_SLIDES;
+
+  try {
+    const docs = await client.fetch<HeroDoc[]>(
+      HERO_QUERY,
+      {},
+      { next: { tags: ["heroSlide"], revalidate: 3600 } }
+    );
+
+    if (!docs?.length) return HERO_SLIDES;
+
+    const slides = docs.flatMap((doc) => {
+      const photo = resolvePhoto(doc.photo, doc.title);
+      if (!photo) return [];
+      return [
+        {
+          id: doc.id,
+          image: photo.src,
+          alt: photo.alt || doc.title,
+          title: doc.title,
+          position: photo.objectPosition,
+        },
+      ];
+    });
+
+    return slides.length ? slides : HERO_SLIDES;
+  } catch {
+    return HERO_SLIDES;
   }
 }
