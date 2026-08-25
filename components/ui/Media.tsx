@@ -1,3 +1,22 @@
+"use client";
+
+/**
+ * ── Why this is a client component ────────────────────────────────────────
+ *
+ * It hands `next/image` a `loader` FUNCTION for Sanity sources (see below), and
+ * a function cannot cross the server/client boundary as a prop — React has to
+ * serialise props, and there is no wire format for a closure. While every
+ * caller was itself a client component this never came up; the project pages
+ * under app/work/[slug] are server components, and rendering a Sanity
+ * photograph from one failed the build with "Functions cannot be passed
+ * directly to Client Components".
+ *
+ * Declaring the boundary HERE rather than making each page a client component
+ * is the right place for it: the loader is this file's decision, so this file
+ * is what has to run where the loader can be constructed. Server components can
+ * render it freely — only its own props cross the boundary, and those are all
+ * strings.
+ */
 /**
  * Media — the single, reusable next/image wrapper used for every photo.
  *

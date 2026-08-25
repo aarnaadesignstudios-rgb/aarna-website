@@ -221,7 +221,21 @@ function NavItem({
             // costing more legibility than it bought hierarchy; the roll to
             // gold on hover is what marks a link as live, and the gold `active`
             // state is what marks the current section.
-            active ? "text-gold" : onDark ? "text-cream" : "text-emerald",
+            //
+            // ── The active gold follows the ground ──────────────────────
+            // This was a flat `text-gold` on both. Raw gold is ~2:1 on a light
+            // surface, so over the light bands the current section's own label
+            // was the least readable thing in the bar — and it is 12px, which
+            // is the size that can least afford it. `gold-ink` is the same hue
+            // held dark enough to clear 5:1 there, and is what every other gold
+            // on a light ground already uses.
+            active
+              ? onDark
+                ? "text-gold"
+                : "text-gold-ink"
+              : onDark
+                ? "text-cream"
+                : "text-emerald",
             onDark && ON_IMAGE,
           )}
         >
@@ -231,7 +245,12 @@ function NavItem({
           aria-hidden
           className={cn(
             "absolute inset-0 block translate-y-[130%] transition-transform duration-500 ease-editorial group-hover:translate-y-0",
-            onDark ? "text-gold-soft" : "text-emerald",
+            // The copy that rolls up on hover. It used to go gold on dark bands
+            // and stay emerald on light ones, which meant the "a link lights up
+            // gold" behaviour simply did not exist over half the page — the
+            // label rolled and arrived the same colour it left. Gold on both,
+            // in whichever cut of it the ground can carry.
+            onDark ? "text-gold-soft" : "text-gold-ink",
             onDark && ON_IMAGE,
           )}
         >
@@ -482,7 +501,20 @@ export default function Navbar() {
   // The emblem is sized by a prop rather than a class, because <Mark /> pins
   // width/height inline so `size` stays authoritative (see that component).
   // That means the responsive step has to happen here in JS.
-  const markSize = compact ? (scrolled ? 26 : 30) : scrolled ? 32 : 38;
+  //
+  // ── One height, the whole way down the page ───────────────────────────
+  //
+  // This used to step down on scroll (38 → 32, and 30 → 26 on phones) along
+  // with the bar's own padding, so the masthead was one size over the hero and
+  // a smaller one everywhere else. That is a common pattern and it is not what
+  // this site wants: the bar is the brand's signature, it carries the wordmark
+  // and the mark, and a masthead that resizes under you draws attention to
+  // itself at exactly the moment the visitor is trying to read the page behind
+  // it. Held at the hero size throughout, at the studio's request.
+  //
+  // `scrolled` is still live — it drives the border's emphasis over the dark
+  // bands below, which is a change of CONTRAST rather than of size.
+  const markSize = compact ? 30 : 38;
 
   // The pill follows the pointer, and parks on the current section when the
   // pointer is elsewhere.
@@ -502,8 +534,11 @@ export default function Navbar() {
         ease: [0.22, 1, 0.36, 1],
       }}
       className={cn(
-        "fixed inset-x-0 top-0 z-50 px-3 transition-[padding] duration-500 ease-editorial sm:px-4 md:px-6 lg:px-8",
-        scrolled ? "pt-2 md:pt-3" : "pt-3 md:pt-5",
+        "fixed inset-x-0 top-0 z-50 px-3 sm:px-4 md:px-6 lg:px-8",
+        // Fixed, not scroll-dependent — see the note on `markSize`. The
+        // `transition-[padding]` that used to ride with it is gone too: there
+        // is no longer a padding change for it to smooth.
+        "pt-3 md:pt-5",
       )}
     >
       <motion.nav
@@ -517,13 +552,16 @@ export default function Navbar() {
           // `overflow-hidden` keeps the sheen, the specular and the progress
           // hairline inside the rounded shape — without it each one paints
           // square corners back on.
-          "relative mx-auto grid max-w-[1560px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden rounded-[18px] px-3 transition-[padding,border-color,background-color,box-shadow] duration-700 ease-editorial sm:gap-4 sm:px-4 md:px-6",
+          // `padding` has left the transition list with the height that used to
+          // change — what still animates is the palette swap between light and
+          // dark bands.
+          "relative mx-auto grid max-w-[1560px] grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden rounded-[18px] px-3 transition-[border-color,background-color,box-shadow] duration-700 ease-editorial sm:gap-4 sm:px-4 md:px-6",
           "glass-bar border",
           onDark
             ? "glass-bar-dark border-cream/18"
             : "glass-bar-light border-emerald/12",
           onDark && scrolled && "border-cream/24",
-          scrolled ? "py-2" : "py-2.5 md:py-3.5",
+          "py-2.5 md:py-3.5",
         )}
       >
         {/* Glass layers. Both are inert and sit under the content. */}

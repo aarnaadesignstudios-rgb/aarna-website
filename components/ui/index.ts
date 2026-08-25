@@ -25,3 +25,4 @@ export { default as Spotlight } from "./Spotlight";
 export { default as SpotlightCard } from "./SpotlightCard";
 export { BentoGrid, BentoGridItem } from "./BentoGrid";
 export { default as InfiniteMovingCards } from "./InfiniteMovingCards";
+export { default as ProjectBody } from "./ProjectBody";

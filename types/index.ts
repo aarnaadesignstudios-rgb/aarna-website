@@ -103,6 +103,51 @@ export interface Work {
   width: string;
 }
 
+/**
+ * One photograph on a project's own page.
+ *
+ * `wide` is the studio's call, made per picture in the Studio, because which
+ * shot deserves the full measure is an editorial decision about the photograph
+ * and not something a rule about position can get right.
+ */
+export interface WorkPhoto {
+  id: string;
+  src: string;
+  alt: string;
+  caption?: string;
+  objectPosition?: string;
+  wide?: boolean;
+}
+
+/**
+ * A project, plus everything that only its own page needs.
+ *
+ * Separate from `Work` on purpose. The ring asks for all nine projects at once
+ * and needs a name, a category and one photograph from each; pulling every
+ * write-up and every gallery into that query to render a heading would be a
+ * large amount of content fetched to be thrown away. This is read one at a
+ * time, by slug.
+ *
+ * `body` is Portable Text — Sanity's block format — and is typed loosely here
+ * so `types/` does not have to depend on the CMS. It is rendered by
+ * components/ui/ProjectBody.tsx, which is the only thing that inspects it.
+ */
+export interface WorkDetail extends Work {
+  body?: unknown[];
+  gallery?: WorkPhoto[];
+  /** The next and previous commissions, for the footer's continue-reading pair. */
+  siblings?: { prev?: WorkLink; next?: WorkLink };
+}
+
+/** Just enough of a project to link to it. */
+export interface WorkLink {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  objectPosition?: string;
+}
+
 /** A single frame in the hero's cross-dissolving image cycle. */
 export interface HeroSlide {
   id: string;

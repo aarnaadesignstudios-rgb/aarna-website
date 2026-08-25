@@ -573,7 +573,20 @@ export default function SelectedWorks({
     if (!work) return null;
     return (
       <SmoothLink
-        href="#contact"
+        /* ── A card leads to the project, not to the form ────────────────
+           Every card used to point at #contact, which meant the one thing a
+           visitor could do with a commission that interested them was ask
+           about a different one. It goes to the project's own page now — see
+           app/work/[slug]/page.tsx — and the enquiry form is at the foot of
+           that page, so the route to the form is longer by one step and now
+           passes through the thing the visitor actually wanted to see.
+
+           <SmoothLink /> rather than a bare <Link />: it hands the click to the
+           site's navigation layer, so the change of page is covered by the
+           chapter card the rest of the site uses instead of being a white
+           flash. It falls back to the router on its own if that overlay is not
+           mounted or the visitor has asked for reduced motion. */
+        href={`/work/${work.id}`}
         aria-label={`${work.title} — ${work.category}`}
         className={cn(
           "group relative block size-full overflow-hidden rounded-xl bg-emerald-deep",

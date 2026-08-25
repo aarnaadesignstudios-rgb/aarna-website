@@ -74,7 +74,12 @@ const TONE: Record<
   light: {
     card: "bg-white text-charcoal",
     border: "border-emerald/10 hover:border-gold/45",
-    glyph: "text-gold/55",
+    // Raw gold at 55% over a near-white card resolves to #e1d08e, which is a
+    // pale cream rather than a gold — so the site's accent colour appeared on
+    // this section as something that did not look like the accent colour. The
+    // same hue in its light-ground cut keeps the mark quiet without draining
+    // the gold out of it.
+    glyph: "text-gold-ink/45",
     quote: "text-emerald",
     author: "text-emerald",
     role: "text-charcoal/50",
