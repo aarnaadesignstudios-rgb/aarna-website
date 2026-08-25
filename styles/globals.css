@@ -582,7 +582,94 @@ html.lenis body {
     );
   }
 
-    /* ── The 3D stage ─────────────────────────────────────────────────────
+  /* ── The cyclorama ──────────────────────────────────────────────────
+     The room the ring stands in.
+
+     ── What this fixes ──────────────────────────────────────────
+
+     The section was a FLAT FILL of `--color-emerald` behind an arc of
+     photographs. Every pixel of ground was the same value, top to bottom and
+     edge to edge, which has one unavoidable consequence: there is no horizon,
+     so there is no floor, so the cards are not standing anywhere. The eye reads
+     an arrangement of rectangles on a coloured rectangle, and the two thirds of
+     the frame that hold no photograph read as UNUSED PAGE rather than as space.
+     That is the whole of the "empty and half finished" note — it was never
+     about how much was on the screen, it was about the screen having no depth
+     for anything to be in.
+
+     A photographer solves this with a cyclorama: a swept backdrop lit from
+     above so the ground runs dark at the crown, through a lifted band where the
+     subject stands, and back to dark at the base. There is no visible seam and
+     yet the eye places a floor exactly at the bright band. Four layers, painted
+     in one element, listed here in PAINT order — which is the REVERSE of the
+     order they are written in `background-image`, where the first entry paints
+     last, on top:
+
+       1. THE SWEEP      a vertical value ramp, `emerald-deep` at the crown
+                         through `emerald` to a lifted band at the horizon and
+                         back down to `emerald-deep` at the foot. This alone
+                         turns the flat fill into a space.
+       2. THE KEY        a wide, soft ellipse of `emerald-light` centred a
+                         little above the floor line. This is the lamp — it is
+                         what the horizon band is lit BY, and it sits behind
+                         where the front card stands, so the subject is the
+                         brightest thing in the room.
+       3. THE BOUNCE     a very flat, very faint warm pool at the floor line.
+                         Gold at 5%: the one place the brand accent is allowed
+                         onto the ground, and at that strength it does not read
+                         as a colour, it reads as WARMTH — which is most of the
+                         difference between a green box and a lit interior.
+       4. THE VIGNETTE   corner falloff to `emerald-deep`. It frames the
+                         composition, and more usefully it is what stops the arc
+                         running out of screen at both edges: the cards at the
+                         ends now fade into a corner that is ALREADY dark, so
+                         the ring reads as continuing past the frame rather than
+                         as being cut off by it.
+
+     ── Why it is its own element and not a background on the section ───
+
+     <section> is as tall as the whole scroll the pin consumes — about five and
+     a half screens. A gradient on it is stretched over all of that, so only the
+     top sixth is ever on screen and the horizon lands thousands of pixels below
+     the fold. This is absolutely positioned inside the PINNED 100vh box, which
+     is the only element whose height is the height of what a visitor sees. */
+  .ring-cyclorama {
+    position: absolute;
+    inset: 0;
+    background-image:
+      /* 4. vignette */
+      radial-gradient(
+        120% 92% at 50% 46%,
+        transparent 42%,
+        color-mix(in srgb, var(--color-emerald-deep) 34%, transparent) 78%,
+        color-mix(in srgb, var(--color-emerald-deep) 66%, transparent) 100%
+      ),
+      /* 3. bounce */
+        radial-gradient(
+          78% 26% at 50% 82%,
+          color-mix(in srgb, var(--color-gold) 5%, transparent) 0%,
+          transparent 72%
+        ),
+      /* 2. key */
+        radial-gradient(
+          66% 52% at 50% 63%,
+          color-mix(in srgb, var(--color-emerald-light) 92%, transparent) 0%,
+          color-mix(in srgb, var(--color-emerald-light) 34%, transparent) 46%,
+          transparent 78%
+        ),
+      /* 1. sweep */
+        linear-gradient(
+          to bottom,
+          var(--color-emerald-deep) 0%,
+          color-mix(in srgb, var(--color-emerald) 88%, var(--color-emerald-deep)) 26%,
+          var(--color-emerald) 54%,
+          color-mix(in srgb, var(--color-emerald-light) 42%, var(--color-emerald)) 72%,
+          color-mix(in srgb, var(--color-emerald-deep) 72%, var(--color-emerald)) 92%,
+          var(--color-emerald-deep) 100%
+        );
+  }
+
+  /* ── The 3D stage ─────────────────────────────────────────────────────
      Used by <SelectedWorks />, whose nine projects sit on the faces of an
      invisible cylinder. Three properties have to be here rather than inline
      because Tailwind has no utility that spells them, and all three are
@@ -677,6 +764,34 @@ html.lenis body {
      ring's own vertical axis while that axis is still vertical. Rotate first
      and the same translate pushes the disc away from the camera instead of
      down. */
+  /* ── It was drawn in the ground's own colour, so it was not drawn ─────
+     Every value in the old rule was `--color-emerald` at 9–34% over a ground
+     that was solid `--color-emerald`. `color-mix(emerald X%, transparent)`
+     composited onto emerald resolves to emerald at every X — the disc was
+     mathematically identical to the background it sat on. The comment above
+     calls this "the cheapest large gain in the whole section", and it was
+     rendering absolutely nothing. Confirmed on screen: no ellipse, at any
+     scroll position.
+
+     A footprint is not a darker patch of floor anyway. A floor under a key
+     light is BRIGHTER where the light lands and falls off to the edges, so
+     this is a POOL OF LIGHT with a drawn rim:
+
+       · the fill lifts toward `emerald-light` at the centre, which puts the
+         brightest ground directly under the front card — the same lamp the
+         cyclorama's key layer is describing, seen on the floor instead of on
+         the backdrop, so the two read as one light rather than as two effects
+       · the rim is GOLD, not green. It is the site's hairline — the chapter
+         rule, the spine, the ornament — and drawing the ring's footprint in it
+         is what makes the floor read as SURVEYED rather than as a glow. It is
+         also the only value in here that can be seen against every part of
+         the sweep, which is what a rim has to do.
+
+     `blur` is deliberately absent: a filter on an element inside a
+     `preserve-3d` context forces it into its own flattened rendering surface
+     in Chromium, which drops it out of the ring's depth sort — the disc would
+     paint on top of the cards it is supposed to be under. The soft edge comes
+     from the gradient's own falloff instead, which costs nothing. */
   .ring-floor {
     position: absolute;
     top: 50%;
@@ -686,12 +801,91 @@ html.lenis body {
     margin: calc(var(--ring-r, 700px) * -1) 0 0 calc(var(--ring-r, 700px) * -1);
     border-radius: 50%;
     transform: translateY(var(--floor-y, 240px)) rotateX(90deg);
-    border: 1px solid color-mix(in srgb, var(--color-emerald) 34%, transparent);
+    /* ── This is the section's datum, and it replaced a straight one ─────
+       A full-width gold hairline was tried first, ruled across the backdrop at
+       the height of the lit band. It failed for a reason worth recording: the
+       reflections are semi-transparent, so the rule showed THROUGH them, and a
+       straight line crossing a mirror image reads as a seam in the render
+       rather than as a horizon behind it. It also had to be positioned by eye
+       against a stage whose height changes with the standfirst's line count.
+
+       This rim is the same idea done in perspective. It is the ring's own
+       footprint, it is drawn in the same gold as every other hairline on the
+       site, and it cannot land in the wrong place because it IS the geometry —
+       it is derived from `--ring-r` and `--floor-y`, the two numbers that put
+       the cards where they are. A drawn ellipse also says something a straight
+       line cannot: that the ground is a plane going back into the page.
+
+       34% rather than the 18% this started at. Measured against the sweep, 18%
+       gold over the lit band is under two values of separation — it was there
+       in the DOM and invisible on screen, which is the exact fault this rule
+       was rewritten to fix in the first place. */
+    border: 1px solid color-mix(in srgb, var(--color-gold) 34%, transparent);
     background-image: radial-gradient(
       closest-side,
-      color-mix(in srgb, var(--color-emerald) 26%, transparent) 0%,
-      color-mix(in srgb, var(--color-emerald) 9%, transparent) 62%,
+      color-mix(in srgb, var(--color-emerald-light) 74%, transparent) 0%,
+      color-mix(in srgb, var(--color-emerald-light) 30%, transparent) 46%,
+      color-mix(in srgb, var(--color-emerald-deep) 20%, transparent) 84%,
       transparent 100%
+    );
+  }
+
+  /* ── The contact shadow ────────────────────────────────────────
+     A soft dark ellipse where each card meets the ground.
+
+     The floor above says there IS a floor; this is what says a given card is
+     STANDING on it. They are not the same job and the second cannot be faked
+     by the first: without it every card floats a constant distance above a lit
+     disc, which the eye reads as nine photographs hovering over a green
+     ellipse rather than as panels set down in a room.
+
+     ── This was built the physically correct way first, and that failed ──
+
+     The first version was a real shadow on a real floor: a child of the face,
+     laid flat with `rotateX(90deg)` so it lived on the ground plane and turned
+     and travelled with its card. It was correct, and it was USELESS, for a
+     reason that is worth keeping written down because it is a property of this
+     section's camera rather than a bug in the code.
+
+     The ring is tilted about X by only ~7°. A horizontal plane seen from 7°
+     above is very nearly edge-on — the same fact the `.ring-3d` comment
+     records when it explains why the floor disc needs that tilt to be visible
+     at all. Measured on the render: the laid-flat ellipse projected to between
+     one and five pixels of screen height. Painting it bright red confirmed it
+     was in the DOM, in the right place, and effectively a hairline. Deepening
+     it does not rescue it either — screen height grows as depth × h / 1250, so
+     reading at 30px would have taken an ellipse a metre deep, which then
+     stretches so far behind the card that it stops being a contact shadow.
+
+     So it is drawn in the CARD'S OWN PLANE instead, unrotated: a squat ellipse
+     straddling the bottom edge. At a camera angle this shallow the two are
+     nearly indistinguishable — you cannot see the floor plane, so a shadow
+     lying on it and a shadow standing in the picture plane project to almost
+     the same shape — and this one has none of the projection problem. It still
+     inherits the face's station on the cylinder, so it turns and foreshortens
+     with its card exactly as the rotated version did.
+
+     It is the LAST child of the face, after the reflection, and that ordering
+     is the point rather than an accident: the reflection is at full strength
+     where it meets the card, so without something over it the mirror image is
+     brightest at precisely the spot a shadow should be darkest. Drawn on top,
+     the reflection emerges FROM the contact instead of starting at it. */
+  .ring-contact {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: var(--contact-w, 138%);
+    height: var(--contact-h, 112px);
+    /* Straddling the edge rather than hanging below it: a shadow that starts
+       at the card's bottom edge leaves a bright hairline of floor between the
+       object and its own shadow, which is the tell that it is a decal. */
+    transform: translate(-50%, -54%);
+    border-radius: 50%;
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--color-emerald-deep) 88%, transparent) 0%,
+      color-mix(in srgb, var(--color-emerald-deep) 42%, transparent) 46%,
+      transparent 78%
     );
   }
 
@@ -707,12 +901,24 @@ html.lenis body {
 
      Same `src` as the card above it, so this costs no extra network — it is
      the same optimised URL and a guaranteed cache hit. */
+  /* ── Knocked back, because the ground under it changed ────────────
+     0.3 over 38% of the card's height was right when this floor was a FLAT
+     FILL of `--color-emerald`: a dark, even ground swallows a mirror image and
+     what survived read as a reflection. The floor is a lit pool now, and the
+     same reflection over a lifted ground stopped being a mirror and became a
+     SECOND PHOTOGRAPH — legible chairs, legible tables, a legible dog, hanging
+     upside down under the card and competing with the picture above it.
+
+     A reflection has to be the weakest thing in the frame or it stops reading
+     as one. Two changes rather than one: less of it (0.16), and less far
+     (27%), because opacity alone would have kept a long, faint, upside-down
+     picture where what is wanted is the suggestion of a wet floor. */
   .ring-reflect {
     position: absolute;
     top: 100%;
     left: 0;
     width: 100%;
-    height: 32%;
+    height: 27%;
     overflow: hidden;
     /* Flipped about its OWN CENTRE, not its top edge. About the top edge the
        box itself lands back on top of the card — a transform moves the element,
@@ -720,7 +926,7 @@ html.lenis body {
        instead of under it. About the centre the box stays where it was
        positioned and only what is drawn inside it is mirrored. */
     transform: scaleY(-1);
-    opacity: 0.3;
+    opacity: 0.16;
     /* The mask is applied in LOCAL space and then flipped with everything else,
        so "to bottom" here reads as "to visual top". Local top (= visual bottom,
        furthest from the card) is transparent; local bottom (= visual top, where

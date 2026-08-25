@@ -320,6 +320,37 @@ export const TESTIMONIALS: Testimonial[] = [
  *       and year. Widths are intentionally uneven so the row never reads as a
  *       carousel — keep that when the real crops arrive.
  */
+/**
+ * The standfirst under chapter 02's chapter mark.
+ *
+ * ── DRAFT — for the studio to approve or replace ─────────────────────
+ *
+ * The band between the "Selected Works" mark and the top of the ring was the
+ * emptiest part of that section, and it was empty in the least forgivable way:
+ * the chapter announced itself and then said nothing about the work it was
+ * introducing. Every other chapter on the site leads with a sentence. This one
+ * did not.
+ *
+ * Three constraints shaped the wording, and they are worth keeping if it is
+ * rewritten:
+ *
+ *   · It names the THREE TYPOLOGIES the projects actually fall into —
+ *     hospitality, workplace and private residence — which is the first thing
+ *     a prospective client scans a practice's index for, and which the section
+ *     otherwise only reveals one category at a time as the ring turns.
+ *   · It does not state a project COUNT. The projects come from the CMS, so a
+ *     sentence beginning "Nine commissions" is a sentence that goes wrong the
+ *     day the studio publishes a tenth. The counter in the header already
+ *     carries the number, and it carries it correctly.
+ *   · It does not repeat chapter 01. <Practice /> already says "Every space
+ *     has a story. Our work begins by listening to it." — so this deliberately
+ *     picks up the OTHER half of what the studio offers, the part the FAQ
+ *     describes as design and build: that the practice stays with a project
+ *     through execution rather than handing over a drawing set.
+ */
+export const WORKS_STANDFIRST =
+  "Hospitality, workplace and private residence — drawn, detailed, and seen through on site.";
+
 export const WORKS: Work[] = [
   {
     id: "awc",

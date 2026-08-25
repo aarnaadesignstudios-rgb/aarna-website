@@ -86,7 +86,7 @@ import {
   SheetTexture,
   SmoothLink,
 } from "@/components/ui";
-import { WORKS } from "@/constants";
+import { WORKS, WORKS_STANDFIRST } from "@/constants";
 import type { Work } from "@/types";
 import { smoothScrollTo } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
@@ -123,6 +123,24 @@ const CUT_AT = 94;
  * still ~180px of hit area sitting over the front card's right-hand edge.
  */
 const LIVE_WITHIN = 26;
+
+/**
+ * How far from the front the "view project" cue on a card survives, in degrees.
+ *
+ * Deliberately much tighter than `LIVE_WITHIN`, and not the same idea. That one
+ * answers "is this card clickable", and it has to be generous — a visitor
+ * aiming at a card that is a few degrees off centre should still hit it. This
+ * answers "is this card THE SUBJECT", and it has to be mean: the faces sit 40°
+ * apart, so anything above 20° means both neighbours carry a cue at the halfway
+ * point and the section grows three call-to-actions at once, which is exactly
+ * the kind of busyness the studio asked to avoid.
+ *
+ * At 14° the cue is at full strength through the whole of each project's dwell
+ * (the ring rests square-on — see `smootherstep`) and is gone before the next
+ * card is anywhere near the front. It fades rather than switching, because a
+ * control that pops into existence mid-rotation reads as a bug.
+ */
+const CUE_WITHIN = 14;
 
 /**
  * A small vertical offset per face, in vh.
@@ -310,6 +328,16 @@ export default function SelectedWorks({
       // nine elements sixty times a second, hence the compare.
       if (face.inert === live) face.inert = !live;
       face.style.setProperty("--face-haze", String(haze));
+
+      // The card's own affordance, on the subject card only. Same technique as
+      // everything else here — a custom property the CSS reads — so revealing
+      // it costs no React render and it cannot fall out of step with the
+      // rotation the way a state-driven `activeIndex === i` would when the
+      // ring is between projects.
+      face.style.setProperty(
+        "--face-cue",
+        String(Math.max(0, 1 - away / CUE_WITHIN))
+      );
 
       // The gold sweep: a triangular falloff around SWEEP_PEAK on the incoming
       // side only. `rel` is signed, so testing it rather than `away` is what
@@ -567,6 +595,31 @@ export default function SelectedWorks({
 
   const current = works[active] ?? works[0];
 
+  /**
+   * ── The title block's facts ────────────────────────────────────────
+   *
+   * The same three the project's own page prints in its spec strip — see the
+   * `Spec` component in app/work/[slug]/page.tsx — so a visitor meets a
+   * commission described the same way here as they do when they open it. That
+   * consistency is the point: a project index and a project page that label
+   * their facts differently read as two sites.
+   *
+   * Every field is optional in the CMS and each one is dropped independently,
+   * so a project with only a year shows only a year rather than two empty
+   * rows. If a project has none of them the block collapses to nothing and the
+   * layout is the name and the category alone — which is what the committed
+   * fallback projects in `constants/content.ts` render today, because inventing
+   * an area or a completion date for a real commission is not something this
+   * file gets to do. Fill them in the Studio and the block appears.
+   */
+  const spec: [string, string][] = current
+    ? ([
+        ...(current.location ? [["Location", current.location]] : []),
+        ...(current.area ? [["Area", current.area]] : []),
+        ...(current.year ? [["Year", current.year]] : []),
+      ] as [string, string][])
+    : [];
+
   /** One project's photograph, used by both the ring and the mobile stack. */
   const photo = (i: number) => {
     const work = works[i];
@@ -589,7 +642,26 @@ export default function SelectedWorks({
         href={`/work/${work.id}`}
         aria-label={`${work.title} — ${work.category}`}
         className={cn(
-          "group relative block size-full overflow-hidden rounded-xl bg-emerald-deep",
+          "group relative block size-full overflow-hidden rounded-xl",
+          /* ── The card's own ground, and why it is not a flat fill ───────
+             This was `bg-emerald-deep`, which is very nearly black. That is
+             the colour a visitor sees for as long as the photograph takes to
+             decode — and a near-black rectangle standing on a mid-green
+             cyclorama does not read as "a picture is coming", it reads as a
+             HOLE punched in the section. Caught on screen: at one scroll
+             position the front card had not decoded and the middle of the
+             composition was an empty dark box, which is worse than the empty
+             page the studio was complaining about in the first place.
+
+             A two-stop diagonal instead. It is the same family of greens as
+             the sweep behind it and it is LIT the same way — brighter at the
+             top left, falling to the bottom right — so an undecoded card
+             reads as a blank panel standing in the room with the others,
+             waiting for its image. The photograph covers it entirely a moment
+             later, so this costs one gradient that is almost never seen, and
+             the one time it is seen it is the difference between a considered
+             loading state and a rendering fault. */
+          "bg-[linear-gradient(140deg,var(--color-emerald-light)_0%,var(--color-emerald)_46%,var(--color-emerald-deep)_100%)]",
           // The ring's own drop shadow. Emerald-tinted rather than black: on a
           // cream page a neutral shadow reads as dirt, and this is the one
           // place the brand green can sit under a photograph without tinting
@@ -626,6 +698,66 @@ export default function SelectedWorks({
           className="absolute inset-0 bg-[linear-gradient(104deg,transparent_28%,color-mix(in_srgb,var(--color-gold-soft)_52%,transparent)_47%,color-mix(in_srgb,var(--color-paper)_30%,transparent)_54%,transparent_74%)] mix-blend-soft-light"
           style={{ opacity: "var(--face-sweep, 0)" }}
         />
+
+        {/* ── The way in ────────────────────────────────────────────────
+            Every card is a link to its project's page and, until now, nothing
+            on any card said so. The photographs are the whole point of this
+            section, so the affordance is deliberately the quietest thing that
+            can still be unambiguous: a drawn gold circle with an arrow leaving
+            it, at the corner where a caption would go.
+
+            ── Why it is on the SUBJECT card only ─────────────────────
+            `--face-cue` is 1 when this face is square-on and 0 within 14° of
+            leaving — see CUE_WITHIN. Nine cards each carrying a button would
+            turn an arc of photographs into a wall of controls, and the eight
+            that are not the subject are foreshortened anyway, so their cue
+            would be a squashed oval. One card is the subject at any moment;
+            one card gets the invitation.
+
+            The DISC is drawn rather than filled, in the section's hairline
+            gold, for the same reason the floor rim and the chapter rules are:
+            it is
+            the language the rest of the page is written in. Filling it on
+            hover — gold ground, emerald arrow — is the whole hover state, and
+            the arrow travelling a few pixels up and out is what makes it read
+            as "leaves this page" instead of "opens something here".
+
+            `mix-blend` is deliberately NOT used: over a photograph it would
+            take its contrast from whatever happens to be underneath, and half
+            the covers here are bright interiors where it would vanish. */}
+        <span
+          aria-hidden
+          /* ── No `backdrop-blur` here, deliberately ─────────────────────
+             The obvious treatment for a disc floating over a photograph is a
+             frosted one, and it is the wrong call in this particular place. A
+             backdrop filter forces the element onto its own compositing layer
+             and re-samples what is behind it whenever that changes — and what
+             is behind this is a photograph on a card that is rotating on every
+             scroll frame. There are nine of them, and an element at
+             `opacity: 0` is still composited, so eight of the nine would pay
+             that cost permanently while being invisible.
+
+             A flat scrim in `--color-ink` does the same job for the same
+             reason it is used everywhere else on the site: it is the palette's
+             true neutral, so it darkens the photograph under the arrow without
+             tinting it green the way an emerald scrim would. See the note on
+             `--color-ink` in styles/globals.css. */
+          className="pointer-events-none absolute right-5 bottom-5 flex size-[3.25rem] items-center justify-center rounded-full border border-gold/45 bg-ink/35 transition-[background-color,border-color] duration-500 ease-editorial group-hover:border-gold group-hover:bg-gold"
+          style={{ opacity: "var(--face-cue, 0)" }}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="size-[1.15rem] text-gold-soft transition-[transform,color] duration-500 ease-editorial group-hover:translate-x-[2px] group-hover:-translate-y-[2px] group-hover:text-emerald-deep"
+          >
+            <path d="M7 17 17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </span>
 
         {/* A hairline INSIDE the photograph. At the point where a face turns
             edge-on it is a few pixels of image with no silhouette; the rule is
@@ -676,13 +808,20 @@ export default function SelectedWorks({
             that edge — so the reflection has to be a crop of the photograph's
             BOTTOM, not a squashed copy of the whole thing.
 
-            `h-[313%]` is the card's full height expressed against this 32%-tall
-            box (100 / 32), anchored to the box's bottom. The box clips it, so
-            what survives is the bottom 38% of the image, and the flip on
+            `h-[370%]` is the card's full height expressed against this box
+            (100 / 27), anchored to the box's bottom. The box clips it, so what
+            survives is the bottom 27% of the image, and the flip on
             `.ring-reflect` puts that against the card's lower edge where it
             belongs. Without this the reflection is the middle of the picture,
-            which reads as a second, wrong photograph. */}
-        <div className="absolute inset-x-0 bottom-0 h-[313%] overflow-hidden rounded-b-xl">
+            which reads as a second, wrong photograph.
+
+            The 370 MUST track `.ring-reflect`'s own height — it was 313
+            against a 32%-tall box, and the box is 27% now. Leaving the old
+            number would not have looked broken, which is what makes it worth
+            saying: it would have silently mirrored the wrong band of the
+            photograph, so the reflection stopped lining up with the card edge
+            above it by a few percent on every card. */}
+        <div className="absolute inset-x-0 bottom-0 h-[370%] overflow-hidden rounded-b-xl">
           <Media
             src={work.image}
             alt=""
@@ -713,13 +852,38 @@ export default function SelectedWorks({
          the cyclorama rendered as a flat pale wash and the floor and corners
          it depends on were thousands of pixels below the fold. The background
          has to live on the 100vh stage that is actually on screen. The section
-         keeps a flat ground for the pin spacer to sit on. */
-      className="relative bg-emerald text-cream"
+         keeps a flat ground for the pin spacer to sit on.
+
+         `emerald-deep` rather than `emerald`, because the sweep now starts and
+         ends on it — see `.ring-cyclorama`. The pin spacer is what shows in the
+         moments either side of the pin engaging, so matching it to the sweep's
+         ENDS rather than to its middle is what keeps that join invisible. With
+         the flat `emerald` it was a visible step: a mid green appearing above a
+         near-black crown for one frame at each end of the pin. */
+      className="relative bg-emerald-deep text-cream"
     >
       <div
         ref={pinRef}
         className="relative flex flex-col overflow-hidden lg:h-screen"
       >
+        {/* ── The room ────────────────────────────────────────────────────
+            Everything the ring stands in, and the single largest part of the
+            answer to "it feels empty". Both elements are behind every other
+            child of the pinned box and neither is interactive.
+
+            There WAS a second element here: a gold hairline ruled across the
+            full width at the height of the lit band, as a drawn datum. It is
+            gone, and the note is kept because it is the more useful half of
+            the decision. The reflections are semi-transparent, so the rule
+            showed straight through them — a hard straight line crossing a
+            mirror image reads as a seam in the render, not as a horizon
+            behind it. It also had to be positioned by eye against a stage
+            whose height moves with the standfirst's line count.
+
+            The ring's own floor rim does that job properly now: same gold,
+            same hairline, but drawn in perspective and derived from the
+            geometry rather than guessed at. See `.ring-floor`. */}
+        <div aria-hidden className="ring-cyclorama hidden lg:block" />
         {/* `top` placement: this chapter's lower half is the ring, its
             reflections and the floor, and a bloom under those would fight the
             cyclorama's own floor gradient. */}
@@ -727,9 +891,30 @@ export default function SelectedWorks({
 
         {/* Header — the counter rides in the heading's title-block slot. */}
         <PageContainer className="relative z-20 shrink-0 pt-24 pb-2 md:pt-28">
+          {/* ── The standfirst ───────────────────────────────────────────
+              The band between this header and the top of the arc was the
+              emptiest part of the frame: a chapter mark on the left, a counter
+              on the right, and several hundred pixels of nothing under both.
+              The cyclorama behind it now makes that band read as air rather
+              than as unused page, but air with a sentence in it is better than
+              air, and this is the one section on the site that was announcing
+              itself without saying anything.
+
+              It goes through SectionHeading's OWN `description` slot rather
+              than being a paragraph added here. Every other chapter's lead
+              copy is set through that slot, so this inherits the measure, the
+              ink, the size and the entrance the rest of the site uses — which
+              is the difference between a line that belongs in the design and
+              one that was dropped into it. Nothing new was added to the type
+              system to fit it.
+
+              The words are in constants/content.ts, next to the projects
+              themselves, and are marked there as pending the studio's
+              approval. */}
           <SectionHeading
             eyebrow="Selected Works"
             tone="dark"
+            description={WORKS_STANDFIRST}
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
               count
             ).padStart(2, "0")}`}
@@ -775,16 +960,32 @@ export default function SelectedWorks({
               have to go where the composition is EMPTY, and on a ring that
               fills the middle, that is the outer corners.
 
-              So it is ranged right and bleeds a third of itself off the edge.
-              Bleeding is deliberate — a number cropped by the page edge reads
-              as a printed folio, and one floating clear of it reads as a
-              graphic that did not fit.
+              So it is ranged right and bleeds off the edge. Bleeding is
+              deliberate — a number cropped by the page edge reads as a printed
+              folio, and one floating clear of it reads as a graphic that did
+              not fit.
+
+              ── How MUCH of it bleeds, though, is a legibility limit ─────
+              It was a third of itself, off a glyph box set at 30vw, and the
+              two together took it past the point where it is a numeral at all:
+              measured on the render, the second digit was cropped so hard that
+              the pair read as a circle followed by an unrelated curve. A folio
+              has to be READABLE as a number or the reference is lost and what
+              is left is decoration — the exact charge the studio levelled at
+              the drawing grid this section's ornament replaced.
+
+              26vw with an eighth bleeding is the same gesture inside the
+              limit: both digits are on the page, the last stroke runs off it.
+              The numeral sits BEHIND the ring — it is declared before
+              `.ring-3d`, so the cards occlude it where they overlap, which is
+              what keeps a 400px glyph from competing with the photographs
+              while still filling the corner they leave empty.
 
               `-webkit-text-stroke` with a transparent fill: an outline, because
               a solid numeral this size competes with the photographs. */}
           <span
             aria-hidden
-            className="pointer-events-none absolute top-[3%] right-0 translate-x-[32%] font-serif text-[30vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
+            className="pointer-events-none absolute top-[3%] right-0 translate-x-[12%] font-serif text-[26vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
           >
             {String(active + 1).padStart(2, "0")}
           </span>
@@ -824,6 +1025,12 @@ export default function SelectedWorks({
               >
                 {photo(i)}
                 {reflection(i)}
+                {/* LAST, so it darkens the top of the reflection rather than
+                    sitting behind it — the reflection is at full strength
+                    exactly where the shadow needs to be darkest. See
+                    `.ring-contact`, which also records why this is drawn in
+                    the card's plane instead of on the floor. */}
+                <div aria-hidden className="ring-contact" />
               </div>
             ))}
           </div>
@@ -839,45 +1046,123 @@ export default function SelectedWorks({
               glitch. Masked, so it rises out of the rule beneath it. */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
             <PageContainer>
-              {/* ── The mask clips DOWN, never ACROSS ──────────────────────
-                  `overflow-hidden` clips both axes, so the measure has to be
-                  set on the heading INSIDE the mask and never on the mask
-                  itself. Putting a `max-w` here instead is what cut "Kyukotoh
-                  Gurugram" to "Kyukotol / Gurugra" — the title wrapped to the
-                  measure and then had its last glyph clipped off each line by
-                  the very element that was supposed to be hiding it vertically.
+              {/* ── The title block ────────────────────────────────────────
+                  This was a caption: a category and a name, ranged left, with
+                  the whole right-hand half of the frame empty beneath the
+                  arc. Two separate problems in one element — the composition
+                  was unbalanced, and the section was describing nine
+                  architectural commissions with less information than a
+                  photograph caption carries.
 
-                  `pb-4` is clearance, not rhythm: the longest name here is
-                  "Kapali Mall Food Court", which sets to two lines at this
-                  size, and without it the second line lands on the gold
-                  progress rail immediately below the stage. */}
-              <div className="overflow-hidden pb-4">
-                <motion.div
-                  key={current?.id}
-                  initial={{ y: "108%" }}
-                  animate={{ y: "0%" }}
-                  transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  {/* ── Light ink, on purpose ────────────────────────────
-                      Everything from here down sits on the deep end of the
-                      cyclorama, where the ground resolves to a mid green
-                      around #7d9a8b. Emerald type on that is about 2:1 — it
-                      was legible on the flat pale version this replaced and it
-                      is not legible now.
+                  A drawing sheet answers both at once, and it is the metaphor
+                  this site is already built on: <SectionHeading /> calls its
+                  right-hand slot "the sheet's title block", the chapters are
+                  numbered sheets, the spine is the margin. A real title block
+                  puts the NAME on one side and the SCHEDULE OF FACTS on the
+                  other, ruled off, at the foot of the sheet. So:
 
-                      So the section carries TWO ink schemes: charcoal and gold
-                      at the top, where the sweep is still paper, and cream
-                      below the horizon. That is not an inconsistency, it is
-                      what a lit sweep is — and it is the one place on the site
-                      where the brand green is dense enough to hold cream type,
-                      which is worth having. */}
-                  <span className="block font-label text-cream/75">
-                    {current?.category}
-                  </span>
-                  <h3 className="mt-1.5 max-w-[13ch] font-serif text-[2.3rem] leading-[0.98] tracking-tight text-cream xl:text-[2.9rem]">
-                    {current?.title}
-                  </h3>
-                </motion.div>
+                    COMMERCIAL INTERIORS            LOCATION  Gurugram
+                    Cha and Co                      AREA      4,200 sq ft
+                                                    YEAR      2024
+                                                    ─────────────────────
+                                                    View project →
+
+                  The facts fill the dead right-hand corner with the one thing
+                  that belongs there — and they are the reason this now reads
+                  as an architecture practice's index rather than as a
+                  photography carousel. See `spec` above for what happens when
+                  a project has none of them.
+
+                  `items-end` and not `items-baseline`: the two columns are
+                  different type sizes with different line counts, and baseline
+                  alignment would peg a three-row spec table to the first line
+                  of a two-line project name, which sends it up over the
+                  photographs. Aligning the BOXES keeps both columns sitting on
+                  the same rule no matter how either one sets. */}
+              <div className="flex items-end justify-between gap-8 pb-4 xl:gap-16">
+                {/* ── The mask clips DOWN, never ACROSS ──────────────────
+                    `overflow-hidden` clips both axes, so the measure has to be
+                    set on the heading INSIDE the mask and never on the mask
+                    itself. Putting a `max-w` here instead is what cut "Kyukotoh
+                    Gurugram" to "Kyukotol / Gurugra" — the title wrapped to the
+                    measure and then had its last glyph clipped off each line by
+                    the very element that was supposed to be hiding it
+                    vertically.
+
+                    `min-w-0` because this is a flex child now: without it the
+                    column takes its width from the longest unbreakable word in
+                    the title and refuses to shrink, which at "Kapali Mall Food
+                    Court" pushed the spec table off the right-hand edge. */}
+                <div className="min-w-0 overflow-hidden">
+                  <motion.div
+                    key={current?.id}
+                    initial={{ y: "108%" }}
+                    animate={{ y: "0%" }}
+                    transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {/* ── Light ink, on purpose ──────────────────────────
+                        Everything from here down sits on the deep end of the
+                        cyclorama, where the ground resolves to a mid green
+                        around #7d9a8b. Emerald type on that is about 2:1 — it
+                        was legible on the flat pale version this replaced and
+                        it is not legible now.
+
+                        So the section carries TWO ink schemes: charcoal and
+                        gold at the top, where the sweep is still paper, and
+                        cream below the horizon. That is not an inconsistency,
+                        it is what a lit sweep is — and it is the one place on
+                        the site where the brand green is dense enough to hold
+                        cream type, which is worth having. */}
+                    <span className="block font-label text-cream/75">
+                      {current?.category}
+                    </span>
+                    <h3 className="mt-1.5 max-w-[13ch] font-serif text-[2.3rem] leading-[0.98] tracking-tight text-cream xl:text-[2.9rem]">
+                      {current?.title}
+                    </h3>
+                  </motion.div>
+                </div>
+
+                {/* ── The schedule ───────────────────────────────────────
+                    Hidden below `xl`, and that is a legibility decision rather
+                    than a space one. Between `lg` and `xl` the front card is
+                    still ~30vw of a ~1100px viewport, so the gap between the
+                    card's right edge and the page margin is around 180px —
+                    enough to PUT a two-column table in and not enough to read
+                    one, because the label column alone wants 90px at this
+                    tracking. Two columns of clipped small caps under a
+                    photograph is worse than no schedule.
+
+                    Keyed on the project, like the name, so the facts arrive
+                    with the commission they belong to instead of the old row's
+                    values being swapped underneath the new one's labels. It
+                    fades rather than rising: the name's masked rise is the
+                    section's headline gesture and having a second block
+                    perform it at the same moment turns one arrival into two
+                    competing ones. */}
+                {spec.length > 0 && (
+                  <motion.dl
+                    key={`${current?.id}-spec`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.5,
+                      delay: 0.14,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="hidden shrink-0 grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 border-l border-gold/25 pl-7 xl:grid"
+                  >
+                    {spec.map(([label, value]) => (
+                      <div key={label} className="contents">
+                        <dt className="font-label text-gold-soft/70">
+                          {label}
+                        </dt>
+                        <dd className="font-label tracking-[0.04em] text-cream/85">
+                          {value}
+                        </dd>
+                      </div>
+                    ))}
+                  </motion.dl>
+                )}
               </div>
             </PageContainer>
           </div>
@@ -891,17 +1176,42 @@ export default function SelectedWorks({
               ref={(el) => {
                 stackRef.current[i] = el;
               }}
+              /* The stack has no ring, so nothing writes `--face-cue` here —
+                 `apply` returns early without one. Declared as 1 so every card
+                 in the phone layout carries the same corner arrow the ring's
+                 subject card does: on the ring only one card at a time is the
+                 subject, but in a stack every card IS the one being looked at.
+                 Without this the whole phone layout is nine photographs that
+                 happen to be links, with nothing saying so. */
+              style={{ "--face-cue": 1 } as React.CSSProperties}
             >
               <div className="aspect-4/5 w-full">{photo(i)}</div>
+              {/* ── This was invisible, and it was invisible before this pass ──
+                  The category was `charcoal/50` and the name was `text-emerald`
+                  — on a section whose ground is `bg-emerald`. The title was
+                  being set in EXACTLY the background colour, so every project
+                  name in the phone layout rendered as a name-shaped hole, and
+                  the category was a near-black at half opacity on a dark green,
+                  which is under 1.5:1.
+
+                  It is a leftover: this stack was written when the section sat
+                  on the old pale paper ground, and it was never revisited when
+                  the chapter turned green. Nothing about it looked wrong in the
+                  source — `text-emerald` on a brand section reads as correct —
+                  which is why it survived. It only shows up on a phone, and
+                  only if you look for the words rather than at the pictures.
+
+                  Cream, matching the ring's own title block above, where the
+                  same reasoning is set out at greater length. */}
               <div className="mt-4">
-                <span className="block font-label text-charcoal/50">
+                <span className="block font-label text-cream/70">
                   {work.category}
                 </span>
-                <h3 className="mt-1.5 font-serif text-3xl leading-[1.04] tracking-tight text-emerald">
+                <h3 className="mt-1.5 font-serif text-3xl leading-[1.04] tracking-tight text-cream">
                   {work.title}
                 </h3>
                 {work.description && (
-                  <p className="mt-2 max-w-[40ch] text-charcoal/65">
+                  <p className="mt-2 max-w-[40ch] text-cream/70">
                     {work.description}
                   </p>
                 )}
