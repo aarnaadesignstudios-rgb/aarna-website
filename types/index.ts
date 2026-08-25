@@ -35,6 +35,20 @@ export interface Stat {
 }
 
 /** One of the studio's disciplines. */
+/**
+ * A link revealed inside a discipline's expanded panel.
+ *
+ * Both fields are required, and `label` is not optional for a reason: a link
+ * whose text is derived from its URL ("/photography") is a link a visitor has
+ * to decode before deciding whether to follow it. Whoever adds the link knows
+ * what is on the other end; the label is where they say so.
+ */
+export interface ServiceLink {
+  label: string;
+  /** Internal path ("/photography") or an absolute URL to another site. */
+  href: string;
+}
+
 export interface Service {
   id: string;
   /** Display index, e.g. "01". */
@@ -43,8 +57,23 @@ export interface Service {
   /** Revealed when the title is clicked; not shown at rest. */
   body: string;
   image: string;
-  /** Set only where the discipline opens a page of its own. */
-  href?: string;
+  /**
+   * Links shown inside the expanded panel, under the description.
+   *
+   * ── This replaced `href`, and the change is behavioural ─────────────
+   *
+   * `href?: string` meant "this discipline opens a page INSTEAD of expanding".
+   * Exactly one discipline used it — Architectural Photography — and the cost
+   * was that one card in a row of five behaved differently from its
+   * neighbours: it navigated away rather than revealing its description, so
+   * its copy had to be printed permanently to compensate, which in turn made
+   * it the only card whose height did not agree with the others.
+   *
+   * A discipline can now expand AND lead somewhere, which is what that card
+   * actually wanted. It also generalises: any discipline can carry any number
+   * of links without needing a new field or a new branch in the component.
+   */
+  links?: ServiceLink[];
 }
 
 /** A featured architecture project. */

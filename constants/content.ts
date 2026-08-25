@@ -192,7 +192,23 @@ export const SERVICES: Service[] = [
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     image:
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
-    href: "/photography",
+    /* ── This card used to BE a link, and that orphaned a page ──────────
+       `href: "/photography"` made this card navigate instead of expanding.
+       Every discipline expands now, so the address moved in here — and it had
+       to move somewhere, because a search of the whole repository turns up
+       exactly one link to /photography and this was it. Dropping the card's
+       `href` without putting the address back would have left a finished
+       portfolio page with no route to it from anywhere on the site.
+
+       A SECOND LINK IS EXPECTED HERE — the studio asked for one out to
+       another site, and the address has not been supplied yet. Add it as
+       another entry:
+
+           { label: "Postcard of Life", href: "https://…" },
+
+       Nothing else needs changing: the panel renders however many links it is
+       given, and renders none if the array is absent. */
+    links: [{ label: "See the photography", href: "/photography" }],
   },
 ];
 

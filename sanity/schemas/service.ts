@@ -31,12 +31,46 @@ export const service = defineType({
       description: "Revealed when the discipline's name is clicked.",
       validation: (rule) => rule.required(),
     }),
+    /* ── Was a single "Opens a page" string ────────────────────────────
+       That field made a discipline navigate INSTEAD of expanding, which is
+       why Architectural Photography behaved unlike every other card in the
+       row. Every discipline expands now, and links live inside the panel that
+       opens — so a discipline can both describe itself and lead somewhere.
+
+       An array rather than one link: Photography has two destinations (the
+       studio's own portfolio page and the photographer's site), and there was
+       no reason for the schema to make the second one impossible. */
     defineField({
-      name: "href",
-      title: "Opens a page",
-      type: "string",
+      name: "links",
+      title: "Links",
+      type: "array",
       description:
-        'Only set where the discipline has a page of its own — currently just "/photography". Leave blank and the card expands in place instead.',
+        "Shown inside the panel that opens when someone clicks this discipline. Leave empty and the panel is just the description.",
+      of: [
+        {
+          type: "object",
+          name: "serviceLink",
+          fields: [
+            defineField({
+              name: "label",
+              title: "Link text",
+              type: "string",
+              description:
+                'What the link says — e.g. "See the photography". Not the address.',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "href",
+              title: "Address",
+              type: "string",
+              description:
+                'A page on this site ("/photography") or a full address on another site ("https://…").',
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: { select: { title: "label", subtitle: "href" } },
+        },
+      ],
     }),
     order,
   ],

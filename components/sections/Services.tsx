@@ -36,8 +36,28 @@
  * and the panel animates `grid-template-rows` so it opens to the copy's real
  * height rather than to a guessed max-height.
  *
- * Architectural Photography opens its own page instead of expanding, so its
- * card renders a link and says so.
+ * ── Every card behaves the same way now ───────────────────────────────────
+ *
+ * Architectural Photography used to open its own page INSTEAD of expanding. It
+ * was the only card in the row that did, and the exception cost more than it
+ * bought: its description had to be printed permanently since it had no panel
+ * to reveal, which made it the one card whose text block never matched its
+ * neighbours' — and a visitor who clicked it was taken off the page mid-track,
+ * out of a section they were halfway through reading.
+ *
+ * It expands like the rest, and its destinations live INSIDE the panel as
+ * links. That is strictly more capable than the old arrangement: a discipline
+ * can now describe itself and lead somewhere, rather than having to choose.
+ * See `links` on the Service type.
+ *
+ * ── The ground ────────────────────────────────────────────────────────────
+ *
+ * Paper, at the studio's request, matching <Testimonials />. It also breaks up
+ * what had become three consecutive emerald bands — Process, Services, Contact
+ * — and the middle one is the section carrying five photographs, which are the
+ * thing worth looking at. Brand colour is carried the way the palette intends
+ * on a light ground: emerald in the type and the index chips, gold in the
+ * hairlines, the vines and the rail.
  */
 import { useRef, useState } from "react";
 import { FiArrowUpRight, FiPlus } from "react-icons/fi";
@@ -114,18 +134,24 @@ export default function Services() {
     <section
       ref={sectionRef}
       id="services"
-      /* ── The arc's last light-to-dark step ──────────────────────────────
-         Mid brand green with cream type. This is the chapter where the green
-         stops being a tint and becomes the loudest thing on the screen — see
-         the note on `.surface-moss` in styles/globals.css.
+      /* ── Paper, matching <Testimonials /> ────────────────────────────
+         This was a saturated emerald band, on the argument that a green ground
+         makes photography read as lit objects. That argument holds in
+         isolation and did not hold on the page: <Process /> above and
+         <Contact /> below are both `bg-emerald` too, so the last third of the
+         document was three consecutive bands of the same colour with the
+         densest, most photographic of them in the middle.
 
-         It suits this section better than any other: five disciplines, each
-         carried by a photograph, and a saturated green ground makes
-         photography read as lit objects rather than as tiles on a page. */
-      data-chrome="dark"
-      className="relative bg-emerald text-cream"
+         `data-chrome="dark"` is gone with the ground, and that is not
+         cosmetic. The masthead and the spine both read that attribute to
+         decide whether to draw themselves in cream or in emerald — see the
+         note in components/layout/Navbar.tsx. Leaving it on a paper section
+         would put cream type and a cream thread on a near-white ground for the
+         whole length of the track: invisible, and invisible in the two pieces
+         of chrome a visitor uses to know where they are. */
+      className="relative bg-paper text-charcoal"
     >
-      <SheetTexture tone="dark" placement="top" />
+      <SheetTexture placement="top" />
 
       <div
         ref={pinRef}
@@ -135,7 +161,7 @@ export default function Services() {
           <SectionHeading
             eyebrow="Services"
             title="What we do"
-            tone="dark"
+            tone="light"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
               SERVICES.length
             ).padStart(2, "0")}`}
@@ -150,7 +176,8 @@ export default function Services() {
         >
           {SERVICES.map((service) => {
             const open = openId === service.id;
-            const isLink = Boolean(service.href);
+            const toggle = () => setOpenId(open ? null : service.id);
+            const panelId = `service-${service.id}`;
 
             return (
               <article
@@ -166,129 +193,228 @@ export default function Services() {
                     `min-height: auto`, which refuses to shrink below its
                     content and quietly defeats `flex-1`.
 
-                    `bg-stone` is not decoration either: these images are
-                    lazy-loaded and the track scrolls sideways, so a card can be
-                    on screen before its image has arrived. Without a ground the
-                    card reads as a hole in the row. */}
-                {/* ── The image is the primary target ──────────────────────
-                    Clicking the photograph does exactly what clicking the name
-                    does: opens the description, or follows the link on
-                    Photography. It is by far the biggest thing in the card, so
-                    it was always the thing a visitor would aim at first — and
-                    until now it was the one part that did nothing.
+                    `bg-stone` is the loading ground, and it is not decoration:
+                    these images are lazy-loaded and the track scrolls
+                    sideways, so a card can be on screen before its image has
+                    arrived. It used to be `bg-emerald-deep`, which was a
+                    near-black rectangle — fine against the old emerald band
+                    and, on paper, a hole cut in the row. Caught on screen:
+                    the Photography card renders exactly that way for as long
+                    as its photograph takes to decode.
 
-                    Rendered as a real <a> or <button>, not a div with an
-                    onClick, so both targets are reachable by keyboard and
-                    announce themselves. The two share `aria-controls`, and the
-                    image copy is `tabIndex={-1}` / `aria-hidden`: it is a
-                    second handle on the same control, and exposing it twice
-                    would make a keyboard user tab through nine stops to cross
-                    five cards. */}
-                {isLink ? (
-                  <SmoothLink
-                    href={service.href!}
-                    tabIndex={-1}
-                    aria-hidden
-                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-emerald-deep lg:aspect-auto lg:h-[60%]"
-                  >
-                    <Media
-                      src={service.image}
-                      alt=""
-                      sizes="(max-width: 1024px) 90vw, 30vw"
-                      className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
-                    />
-                    <span className="absolute top-5 left-5 font-label text-cream/90">
-                      {service.index}
-                    </span>
-                  </SmoothLink>
-                ) : (
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    aria-hidden
-                    onClick={() => setOpenId(open ? null : service.id)}
-                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-emerald-deep lg:aspect-auto lg:h-[60%]"
-                  >
-                    <Media
-                      src={service.image}
-                      alt=""
-                      sizes="(max-width: 1024px) 90vw, 30vw"
-                      className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
-                    />
-                    <span className="absolute top-5 left-5 font-label text-cream/90">
-                      {service.index}
-                    </span>
-                  </button>
-                )}
+                    ── The image is the primary target ──────────────────────
+                    Clicking the photograph does exactly what clicking the name
+                    does. It is by far the biggest thing in the card, so it was
+                    always the thing a visitor would aim at first.
+
+                    A real <button>, not a div with an onClick, so it is
+                    reachable by keyboard. It is `tabIndex={-1}` / `aria-hidden`
+                    because it is a SECOND handle on the same control that the
+                    name below already exposes — announcing it twice would make
+                    a keyboard user tab through ten stops to cross five cards. */}
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-hidden
+                  onClick={toggle}
+                  className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-stone ring-1 ring-emerald/10 lg:aspect-auto lg:h-auto lg:min-h-0 lg:shrink lg:basis-[60%]"
+                >
+                  <Media
+                    src={service.image}
+                    alt=""
+                    sizes="(max-width: 1024px) 90vw, 30vw"
+                    className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
+                  />
+                  {/* ── The index needed a ground once the section went light ──
+                      It was bare cream type laid straight on the photograph.
+                      That worked while every card sat on a dark band, because
+                      the images were all darkened by the section around them.
+                      On paper the photographs are at full strength and three
+                      of these five are bright interiors — cream on a white
+                      ceiling is not low contrast, it is no contrast.
+
+                      An emerald chip fixes it independently of what the
+                      photograph happens to be, and it is where the brand green
+                      goes on a light ground: into a small, dense, deliberate
+                      mark rather than across the whole band. */}
+                  <span className="absolute top-4 left-4 rounded-full bg-emerald/95 px-3 py-1 font-label text-cream">
+                    {service.index}
+                  </span>
+                </button>
 
                 {/* The image above is a FIXED share of the column height and
                     this block takes the remainder, rather than the image
-                    flexing to fill what is left. Two reasons, both visible:
-                    the Photography card carries a permanent description while
-                    the others do not, so a flexing image made its photograph
-                    noticeably shorter than its neighbours' and the row's
-                    bottom edges stopped agreeing; and opening a description
-                    shrank that card's photograph as it expanded, which reads
-                    as the layout collapsing rather than as a panel opening. */}
-                <div className="mt-6 min-h-0 flex-1 overflow-hidden border-t border-cream/20 pt-5">
-                  {isLink ? (
-                    /* Photography opens its own page. A link, not a toggle —
-                       and it says so, so the different behaviour is visible
-                       before it is clicked rather than after. */
-                    <SmoothLink
-                      href={service.href!}
-                      className="flex w-full items-start justify-between gap-4 text-left"
-                    >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] text-cream xl:text-3xl">
-                        {service.title}
-                      </span>
-                      <FiArrowUpRight
-                        className="mt-1.5 shrink-0 text-gold transition-transform duration-500 ease-editorial group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                        size={20}
-                        aria-hidden
-                      />
-                    </SmoothLink>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setOpenId(open ? null : service.id)}
-                      aria-expanded={open}
-                      aria-controls={`service-${service.id}`}
-                      className="flex w-full cursor-pointer items-start justify-between gap-4 text-left"
-                    >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] text-cream xl:text-3xl">
-                        {service.title}
-                      </span>
-                      <FiPlus
-                        className={cn(
-                          "mt-2 shrink-0 text-gold transition-transform duration-500 ease-editorial",
-                          open && "rotate-45"
-                        )}
-                        size={18}
-                        aria-hidden
-                      />
-                    </button>
-                  )}
+                    flexing to fill what is left. Opening a description would
+                    otherwise shrink that card's photograph as it expanded,
+                    which reads as the layout collapsing rather than as a panel
+                    opening.
 
-                  {isLink ? (
-                    <p className="mt-3 max-w-sm text-cream/75">
-                      {service.body}
-                    </p>
-                  ) : (
-                    <div
-                      id={`service-${service.id}`}
+                    The rule is GOLD now rather than a cream tint — on paper it
+                    is the same hairline that opens every chapter and rules the
+                    spine, so the card joins the drawing the rest of the page is
+                    made of. It brightens on the open card, which is the
+                    quietest possible way to say which one you are reading. */}
+                {/* ── No `overflow-hidden` here, and that is a fix ───────────
+                    This block is `flex-1` inside a card that is exactly the
+                    height of a pinned 100vh column, so its height is fixed by
+                    the viewport rather than by what is in it. Clipping its
+                    overflow therefore meant the expanded panel was silently
+                    CUT OFF whenever the description plus its links came to
+                    more than the space left under the title.
+
+                    Measured at 1600x900: the panel cleared the card's bottom
+                    edge by thirteen pixels with one link. A second link is
+                    about twenty-eight, so adding the one the studio asked for
+                    would have cropped it — and at a laptop height of 800 the
+                    panel was already being cut with no links at all. It never
+                    showed up because, until now, the only card with anything
+                    in its panel was the one card that had no panel.
+
+                    Letting it overflow gives the panel the track's own bottom
+                    padding to expand into — forty pixels that were doing
+                    nothing — and the collapse still clips correctly, because
+                    that is done by the `0fr` grid row and the inner wrapper,
+                    not by this. */}
+                {/* ── `lg:min-h-52` is the floor the panel needs ─────────────
+                    The image was a flat 60% of the column and could not
+                    shrink, so the text block was whatever 40% of the viewport
+                    happened to be. At 1600x900 that is 234px and everything
+                    fits. At a laptop height of 760 it is 178px, and the
+                    description plus two links want 246 — the panel ran 81px
+                    past the bottom of the card and straight through the
+                    progress rail.
+
+                    Now the split is a PREFERENCE rather than a rule: the image
+                    still takes 60% wherever there is room for it (so nothing
+                    changes at ordinary desktop heights), but the text block
+                    holds a floor of 13rem and the image gives way below that.
+                    A photograph that is a little more panoramic on a short
+                    screen is a far better trade than a link the visitor cannot
+                    see.
+
+                    The floor is a CONSTANT, not content-derived, which is what
+                    keeps the earlier fault from coming back: the image height
+                    depends only on the viewport, so opening a panel never
+                    changes it and the row's photographs always agree with each
+                    other. */}
+                <div
+                  className={cn(
+                    "mt-6 min-h-0 flex-1 border-t pt-4 transition-colors duration-500 ease-editorial lg:min-h-52",
+                    open ? "border-gold" : "border-gold/40"
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={toggle}
+                    aria-expanded={open}
+                    aria-controls={panelId}
+                    className="flex w-full cursor-pointer items-start justify-between gap-4 text-left"
+                  >
+                    <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
+                      {service.title}
+                    </span>
+                    {/* `gold-ink`, not `gold`. The logo gold is around 2:1 on
+                        paper — the palette's own note reserves it for rules and
+                        marks and calls it unreadable as ink on a light ground.
+                        A 18px glyph made of 1.5px strokes is ink, not a rule. */}
+                    <FiPlus
                       className={cn(
-                        "grid transition-[grid-template-rows] duration-600 ease-editorial",
-                        open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                        "mt-2 shrink-0 text-gold-ink transition-transform duration-500 ease-editorial",
+                        open && "rotate-45"
                       )}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="mt-3 max-w-sm text-cream/75">
-                          {service.body}
-                        </p>
+                      size={18}
+                      aria-hidden
+                    />
+                  </button>
+
+                  {/* ── `inert` is load-bearing now that the panel has links ──
+                      A collapsed panel is `grid-rows-[0fr]` with
+                      `overflow-hidden`: zero pixels tall, and still in the
+                      document. That was harmless while the only thing inside
+                      was a paragraph. It stops being harmless the moment a
+                      LINK is in there — a keyboard user would tab into a link
+                      they cannot see, inside a card they have not opened, in a
+                      pinned track that then scrolls to bring it into view.
+
+                      `inert` takes the subtree out of the tab order and out of
+                      the accessibility tree together, which is exactly the
+                      pair of things wanted here. */}
+                  <div
+                    id={panelId}
+                    inert={!open}
+                    className={cn(
+                      "grid transition-[grid-template-rows] duration-600 ease-editorial",
+                      open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    )}
+                  >
+                    <div className="overflow-hidden">
+                      {/* A gold rule down the left of the revealed copy. On a
+                          drawing, what is written beside a rule is an
+                          annotation on the thing above it — which is precisely
+                          what this text is. It also gives the opened state a
+                          shape of its own, so the panel reads as something
+                          that was revealed rather than as text that appeared. */}
+                      <div className="mt-2.5 border-l border-gold/45 pl-4">
+                        {/* `max-w-sm` was 384px inside a card that is ~464px
+                            wide once the rule and its padding are taken off —
+                            so the copy was being held to three lines by a
+                            measure narrower than the space it had. Widening it
+                            to the card takes most descriptions to two lines,
+                            which is worth about 28px of panel height on every
+                            card. That is the difference between the floor
+                            below biting on a 1440x800 laptop and not.
+
+                            ~50 characters at this size, which is inside the
+                            65-character target the type system sets, so this
+                            buys the height without spending readability. */}
+                        <p className="text-charcoal/70">{service.body}</p>
+
+                        {service.links && service.links.length > 0 && (
+                          <ul className="mt-4 flex flex-col items-start gap-2">
+                            {service.links.map((link) => {
+                              /* Anything not starting with "/" or "#" leaves
+                                 the site. <SmoothLink /> already renders those
+                                 as a plain anchor rather than handing them to
+                                 the router — but it cannot know they should
+                                 open in a new tab, and sending a visitor off
+                                 the studio's site mid-section with no way back
+                                 is the one thing this panel should not do. */
+                              const external =
+                                !link.href.startsWith("/") &&
+                                !link.href.startsWith("#");
+
+                              return (
+                                <li key={link.href}>
+                                  <SmoothLink
+                                    href={link.href}
+                                    {...(external
+                                      ? {
+                                          target: "_blank",
+                                          rel: "noreferrer",
+                                        }
+                                      : {})}
+                                    className="group/link inline-flex items-center gap-2 border-b border-gold/50 pb-1 font-label text-gold-ink transition-colors duration-300 hover:border-emerald hover:text-emerald"
+                                  >
+                                    {link.label}
+                                    {external && (
+                                      <span className="sr-only">
+                                        (opens in a new tab)
+                                      </span>
+                                    )}
+                                    <FiArrowUpRight
+                                      size={13}
+                                      aria-hidden
+                                      className="transition-transform duration-500 ease-editorial group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
+                                    />
+                                  </SmoothLink>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </article>
             );
@@ -298,12 +424,16 @@ export default function Services() {
               gives the horizontal run somewhere to arrive. */}
           <div className="hidden shrink-0 flex-col justify-end pb-8 lg:flex lg:w-[24vw]">
             <span aria-hidden className="mb-6 block h-px w-16 bg-gold" />
-            <p className="font-serif text-[1.7rem] leading-[1.15] text-cream xl:text-3xl">
+            <p className="font-serif text-[1.7rem] leading-[1.15] text-emerald xl:text-3xl">
               One studio, five disciplines, one continuous idea.
             </p>
+            {/* `gold-soft` was the champagne cut, which exists specifically to
+                carry gold on deep green. On paper it is a pale warm grey at
+                about 1.6:1 — the closing call to action would have been the
+                least legible type in the section. */}
             <SmoothLink
               href="#contact"
-              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pb-1.5 font-label text-gold-soft transition-colors duration-500 hover:text-cream"
+              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pb-1.5 font-label text-gold-ink transition-colors duration-500 hover:border-emerald hover:text-emerald"
             >
               Start a conversation
               <FiArrowUpRight
@@ -318,7 +448,13 @@ export default function Services() {
         {/* Progress hairline (desktop only — below lg there is no horizontal
             travel for it to describe). */}
         <PageContainer className="hidden shrink-0 pb-5 lg:block">
-          <div className="relative h-px bg-cream/25">
+          {/* The track was `cream/25` on emerald. On paper that is a white
+              line on a white ground — the rail would have been a gold bar
+              growing across nothing. Emerald at 15% is the same relationship
+              the other light sections use for a hairline. The FILL stays plain
+              `gold`: it is a rule, not type, which is the one job the palette
+              keeps the logo gold for. */}
+          <div className="relative h-px bg-emerald/15">
             {/* scaleX rather than width: a transform is composited, so the bar
                 stays smooth while the pin is also driving the track. */}
             <div
