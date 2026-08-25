@@ -255,7 +255,7 @@ export default function Practice() {
                 /* The flipping word is part of this sentence, so it is set in the
                  same face — italic and gold to mark it, not a second
                  typeface. */
-                wordClassName="font-serif font-medium italic text-gold text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
+                wordClassName="font-serif font-medium italic text-gold-ink text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
               />
             </motion.h2>
 

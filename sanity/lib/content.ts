@@ -3,7 +3,7 @@ import "server-only";
 import { groq } from "next-sanity";
 
 import { HERO_SLIDES, WORKS } from "@/constants";
-import type { HeroSlide, Work } from "@/types";
+import type { HeroSlide, Work, WorkDetail, WorkLink } from "@/types";
 
 import { client } from "./client";
 import { resolvePhoto, type Photo } from "./image";
@@ -171,5 +171,158 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     return slides.length ? slides : HERO_SLIDES;
   } catch {
     return HERO_SLIDES;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   One project, and its own page
+   ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * ── Why this is a second query and not a bigger first one ────────────────
+ *
+ * `getWorks()` reads all nine projects to build the ring, and the ring needs a
+ * name, a category and one photograph from each. If the write-ups and the
+ * galleries were folded into that query, every visit to the home page would
+ * pull every word and every photograph reference of every project in order to
+ * render nine headings and throw the rest away.
+ *
+ * So the page-only content is read one project at a time, by slug, on the route
+ * that actually shows it.
+ */
+const DETAIL_FIELDS = groq`
+  "id": coalesce(slug.current, _id),
+  title,
+  category,
+  description,
+  location,
+  area,
+  year,
+  photo,
+  body,
+  gallery,
+  order
+`;
+
+const WORK_QUERY = groq`*[_type == "work" && coalesce(slug.current, _id) == $slug][0] { ${DETAIL_FIELDS} }`;
+
+/**
+ * The neighbours, for the "next project" pair at the foot of the page.
+ *
+ * Read in the same round trip as the project itself rather than as a second
+ * request: it is the same dataset, the same moment, and a page that renders
+ * before it knows what follows it would have to shift when it found out.
+ */
+const SIBLINGS_QUERY = groq`*[_type == "work"] | order(order asc, _createdAt asc) {
+  "id": coalesce(slug.current, _id), title, category, photo
+}`;
+
+type GalleryDoc = Photo & { caption?: string; wide?: boolean };
+
+type DetailDoc = WorkDoc & {
+  body?: unknown[];
+  gallery?: GalleryDoc[];
+  order?: number;
+};
+
+/** Slugs for `generateStaticParams` — every project gets a prerendered page. */
+export async function getWorkSlugs(): Promise<string[]> {
+  if (!client) return WORKS.map((w) => w.id);
+  try {
+    const ids = await client.fetch<string[]>(
+      groq`*[_type == "work"].slug.current`,
+      {},
+      { next: { tags: ["work"], revalidate: 3600 } }
+    );
+    const real = (ids ?? []).filter(Boolean);
+    // An unconfigured or empty dataset still has to produce the nine pages the
+    // committed constants describe, or every project on the home page would
+    // link to a 404 the moment Sanity was unreachable.
+    return real.length ? real : WORKS.map((w) => w.id);
+  } catch {
+    return WORKS.map((w) => w.id);
+  }
+}
+
+/** Build a detail record out of the committed constants. */
+function detailFromConstants(slug: string): WorkDetail | null {
+  const i = WORKS.findIndex((w) => w.id === slug);
+  if (i === -1) return null;
+  const link = (w: Work | undefined): WorkLink | undefined =>
+    w && { id: w.id, title: w.title, category: w.category, image: w.image, objectPosition: w.objectPosition };
+  return {
+    ...WORKS[i]!,
+    siblings: { prev: link(WORKS[i - 1]), next: link(WORKS[i + 1]) },
+  };
+}
+
+/**
+ * One project by slug, or null if there is no such project.
+ *
+ * Null is a real answer here and the route turns it into a 404 — unlike the
+ * list reads above, "we could not find it" must not fall back to showing
+ * something else, because the something else would be a different commission
+ * under the URL of the one that was asked for.
+ *
+ * A network FAILURE still falls back to the constants, which is a different
+ * case: there the project may well exist and we simply could not reach it.
+ */
+export async function getWork(slug: string): Promise<WorkDetail | null> {
+  if (!client) return detailFromConstants(slug);
+
+  try {
+    const [doc, all] = await Promise.all([
+      client.fetch<DetailDoc | null>(
+        WORK_QUERY,
+        { slug },
+        { next: { tags: ["work"], revalidate: 3600 } }
+      ),
+      client.fetch<{ id: string; title: string; category: string; photo?: Photo }[]>(
+        SIBLINGS_QUERY,
+        {},
+        { next: { tags: ["work"], revalidate: 3600 } }
+      ),
+    ]);
+
+    // Nothing published yet: fall through to the constants, which are what the
+    // ring is showing too, so the link the visitor followed still resolves.
+    if (!doc) return all?.length ? null : detailFromConstants(slug);
+
+    const cover = resolvePhoto(doc.photo, doc.title);
+    const i = (all ?? []).findIndex((w) => w.id === doc.id);
+    const link = (w: (typeof all)[number] | undefined): WorkLink | undefined => {
+      if (!w) return undefined;
+      const p = resolvePhoto(w.photo, w.title);
+      return { id: w.id, title: w.title, category: w.category, image: p?.src ?? "", objectPosition: p?.objectPosition };
+    };
+
+    return {
+      id: doc.id,
+      title: doc.title,
+      category: doc.category,
+      description: doc.description ?? "",
+      location: doc.location,
+      area: doc.area,
+      year: doc.year,
+      image: cover?.src ?? "",
+      objectPosition: cover?.objectPosition,
+      width: WIDTHS[0],
+      body: doc.body,
+      gallery: (doc.gallery ?? []).flatMap((g, n) => {
+        const p = resolvePhoto(g, doc.title);
+        if (!p) return [];
+        return [{
+          id: `${doc.id}-${n}`,
+          src: p.src,
+          alt: p.alt,
+          caption: g.caption,
+          objectPosition: p.objectPosition,
+          wide: g.wide === true,
+        }];
+      }),
+      siblings: i === -1 ? {} : { prev: link(all[i - 1]), next: link(all[i + 1]) },
+    };
+  } catch {
+    return detailFromConstants(slug);
   }
 }

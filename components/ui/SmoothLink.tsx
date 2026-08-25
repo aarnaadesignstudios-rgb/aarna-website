@@ -59,6 +59,16 @@ interface SmoothLinkProps
    * lib/sectionNavigation.ts.
    */
   travel?: Travel;
+  /**
+   * What the chapter card should call this destination.
+   *
+   * Only consulted for a route change, and only worth setting when the URL is
+   * not a good name for where it goes — a CMS slug, chiefly. Omitted, the
+   * navigation layer names the destination itself: a nav entry by its own
+   * label, anything else by title-casing the last path segment. See `describe`
+   * in lib/sectionNavigation.ts.
+   */
+  cardLabel?: string;
 }
 
 /**
@@ -67,7 +77,10 @@ interface SmoothLinkProps
  * DOM node it is handed. Without the ref it would have nothing to write to.
  */
 const SmoothLink = forwardRef<HTMLAnchorElement, SmoothLinkProps>(
-  function SmoothLink({ href, children, onClick, travel = "auto", ...rest }, ref) {
+  function SmoothLink(
+    { href, children, onClick, travel = "auto", cardLabel, ...rest },
+    ref
+  ) {
     const pathname = usePathname();
 
     // ── Kind 4: external, mail, phone. Not ours to manage. ──────────────
@@ -112,8 +125,8 @@ const SmoothLink = forwardRef<HTMLAnchorElement, SmoothLinkProps>(
       // the bottom of /faq, while "About" — which names a section this page does
       // not have — becomes a card that changes route and lands on it.
       const handled = href.startsWith("#")
-        ? navigateToSection(href, travel) || navigateToRoute(`/${href}`)
-        : navigateToRoute(href);
+        ? navigateToSection(href, travel) || navigateToRoute(`/${href}`, cardLabel)
+        : navigateToRoute(href, cardLabel);
       if (handled) e.preventDefault();
     };
 

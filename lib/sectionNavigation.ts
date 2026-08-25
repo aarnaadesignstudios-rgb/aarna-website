@@ -93,6 +93,17 @@ export interface SectionCard {
   index: string | null;
   /** The destination's name, as the visitor just read it on the link. */
   label: string;
+  /**
+   * The wordmark, rather than a section or a page.
+   *
+   * The card sets its label in the site's SERIF, because every destination it
+   * names is a chapter and chapter titles are set in the serif. The wordmark is
+   * not a chapter — it is the studio's name, and the studio's name is set in
+   * the DISPLAY face everywhere else it appears (the masthead, the intro). A
+   * visitor clicking the logo was shown their own studio's name in the wrong
+   * typeface, which is the one string on the site where that is noticeable.
+   */
+  wordmark: boolean;
   /** 1 travelling down the page, -1 travelling up. Drives the wipe direction. */
   direction: 1 | -1;
 }
@@ -122,8 +133,27 @@ export function onSectionCard(fn: Listener) {
  * /photography is reached from a Services card, and the wordmark's #hero is the
  * studio rather than a section.
  */
-function describe(href: string): { index: string | null; label: string } {
-  const [path = "/", hash] = href.split("#");
+function describe(href: string): {
+  index: string | null;
+  label: string;
+  wordmark: boolean;
+} {
+  /* ── An empty path is this page, and the default does not catch it ─────
+     `"#hero".split("#")` is `["", "hero"]`, and a destructuring default only
+     fires on `undefined` — an empty string is a value, so `path` was `""` and
+     every test below that compares it to `"/"` silently failed.
+
+     What that broke was the wordmark, and only the wordmark, because it is the
+     one destination reached by a bare fragment that is NOT also a nav entry:
+     the nav's own links match on the fragment before the path is ever
+     consulted. Clicking the masthead's logo on the home page therefore fell
+     past the wordmark branch, found no path segment to title-case either, and
+     put up a chapter card with an EMPTY name on it — the mark and two gold
+     rules and nothing between them. From /faq or /photography the same click
+     took a different route through here (`/#hero`, which does have a path) and
+     was named, which is why this only ever looked broken on one page. */
+  const [rawPath = "/", hash] = href.split("#");
+  const path = rawPath || "/";
 
   // The same destination can be written two ways depending on where the link is
   // rendered: "#practice" on the home page, "/#practice" everywhere else. Both
@@ -132,13 +162,22 @@ function describe(href: string): { index: string | null; label: string } {
   const forms = hash ? [href, `#${hash}`] : [href];
   const i = NAV_LINKS.findIndex((l) => forms.includes(l.href));
   if (i !== -1) {
-    return { index: String(i + 1).padStart(2, "0"), label: NAV_LINKS[i]!.label };
+    return {
+      index: String(i + 1).padStart(2, "0"),
+      label: NAV_LINKS[i]!.label,
+      wordmark: false,
+    };
   }
 
   // The wordmark. The studio, not a section, so it is named rather than
-  // numbered.
+  // numbered — and named in FULL. This was `SITE.shortName`, which is the
+  // one-word "Aarnaa" the favicon and the document title use where there is no
+  // room for the rest. There is room here: the card is the whole viewport, and
+  // what the visitor just clicked reads "Aarnaa Design Studios" in the
+  // masthead. Abbreviating it on the way to the top of the page made the
+  // transition look like it belonged to a different site.
   if (path === "/" && (!hash || hash === "hero")) {
-    return { index: null, label: SITE.shortName };
+    return { index: null, label: SITE.name, wordmark: true };
   }
 
   // A route with no nav entry — /photography, reached from a Services card.
@@ -151,10 +190,11 @@ function describe(href: string): { index: string | null; label: string } {
         .split("-")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" "),
+      wordmark: false,
     };
   }
 
-  return { index: null, label: "" };
+  return { index: null, label: "", wordmark: false };
 }
 
 function prefersReducedMotion() {
@@ -222,7 +262,7 @@ export function navigateToSection(hash: string, travel: Travel = "auto"): boolea
  * overlay mounted, reduced motion — in which case the caller's <Link> does what
  * it would have done anyway.
  */
-export function navigateToRoute(href: string): boolean {
+export function navigateToRoute(href: string, label?: string): boolean {
   const [path = "/", hash] = href.split("#");
   const samePage = path === window.location.pathname;
 
@@ -252,6 +292,19 @@ export function navigateToRoute(href: string): boolean {
     // the bottom, out through the top, the same way a downward jump does.
     direction: 1,
     ...describe(href),
+    /* ── A caller that knows the destination's real name wins ──────────
+       `describe` names an unlisted route by title-casing its last path
+       segment, which is right for /photography and wrong for a CMS route. A
+       project's slug is whatever the studio typed into Sanity — today those
+       are "33424", "545", "ads" and "223" — so clicking a commission put up a
+       card that said "33424" and held it there for as long as the page took to
+       load. The card is on screen longer now (see ROUTE_WAIT_CAP_MS in
+       <SectionTransition />), which turns that from a blemish into the main
+       thing a visitor reads on the way in.
+
+       So a link may name its own destination, and <SelectedWorks /> passes the
+       project's title. Applied AFTER the spread, so it overrides. */
+    ...(label ? { label } : null),
   });
   return true;
 }

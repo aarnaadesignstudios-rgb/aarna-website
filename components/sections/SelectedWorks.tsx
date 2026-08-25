@@ -48,8 +48,11 @@
  *      stays light so the photographs still sit ON it.
  *   4. POINTER TILT. The whole turntable leans a few degrees toward the
  *      pointer. Small, and it is the difference between a diagram and a thing.
- *   5. A GHOST NUMERAL. The active project's index, outlined, at 26vw, behind
- *      the ring. Fills the upper frame with something editorial.
+ *   5. A CAPTION PLATE, ranged into the bottom-right corner: where the
+ *      commission is, when it was, how big, and the way into it. This corner
+ *      carried a large outlined numeral for a while and it was one gold mark
+ *      too many next to <Ornament />; a caption fills the same void and says
+ *      something.
  *   6. A DENSER ARC. Bigger cards on a tighter radius with a shorter
  *      perspective, so the arc reaches both edges of the screen and the cards
  *      overlap slightly. Award-site lesson, plainly: fill the frame.
@@ -59,9 +62,13 @@
  *   · The STAGE owns `perspective`. It cannot live on the ring: perspective
  *     applies to an element's children, so on the rotating element itself every
  *     card would get its own vanishing point and the ring would shear.
- *   · The RING owns `rotateY` and `preserve-3d`, and is pushed back by its own
- *     radius so the front face lands on the perspective plane at scale 1.
- *   · Each FACE is swung to `rotateY(i × 40°) translateZ(radius)`.
+ *   · The RING owns `preserve-3d` and the pointer lean, and is pushed back by
+ *     its own radius so the front face lands on the perspective plane at
+ *     scale 1. It does NOT rotate: the ring loops, so the spin is per-face.
+ *   · Each FACE is swung to `rotateY(angle) translateZ(radius)`, where the
+ *     angle is recomputed every frame as the station nearest the front — see
+ *     the note on `SPAN`. That is what keeps a card on both flanks at every
+ *     scroll position instead of the arc running out at its ends.
  *
  * All three are in styles/globals.css (`.ring-stage`, `.ring-3d`, `.ring-face`)
  * because Tailwind has no utilities that spell them. This file owns only the
@@ -82,6 +89,7 @@ import { useIsomorphicLayoutEffect } from "@/hooks";
 import {
   PageContainer,
   Media,
+  Ornament,
   SectionHeading,
   SheetTexture,
   SmoothLink,
@@ -114,15 +122,6 @@ import { cn } from "@/utils/cn";
  */
 const FADE_FROM = 62;
 const CUT_AT = 94;
-
-/**
- * Only the face near the front is a link.
- *
- * Everything else is a foreshortened sliver a few pixels wide, and a sliver
- * that swallows clicks is worse than one that ignores them — at 60° a card is
- * still ~180px of hit area sitting over the front card's right-hand edge.
- */
-const LIVE_WITHIN = 26;
 
 /**
  * A small vertical offset per face, in vh.
@@ -162,10 +161,48 @@ const TILT_Y = 4.5;
 const SWEEP_PEAK = 26;
 const SWEEP_WIDTH = 30;
 
-/** Signed shortest angle from the front of the ring, in (-180, 180]. */
-function fromFront(deg: number) {
-  const wrapped = ((deg % 360) + 540) % 360 - 180;
-  return wrapped;
+/**
+ * Degrees between neighbouring faces — the ring's PITCH.
+ *
+ * ── Why this is a constant and not `360 / count` ───────────────────
+ *
+ * It used to be `360 / count`, on the reasoning that the faces should be spread
+ * evenly around a CLOSED cylinder. That is only the same number as this one
+ * while there happen to be nine projects, and the moment the studio's Sanity
+ * dataset held four the pitch became 90° — at which the two neighbours are
+ * exactly edge-on, so they have no projected width and `backface-visibility`
+ * takes them out entirely. The section rendered as ONE card at a time with the
+ * next appearing out of nothing, which is not the arc this was designed as.
+ *
+ * The pitch is what the whole composition is measured against: the radius below
+ * is chosen so that faces 40° apart overlap by ~20px, the sweep peaks at 26°,
+ * and the haze ramp is tuned so the second card out is present but clearly
+ * behind. Letting the item count move it silently retunes all of that.
+ *
+ * So the ring is an ARC of fixed pitch, not a closed cylinder, and only the
+ * front hemisphere was ever drawn anyway (see CUT_AT) — nothing is lost by the
+ * back not joining up. What a visitor sees is three cards: one square-on and a
+ * turned neighbour each side, whether the studio has four projects or nine.
+ */
+const PITCH = 40;
+
+/**
+ * Signed shortest angle from the front of the ring, over a given period.
+ *
+ * ── The period is not always 360° ────────────────────────────────
+ *
+ * It was hard-coded to 360, which is right only for a ring whose faces go all
+ * the way round. At four projects and a 40° pitch the faces span 160° and the
+ * remaining 200° is empty — so the LAST project has to come back round and
+ * stand to the left of the first, or the arc has a bare flank at both ends. The
+ * ring's period is `count × pitch`, and wrapping over that is what turns a
+ * finite arc into a loop.
+ *
+ * Returns a value in [-period/2, period/2).
+ */
+function wrapInto(deg: number, period: number) {
+  const half = period / 2;
+  return ((deg % period) + period + half) % period - half;
 }
 
 /**
@@ -215,17 +252,59 @@ export default function SelectedWorks({
 }) {
   const count = works.length;
   /**
-   * Degrees between neighbouring faces.
+   * Degrees between neighbouring faces — `PITCH`, except when there are enough
+   * projects for `PITCH` to wrap the ring past itself.
    *
-   * Guarded against an empty list: `360 / 0` is Infinity, and the very next
-   * thing that happens to it is `-t * step` with t = 0 — which is 0 × Infinity,
-   * or NaN, written straight into `--ring-rot`. A transform with NaN in it is
-   * invalid, so the browser drops the whole declaration and the ring renders
-   * as nine coincident cards. `getWorks()` cannot return an empty array today,
-   * but a component that turns into a pile of cards because a caller passed
-   * `[]` should not be the way we find that out.
+   * `Math.min` is the guard: at ten or more projects a fixed 40° pitch would
+   * carry the last faces back round through the front of the arc, where they
+   * would sit on top of the first ones. Past nine the ring closes up and the
+   * pitch tightens to whatever divides the circle, which is the behaviour the
+   * old `360 / count` had — it was only ever WRONG below nine.
+   *
+   * `count > 0` matters for its own reason: `360 / 0` is Infinity, and the very
+   * next thing that happens to it is `(i - t) * step` with i = t = 0, which is
+   * 0 × Infinity, or NaN, written straight into `--face-a`. A transform with
+   * NaN in it is invalid, so the browser drops the whole declaration and every
+   * face renders at the same station. `getWorks()` cannot return an empty array
+   * today, but a component that turns into a pile of coincident cards because a
+   * caller passed `[]` should not be the way we find that out.
    */
-  const step = count > 0 ? 360 / count : 0;
+  const step = count > 0 ? Math.min(PITCH, 360 / count) : 0;
+
+  /**
+   * ── The ring loops, so there is never a bare flank ─────────────────
+   *
+   * Faces used to sit at fixed stations, `i × pitch`, and the ring rotated
+   * underneath them as one rigid body. That is right for a closed cylinder and
+   * it leaves an ARC open at both ends: at the first project there is nothing
+   * to its left and at the last nothing to its right, so the section opens and
+   * closes on a lopsided two-card frame with half the stage empty.
+   *
+   * Each face is now placed, per frame, at whichever station around the loop is
+   * NEAREST the front — `wrapInto` above. The last project comes round to stand
+   * left of the first, and what a visitor sees at every position is the same
+   * thing: one card square-on with a turned neighbour on each side.
+   *
+   * `SPAN` is the loop's period. `CUT` is where a face reaches zero opacity,
+   * and it is clamped to the HALF-period for a reason that is load-bearing
+   * rather than cosmetic: the half-period is exactly where a face wraps from
+   * one flank to the other, and a card that teleports across the stage in a
+   * single frame is the ugliest thing this section could do. Fading it out by
+   * the time it gets there means the jump happens while it is invisible.
+   *
+   * At nine projects SPAN is 360 and the half-period 180, so `CUT_AT` wins and
+   * none of this changes what was there. At four it is 160, the flanks fade out
+   * by 80°, and the loop is seamless.
+   *
+   * Below three projects a three-card arc is arithmetically impossible — the
+   * same photograph would have to stand in two places at once — so one or two
+   * commissions still show one or two cards. That is the honest answer for a
+   * studio with two projects, not a case to pad out.
+   */
+  const SPAN = count * step;
+  const CUT = Math.min(CUT_AT, SPAN / 2);
+  /** The haze ramp, held at the proportion `FADE_FROM` sets against `CUT_AT`. */
+  const FADE = CUT * (FADE_FROM / CUT_AT);
 
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
@@ -271,13 +350,16 @@ export default function SelectedWorks({
     const ring = ringRef.current;
     if (!ring) return;
 
-    ring.style.setProperty("--ring-rot", `${-t * step}deg`);
-
     facesRef.current.forEach((face, i) => {
       if (!face) return;
 
-      const rel = fromFront((i - t) * step);
+      // Where this face stands THIS frame, as a signed angle from the front.
+      // It is the whole spin: there is no rotation left on the ring for it to
+      // compose with, because a looping ring is not a rigid body — see the note
+      // on `SPAN` above and on `.ring-3d` in styles/globals.css.
+      const rel = wrapInto((i - t) * step, SPAN);
       const away = Math.abs(rel);
+      face.style.setProperty("--face-a", `${rel}deg`);
 
       // Aerial perspective: the further round the ring a face is, the more of
       // the page's own colour is washed over it, until it disappears into the
@@ -285,12 +367,19 @@ export default function SelectedWorks({
       // black, and it is one opacity on a child — no filters, no blur, nothing
       // that would cost a frame on a nine-card ring.
       const haze =
-        away <= FADE_FROM
-          ? (away / FADE_FROM) * 0.34
-          : 0.34 + Math.min(1, (away - FADE_FROM) / (CUT_AT - FADE_FROM)) * 0.62;
+        away <= FADE
+          ? (away / FADE) * 0.34
+          : 0.34 + Math.min(1, (away - FADE) / (CUT - FADE)) * 0.62;
 
-      const live = away <= LIVE_WITHIN;
-      face.style.opacity = away >= CUT_AT ? "0" : "1";
+      // Exactly one face is a link, and it is the one at the front.
+      //
+      // This was an angular window, `away <= 26` — which at the halfway point
+      // between two projects has BOTH of them inside it: two overlapping links
+      // across the middle of the stage, with paint order deciding which one a
+      // click reaches. Naming the front face instead is unambiguous at every
+      // position, including that one.
+      const live = i === Math.round(t);
+      face.style.opacity = away >= CUT ? "0" : "1";
       face.style.pointerEvents = live ? "auto" : "none";
 
       // ── The card behind the front one is not a tab stop ────────────────
@@ -349,7 +438,7 @@ export default function SelectedWorks({
     }
     // `count` and `step` are the ring's geometry and they come from the props
     // now, so this cannot claim an empty dependency list any more.
-  }, [count, step]);
+  }, [count, step, SPAN, CUT, FADE]);
 
   /**
    * Bring project `i` to the front of the ring.
@@ -566,6 +655,13 @@ export default function SelectedWorks({
   }, [apply, jump]);
 
   const current = works[active] ?? works[0];
+  /**
+   * The active project's facts, in the order a caption sets them, with the
+   * blanks dropped rather than placeheld — see the note on the plate below.
+   */
+  const facts = [current?.location, current?.year, current?.area].filter(
+    (fact): fact is string => Boolean(fact)
+  );
 
   /** One project's photograph, used by both the ring and the mobile stack. */
   const photo = (i: number) => {
@@ -573,7 +669,24 @@ export default function SelectedWorks({
     if (!work) return null;
     return (
       <SmoothLink
-        href="#contact"
+        /* ── A card leads to the project, not to the form ────────────────
+           Every card used to point at #contact, which meant the one thing a
+           visitor could do with a commission that interested them was ask
+           about a different one. It goes to the project's own page now — see
+           app/work/[slug]/page.tsx — and the enquiry form is at the foot of
+           that page, so the route to the form is longer by one step and now
+           passes through the thing the visitor actually wanted to see.
+
+           <SmoothLink /> rather than a bare <Link />: it hands the click to the
+           site's navigation layer, so the change of page is covered by the
+           chapter card the rest of the site uses instead of being a white
+           flash. It falls back to the router on its own if that overlay is not
+           mounted or the visitor has asked for reduced motion. */
+        href={`/work/${work.id}`}
+        /* The chapter card would otherwise name this destination by
+           title-casing the slug, and a Sanity slug is whatever the studio
+           typed. See `cardLabel` in components/ui/SmoothLink.tsx. */
+        cardLabel={work.title}
         aria-label={`${work.title} — ${work.category}`}
         className={cn(
           "group relative block size-full overflow-hidden rounded-xl bg-emerald-deep",
@@ -710,12 +823,59 @@ export default function SelectedWorks({
         {/* `top` placement: this chapter's lower half is the ring, its
             reflections and the floor, and a bloom under those would fight the
             cyclorama's own floor gradient. */}
-        <SheetTexture placement="top" />
+        {/* ── The vine, and four of it rather than two ─────────────────
+            `tone="dark"` is the champagne cut of the ink (`--color-gold-soft`,
+            the same hue lifted to 64% lightness). Plain gold is sampled from
+            the logo and is a ~2:1 line against cream — right on paper, and on
+            this section's deep green it goes muddy and reads as a smudge
+            rather than as a drawn line. See <Ornament />'s `tone`.
+
+            `placement="top"` gives the top-left and top-right pair. The two
+            below are added by hand because <SheetTexture /> only ships the two
+            arrangements, and this section wants all four corners: it is the
+            only chapter with no display title, so its margins are carrying the
+            composition on their own.
+
+            Held back to 55%/45%. At full strength a vine in each corner stops
+            being a marginal flourish and becomes a frame, and the bottom pair
+            in particular sits behind the project's name and the caption plate
+            — it has to stay under type rather than compete with it. Every
+            placement already bleeds ~44% of itself off the page edge, which is
+            what keeps them reading as something larger growing in from the
+            margin. */}
+        <SheetTexture tone="dark" placement="top" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 hidden overflow-hidden lg:block"
+        >
+          <Ornament
+            placement="bottom-left"
+            tone="soft"
+            size="md"
+            className="opacity-55"
+          />
+          <Ornament
+            placement="bottom-right"
+            tone="soft"
+            size="sm"
+            className="opacity-45"
+          />
+        </div>
 
         {/* Header — the counter rides in the heading's title-block slot. */}
         <PageContainer className="relative z-20 shrink-0 pt-24 pb-2 md:pt-28">
           <SectionHeading
             eyebrow="Selected Works"
+            /* ── No title here, and it is the only chapter without one ──────
+               Every other chapter sets a display title under its eyebrow. This
+               one is deliberately label-only: the photographs are the subject
+               and the studio's note was that the section should carry no copy
+               beyond the project's own name at the foot of it. A title was
+               tried here and removed.
+
+               What fills the top band instead is the vine — see the ornaments
+               below. Drawing rather than type, which is what the rest of the
+               site does with its margins anyway. */
             tone="dark"
             meta={`${String(active + 1).padStart(2, "0")} / ${String(
               count
@@ -745,37 +905,6 @@ export default function SelectedWorks({
             } as React.CSSProperties
           }
         >
-          {/* ── The ghost numeral ────────────────────────────────────────
-              The active project's index, outlined, hanging off the right edge.
-
-              Flat type outside the 3D context (the same reason the title is —
-              see below), sized in `vw`. It is doing composition, not
-              information: the counter in the header already says "05 / 09".
-              What it fixes is that the frame had two dead corners.
-
-              ── It was centred, and that was useless ──────────────────
-              Measured: at 26vw the glyph box is 288 × 374 and lands at
-              x 576–864 — which is exactly where the front card and its left
-              neighbour are. The whole numeral was occluded except for one
-              stroke of it showing through a gap, where it read as a stray arc
-              across the ground rather than as a numeral. Composition elements
-              have to go where the composition is EMPTY, and on a ring that
-              fills the middle, that is the outer corners.
-
-              So it is ranged right and bleeds a third of itself off the edge.
-              Bleeding is deliberate — a number cropped by the page edge reads
-              as a printed folio, and one floating clear of it reads as a
-              graphic that did not fit.
-
-              `-webkit-text-stroke` with a transparent fill: an outline, because
-              a solid numeral this size competes with the photographs. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-[3%] right-0 translate-x-[32%] font-serif text-[30vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
-          >
-            {String(active + 1).padStart(2, "0")}
-          </span>
-
           <div
             ref={ringRef}
             className="ring-3d absolute inset-0"
@@ -804,7 +933,11 @@ export default function SelectedWorks({
                 className="ring-face h-[clamp(330px,52vh,540px)] w-[clamp(250px,30vw,450px)] will-change-transform"
                 style={
                   {
-                    "--face-a": `${i * step}deg`,
+                    /* The station this face starts at, so the frame before
+                       hydration is the same arc as the first real one rather
+                       than a pile of coincident cards. `apply` overwrites it
+                       every frame from there on. */
+                    "--face-a": `${wrapInto(i * step, SPAN)}deg`,
                     "--face-y": `${RISE[i % RISE.length] ?? 0}vh`,
                   } as React.CSSProperties
                 }
@@ -825,7 +958,17 @@ export default function SelectedWorks({
               than swapping the string in place, which at this size reads as a
               glitch. Masked, so it rises out of the rule beneath it. */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10">
-            <PageContainer>
+            {/* ── Ranged to both edges, not clustered on one ───────────
+                `justify-between` rather than a gap, so the name holds the left
+                corner and the plate holds the right — the same two-ended
+                structure as the index row and "More, on request" on the rail
+                directly below. That is what ties the band to the section
+                instead of leaving it as two things floating at one end.
+
+                It is also what replaced the folio: a numeral was weighting
+                that corner, and a caption that belongs there does the same job
+                without a second decorative gold mark on the page. */}
+            <PageContainer className="flex items-end justify-between gap-10">
               {/* ── The mask clips DOWN, never ACROSS ──────────────────────
                   `overflow-hidden` clips both axes, so the measure has to be
                   set on the heading INSIDE the mask and never on the mask
@@ -866,6 +1009,67 @@ export default function SelectedWorks({
                   </h3>
                 </motion.div>
               </div>
+
+              {/* ── The plate ───────────────────────────────────────────
+                  Where the commission is, when it was, how big — and the way
+                  into it. It sits on the title's baseline in the band that was
+                  empty between the name and the folio.
+
+                  ── It renders only what exists ─────────────────────────
+                  `location`, `area` and `year` are all optional on `Work` and
+                  optional in the Studio, so most of the time this is one or two
+                  facts rather than three, and for a project with none of them
+                  filled in it is the link alone. That is the point: a caption
+                  that reserved space for three facts would print a row of
+                  em-dashes for a studio that has not typed them yet, which is
+                  worse than not printing the row. It fills out on its own as
+                  the CMS does.
+
+                  ── The link is the affordance the ring did not have ────
+                  The cards point at /work/[slug] now, and nothing on the page
+                  said so — a photograph on a turntable does not read as a link,
+                  and the only cursor cue was on the front card. This says it in
+                  words. `pointer-events-auto` because the wrapper above turns
+                  them off for the whole overlay, which it has to: the overlay
+                  spans the stage and would otherwise swallow every click meant
+                  for a card. */}
+              {current && (
+                <div className="overflow-hidden pb-5 text-right">
+                  <motion.div
+                    key={`${current.id}-plate`}
+                    initial={{ y: "120%" }}
+                    animate={{ y: "0%" }}
+                    transition={{
+                      duration: 0.62,
+                      // A beat behind the name, so the pair reads as one move
+                      // with a direction rather than as two things arriving.
+                      delay: 0.07,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  >
+                    {/* The hairline. It is the section-heading gesture and
+                        the spine's, and repeating it here is the cheapest way
+                        to make a caption read as part of the same drawing
+                        rather than as a label that landed in the corner.
+                        `ml-auto` because the block is ranged right. */}
+                    <span
+                      aria-hidden
+                      className="mb-4 ml-auto block h-px w-14 bg-gold/70"
+                    />
+                    {facts.length > 0 && (
+                      <span className="mb-2 ml-auto block max-w-[34ch] font-label text-cream/55">
+                        {facts.join("  ·  ")}
+                      </span>
+                    )}
+                    <SmoothLink
+                      href={`/work/${current.id}`}
+                      className="pointer-events-auto inline-block font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
+                    >
+                      View project &rarr;
+                    </SmoothLink>
+                  </motion.div>
+                </div>
+              )}
             </PageContainer>
           </div>
         </div>

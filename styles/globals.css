@@ -618,7 +618,13 @@ html.lenis body {
                          whole turntable rather than wobbling each face. Driven
                          by the pointer, and by a fixed downward bias so the
                          floor is visible at rest
-         rotateY(rot)    the spin, from scroll */
+         rotateY(yaw)    the pointer's horizontal lean. The SPIN is not here:
+                         the ring loops, so each face is placed at whichever
+                         station is nearest the front rather than the whole
+                         turntable turning as one body — see the note on `SPAN`
+                         in components/sections/SelectedWorks.tsx. `--ring-rot`
+                         used to live in this slot and is gone; a rotation here
+                         would now be double-counted against `--face-a`. */
     /* ── The tilt vars are UNITLESS numbers, multiplied by 1deg here ─────
        GSAP interpolates a custom property by parsing its COMPUTED value, and a
        property that is only ever referenced through a `var(..., 0deg)` fallback
@@ -634,7 +640,7 @@ html.lenis body {
          footprint without the cards leaning back far enough to look like they
          are falling over. */
       rotateX(calc((var(--ring-tilt, 0) + 7) * 1deg))
-      rotateY(calc(var(--ring-rot, 0deg) + var(--ring-yaw, 0) * 1deg));
+      rotateY(calc(var(--ring-yaw, 0) * 1deg));
   }
 
   .ring-face {

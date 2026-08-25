@@ -45,6 +45,7 @@
  * TODO (future phases): wire submission to a route handler / form service.
  */
 import { useState, type FormEvent } from "react";
+import { FiArrowUpRight } from "react-icons/fi";
 
 import {
   Media,
@@ -267,8 +268,16 @@ export default function Contact() {
                 </label>
 
                 <div className="mt-2">
+                  {/* The same control as the masthead's, down to the arrow:
+                      one instruction, one object. See the note on the
+                      `outline` variant in components/ui/Button.tsx. */}
                   <Button type="submit" variant="outline">
                     Send Enquiry
+                    <FiArrowUpRight
+                      size={14}
+                      aria-hidden
+                      className="shrink-0 transition-transform duration-500 ease-editorial group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5"
+                    />
                   </Button>
                 </div>
               </form>

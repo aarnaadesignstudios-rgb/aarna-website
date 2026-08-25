@@ -20,11 +20,42 @@ type Variant = "solid" | "outline";
  * border around it; it should not be its own typeface.
  */
 const BASE =
-  "group/btn inline-flex items-center justify-center gap-3 rounded-full px-9 py-4 font-label transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-50";
+  "group/btn relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-full px-9 py-4 font-label transition-colors duration-500 ease-editorial focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-50";
 
 const VARIANTS: Record<Variant, string> = {
   solid: "bg-emerald text-cream hover:bg-gold hover:text-emerald",
-  outline: "border border-current text-current hover:bg-current hover:text-emerald",
+  /**
+   * ── `outline` was invisible on hover, and it was arithmetic ─────────────
+   *
+   * It read `border border-current text-current hover:bg-current
+   * hover:text-emerald`, and those last two cannot both be true. `bg-current`
+   * resolves `currentColor` against the element's OWN `color`, and the rule
+   * beside it sets that colour to emerald — so on hover the background became
+   * emerald at the same instant the label did. The only place this variant is
+   * used is the enquiry form, which sits on an emerald section: an emerald pill
+   * with emerald type on an emerald ground, i.e. the control vanished mid-
+   * transition and came back when the pointer left. That is the glitch.
+   *
+   * ── What it is now: the masthead's pill ─────────────────────────────────
+   *
+   * Rather than patch the colours, the variant takes the shape the site already
+   * uses for exactly this job — the "Enquire" control in the bar (see
+   * components/layout/Navbar.tsx). There is one CTA in the masthead and one at
+   * the foot of the form, and they are the same instruction; they should be the
+   * same object.
+   *
+   * The fill is a child element that scales up from the bottom edge (`::sweep`
+   * below) instead of a `background-color` transition, so the button RESOLVES
+   * into a solid rather than blinking into one — and because the fill is its
+   * own element, its colour is set independently of the label's and the two
+   * cannot collapse onto each other the way `currentColor` let them.
+   *
+   * `text-gold-soft` at rest and emerald on hover: the champagne cut reads on a
+   * deep ground where plain gold does not, and once the gold fill has swept up
+   * behind it the label has to go dark to stay legible.
+   */
+  outline:
+    "border border-gold/50 text-gold-soft hover:text-emerald",
 };
 
 interface CommonProps {
@@ -44,8 +75,27 @@ type ButtonAsLink = CommonProps & {
 
 type ButtonProps = ButtonAsButton | ButtonAsLink;
 
+/**
+ * The fill that sweeps up behind an `outline` button's label.
+ *
+ * `-z-10` with `overflow-hidden` on the button: it is clipped to the pill and
+ * sits under the text without either of them needing a stacking context of
+ * their own. `origin-bottom scale-y-0` → `scale-y-100` is a transform, so it
+ * composites — nothing here invalidates layout or paints the label again.
+ */
+function Sweep() {
+  return (
+    <span
+      aria-hidden
+      className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-gold transition-transform duration-500 ease-editorial group-hover/btn:scale-y-100"
+    />
+  );
+}
+
 export default function Button(props: ButtonProps) {
-  const classes = cn(BASE, VARIANTS[props.variant ?? "solid"], props.className);
+  const variant = props.variant ?? "solid";
+  const classes = cn(BASE, VARIANTS[variant], props.className);
+  const sweep = variant === "outline" ? <Sweep /> : null;
 
   if ("href" in props && props.href) {
     // <SmoothLink />, not a bare <a>: every button on this site that points
@@ -60,18 +110,26 @@ export default function Button(props: ButtonProps) {
         rel={props.rel}
         className={classes}
       >
+        {sweep}
         {props.children}
       </SmoothLink>
     );
   }
 
   // Strip the presentational props so only valid <button> attributes spread on.
-  const { children, className, variant, ...buttonProps } =
-    props as ButtonAsButton;
-  void className;
-  void variant;
+  // Renamed on the way out because `variant` is already resolved above; both
+  // are `void`-ed rather than left unused, which is what this file already did.
+  const {
+    children,
+    className: classNameProp,
+    variant: variantProp,
+    ...buttonProps
+  } = props as ButtonAsButton;
+  void classNameProp;
+  void variantProp;
   return (
     <button className={classes} {...buttonProps}>
+      {sweep}
       {children}
     </button>
   );

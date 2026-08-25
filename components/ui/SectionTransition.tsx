@@ -53,6 +53,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Mark } from "@/components/ui";
+import { cn } from "@/utils/cn";
 import {
   onSectionCard,
   type SectionCard,
@@ -90,13 +91,27 @@ const REVEAL_S = 0.62;
 const MEDIA_WAIT_CAP_MS = 520;
 
 /**
- * Resolve once the images inside `root` have loaded, or once the cap expires —
- * whichever comes first.
+ * Resolve once the images inside `root` that a visitor is about to LOOK AT have
+ * loaded, or once `capMs` expires — whichever comes first.
  *
- * Only the first handful are waited on. A pinned gallery can hold nine
- * photographs, and the ones far along a horizontal track are not on screen when
- * the card lifts; waiting for those would spend the whole budget on imagery
- * nobody is looking at yet.
+ * ── Which images count ───────────────────────────────────────────────────
+ *
+ * This used to take the first four pending images in DOM order, which is a
+ * proxy for "the ones on screen" and a bad one. Everything below the fold is
+ * lazy-loaded, so a lazy image that is nowhere near the viewport reports
+ * `complete: false` forever — it has not been asked to load and will not be
+ * until it is scrolled to. Take four of those and the wait cannot finish early;
+ * it burns the entire budget every single time and then resolves on the cap.
+ *
+ * That was survivable at 520ms and is not at ROUTE_MEDIA_WAIT_CAP_MS, which is
+ * the change that made this worth fixing: a bigger budget is only safe if the
+ * wait can actually end. So the filter is geometric now — an image is waited on
+ * when its box intersects the viewport, give or take a fifth of a screen either
+ * side, which is the same neighbourhood the browser itself uses to decide to
+ * start fetching a lazy image.
+ *
+ * Six of them at most. Past that they are stacked deep enough down the page
+ * that the reveal has finished before the eye reaches them.
  */
 /**
  * How long the card will wait for a route change to actually commit.
@@ -107,8 +122,40 @@ const MEDIA_WAIT_CAP_MS = 520;
  * the card indefinitely would turn a transition into a hang. Past it the reveal
  * happens anyway and the page arrives underneath, which is no worse than the
  * plain route change this replaced.
+ *
+ * ── Raised from 1400ms, because a project page is not a section ───────────
+ *
+ * 1400 was measured against /faq and /photography, both of which are static
+ * and prerendered and commit almost immediately. A commission's page is a
+ * different shape: it is a dynamic route whose content comes from the CMS, its
+ * gallery is a column of large photographs, and it was reliably losing the race
+ * — the cap expired, the card lifted, and the visitor watched the page assemble
+ * itself in the open. That is the lag reported here.
+ *
+ * The number is a HANG guard, not a pace: nothing waits for it when the page is
+ * ready sooner, so raising it costs a fast navigation nothing at all and only
+ * changes what happens on a slow one. Six seconds is long enough to cover a
+ * cold dynamic route on a poor connection and short enough that a genuinely
+ * broken navigation still resolves rather than trapping the visitor behind a
+ * panel.
  */
-const ROUTE_WAIT_CAP_MS = 1400;
+const ROUTE_WAIT_CAP_MS = 6000;
+
+/**
+ * The media budget for a ROUTE change, as opposed to an in-page jump.
+ *
+ * `MEDIA_WAIT_CAP_MS` above is deliberately short because a jump lands on a
+ * section of a page that is already loaded and mostly decoded — half a second
+ * is all there is to buy. A route change has a whole document's worth of
+ * above-the-fold imagery arriving at once, and stopping at 520ms there means
+ * revealing a page of empty placeholders, which is precisely what the card
+ * exists to prevent.
+ *
+ * Safe to be this large only because `whenMediaSettles` waits on images that
+ * are ON SCREEN rather than the first few in the DOM — see the note there. A
+ * page whose visible imagery has arrived does not spend any of this.
+ */
+const ROUTE_MEDIA_WAIT_CAP_MS = 2600;
 
 /** Resolve when `predicate` passes, or when `capMs` runs out. */
 function waitFor(predicate: () => boolean, capMs: number): Promise<void> {
@@ -123,24 +170,49 @@ function waitFor(predicate: () => boolean, capMs: number): Promise<void> {
   });
 }
 
-function whenMediaSettles(root: HTMLElement): Promise<void> {
-  const pending = Array.from(root.querySelectorAll("img")).filter(
-    (img) => !img.complete
-  );
+function whenMediaSettles(root: HTMLElement, capMs: number): Promise<void> {
+  const margin = window.innerHeight * 0.2;
+  const pending = Array.from(root.querySelectorAll("img"))
+    .filter((img) => {
+      if (img.complete) return false;
+      const box = img.getBoundingClientRect();
+      // A zero-height box is an image that has not been laid out at all; it
+      // cannot be judged on position, so it is left out rather than guessed at.
+      if (box.height === 0) return false;
+      return box.bottom > -margin && box.top < window.innerHeight + margin;
+    })
+    .slice(0, 6);
+
   if (pending.length === 0) return Promise.resolve();
 
   return new Promise<void>((resolve) => {
-    let outstanding = Math.min(pending.length, 4);
-    const cap = window.setTimeout(resolve, MEDIA_WAIT_CAP_MS);
+    let outstanding = pending.length;
+    const cap = window.setTimeout(resolve, capMs);
     const settle = () => {
       if (--outstanding > 0) return;
       clearTimeout(cap);
       resolve();
     };
-    for (const img of pending.slice(0, 4)) {
+    for (const img of pending) {
       img.addEventListener("load", settle, { once: true });
       img.addEventListener("error", settle, { once: true });
     }
+  });
+}
+
+/**
+ * Resolve once the browser has actually PAINTED whatever React just committed.
+ *
+ * `router.push` resolving and the pathname changing tell you the new route is
+ * mounted, not that it is on screen: the commit still has to be styled, laid
+ * out and painted, and on a heavy page that is several frames. Revealing inside
+ * that window shows the visitor the first, unstyled frame of their destination.
+ *
+ * Two frames, because one only gets you to the end of the current one.
+ */
+function afterPaint(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
 }
 
@@ -206,7 +278,33 @@ export default function SectionTransition() {
       // card lifts on the page we are leaving and the swap happens in the open.
       const [path = "/"] = card.route.split("#");
       router.push(card.route);
-      await waitFor(() => livePathname.current === path, ROUTE_WAIT_CAP_MS);
+      /* ── Both clocks, because one of them runs early ──────────────────
+         This waited on `usePathname()` alone, and measured against a project's
+         page that turned out to be the wrong clock: the router reports the new
+         pathname when the navigation is committed to its own tree, which on a
+         dynamic route is well before the browser's history entry is updated and
+         the page is on screen. Sampled on a commission — the card lifted at
+         ~1.5s with `location.pathname` still `/`, and the real navigation
+         landed at ~3.4s. The visitor watched the page arrive in the open, which
+         is the lag reported here, and raising the cap alone did nothing about
+         it because the wait was resolving early rather than timing out.
+
+         `window.location` is the later of the two and the one that means the
+         document actually changed, so requiring BOTH is strictly more truthful
+         than either. Neither is a paint — `afterPaint` below is. */
+      await waitFor(
+        () =>
+          livePathname.current === path && window.location.pathname === path,
+        ROUTE_WAIT_CAP_MS
+      );
+      if (requestId.current !== id) return;
+
+      // The pathname is the router's answer, not the browser's. Give the commit
+      // its frames before anything below measures the new page — the media wait
+      // reads `getBoundingClientRect()`, and boxes that have not been laid out
+      // yet report zero and get skipped, which would quietly turn the whole
+      // wait into a no-op on exactly the heavy pages that need it most.
+      await afterPaint();
       if (requestId.current !== id) return;
 
       if (card.hash) {
@@ -241,7 +339,12 @@ export default function SectionTransition() {
     const scope = card.hash
       ? document.getElementById(card.hash.slice(1))
       : document.body;
-    if (scope) await whenMediaSettles(scope);
+    if (scope) {
+      await whenMediaSettles(
+        scope,
+        card.route ? ROUTE_MEDIA_WAIT_CAP_MS : MEDIA_WAIT_CAP_MS
+      );
+    }
     if (requestId.current !== id) return;
 
     holdTimer.current = window.setTimeout(() => {
@@ -310,7 +413,24 @@ export default function SectionTransition() {
             </span>
 
             {card.label && (
-              <span className="font-serif text-[2.6rem] leading-[1.05] tracking-tight text-emerald sm:text-6xl lg:text-7xl">
+              /* ── The wordmark is set in the wordmark's face ──────────────
+                 Every other destination this card names is a chapter, and
+                 chapter titles are the serif. The studio's own name is not a
+                 chapter: it is set in the display face in the masthead and on
+                 the intro screen, and showing it in the serif here made the
+                 one string a visitor knows best look like it came off another
+                 site. `font-semibold` and the tracking are the masthead's, so
+                 the name a visitor clicked and the name they land on are the
+                 same drawing at two sizes. See `wordmark` in
+                 lib/sectionNavigation.ts. */
+              <span
+                className={cn(
+                  "leading-[1.05] text-emerald",
+                  card.wordmark
+                    ? "font-display text-[2.2rem] font-semibold tracking-[0.015em] sm:text-5xl lg:text-6xl"
+                    : "font-serif text-[2.6rem] tracking-tight sm:text-6xl lg:text-7xl"
+                )}
+              >
                 {card.label}
               </span>
             )}

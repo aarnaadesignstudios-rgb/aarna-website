@@ -43,8 +43,26 @@ export interface Service {
   /** Revealed when the title is clicked; not shown at rest. */
   body: string;
   image: string;
-  /** Set only where the discipline opens a page of its own. */
-  href?: string;
+  /**
+   * An optional link at the foot of the body, revealed with it.
+   *
+   * ── This replaced `href`, which made the whole card a link ──────────────
+   *
+   * Architectural Photography used to carry `href: "/photography"`, and the
+   * card read that as "this discipline is a page": the photograph and the name
+   * became one big anchor, the `+` became an arrow, and the body was printed at
+   * rest instead of on a click, because there was no click to wait for.
+   *
+   * One of five cards behaving differently from the other four is a difference
+   * a visitor has to notice and then work out, and it cost the row its rhythm:
+   * that card was the only one whose height was set by permanent copy, which is
+   * what forced the other four to reserve the same space and sit half empty.
+   *
+   * A link in the body says the same thing without breaking the set. Every card
+   * is now the same object — image, name, `+` — and the destination is offered
+   * where the reader is already reading.
+   */
+  link?: { label: string; href: string };
 }
 
 /** A featured architecture project. */
@@ -101,6 +119,51 @@ export interface Work {
   objectPosition?: string;
   /** CSS width for the panel — intentionally uneven for editorial rhythm. */
   width: string;
+}
+
+/**
+ * One photograph on a project's own page.
+ *
+ * `wide` is the studio's call, made per picture in the Studio, because which
+ * shot deserves the full measure is an editorial decision about the photograph
+ * and not something a rule about position can get right.
+ */
+export interface WorkPhoto {
+  id: string;
+  src: string;
+  alt: string;
+  caption?: string;
+  objectPosition?: string;
+  wide?: boolean;
+}
+
+/**
+ * A project, plus everything that only its own page needs.
+ *
+ * Separate from `Work` on purpose. The ring asks for all nine projects at once
+ * and needs a name, a category and one photograph from each; pulling every
+ * write-up and every gallery into that query to render a heading would be a
+ * large amount of content fetched to be thrown away. This is read one at a
+ * time, by slug.
+ *
+ * `body` is Portable Text — Sanity's block format — and is typed loosely here
+ * so `types/` does not have to depend on the CMS. It is rendered by
+ * components/ui/ProjectBody.tsx, which is the only thing that inspects it.
+ */
+export interface WorkDetail extends Work {
+  body?: unknown[];
+  gallery?: WorkPhoto[];
+  /** The next and previous commissions, for the footer's continue-reading pair. */
+  siblings?: { prev?: WorkLink; next?: WorkLink };
+}
+
+/** Just enough of a project to link to it. */
+export interface WorkLink {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+  objectPosition?: string;
 }
 
 /** A single frame in the hero's cross-dissolving image cycle. */

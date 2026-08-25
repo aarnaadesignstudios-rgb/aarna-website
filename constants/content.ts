@@ -33,7 +33,17 @@ import type {
 
 /** Primary in-page navigation. Order defines both navbar and scroll flow. */
 export const NAV_LINKS: NavLink[] = [
-  { label: "About", href: "#practice" },
+  /* ── "About" is a page now, not the manifesto ──────────────────────
+     This pointed at `#practice`, the studio's statement of intent — which is
+     about the WORK. A visitor clicking "About" is asking who they would be
+     hiring, and the answer to that (<Founder />: portrait, credentials, the
+     philosophy in her own words) was built and then left rendering nowhere
+     when the section came off the home page. It has a page now; see
+     app/about/page.tsx.
+
+     `#practice` is untouched and still opens with the home page. It has simply
+     stopped having to stand in for a biography. */
+  { label: "About", href: "/about" },
   // "Why Us" is gone with the section it pointed at. Leaving it would give the
   // masthead, the mobile index and the Contact colophon a link that scrolls
   // nowhere — which is the bug the "Projects" link had before the client
@@ -149,8 +159,11 @@ export const STATS: Stat[] = [
  * The studio's five disciplines.
  *
  * `body` is revealed when the discipline's NAME is clicked (client request);
- * it is not shown at rest. `href` is set only where the discipline opens a
- * page of its own — currently just Architectural Photography.
+ * it is not shown at rest.
+ *
+ * `link` is an optional line at the foot of a body, revealed with it. It is
+ * where a discipline that has somewhere to send you sends you — see the note on
+ * the field in types/index.ts for why this is not `href` on the card any more.
  */
 export const SERVICES: Service[] = [
   {
@@ -192,7 +205,14 @@ export const SERVICES: Service[] = [
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     image:
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
-    href: "/photography",
+    /* ── The href to replace ────────────────────────────────────────────
+       This is the site's own photography portfolio, and it is the placeholder:
+       swap the `href` for the Postcard of Life address when you have it. It is
+       deliberately not left empty, because /photography is reachable from
+       NOWHERE else on the site — this card was its only entrance — and an empty
+       string here would orphan the whole page. The label is worth changing with
+       it if the destination stops being ours. */
+    link: { label: "See the photography", href: "/photography" },
   },
 ];
 
