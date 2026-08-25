@@ -74,7 +74,7 @@
  * plain vertical stack below `lg` (a 3D ring on a phone is a lot of compositing
  * for a 380px-wide arc).
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import { gsap, ScrollTrigger } from "@/lib/gsap";
@@ -114,6 +114,52 @@ import { cn } from "@/utils/cn";
  */
 const FADE_FROM = 62;
 const CUT_AT = 94;
+
+/**
+ * Below this many projects, the ring carries two copies of the list.
+ *
+ * ── The bug ───────────────────────────────────────────────────────
+ *
+ * The face spacing was `360 / count` — the projects divided a full circle
+ * between them. That is the right way to build a cylinder and the wrong way to
+ * build this one, because the count is not a constant any more. It comes from
+ * the CMS, and every other number in this file was tuned against NINE of them:
+ * nine faces divide 360° into the 40° steps that put five cards inside the
+ * visible window at once.
+ *
+ * With FOUR projects published, the same formula gives NINETY degrees. Measured
+ * on the live dataset, and it is not a slight degradation:
+ *
+ *   · a neighbour at 90° is edge-on to the camera, so all that was ever on
+ *     screen was the front card and two violently raked slivers
+ *   · at most two faces fall inside the 94° cut, against five at 40°, so two
+ *     thirds of the arc was simply absent
+ *   · between two projects there was no square-on card at all — two steep
+ *     trapezoids and a hole down the middle
+ *
+ * ── Why capping the step is not enough ──────────────────────────
+ *
+ * The obvious fix is `min(360 / count, 40)`, and it was tried. It corrects the
+ * rake, and it leaves the ring OPEN: four faces at 40° occupy an arc of 120°
+ * and the remaining 240° is nothing. In the middle of the scroll that is
+ * invisible, and at the two ENDS it is the whole problem — with the first
+ * project square-on there is nothing at all to its left, so half the frame is
+ * bare. Measured at 1600x900: everything on screen sat right of centre.
+ *
+ * ── Repeating the list closes it ────────────────────────────────
+ *
+ * Two copies of four projects is eight faces at 45°, which is a real cylinder
+ * again: full, symmetric, and wrapping — the card to the left of the first
+ * project is the last project, which is what a ring is supposed to do.
+ *
+ * TWO copies, never more, and the reason is exact. A project's copies sit
+ * `360 / reps` degrees apart, so at two copies they are 180° apart — directly
+ * front and back. The drawn window is ±94°, so a pair can only ever surface as
+ * two edge-on slivers at ±90°, at 88% haze, symmetrically. At three copies
+ * they would be 120° apart and the same photograph would appear twice, large,
+ * on both flanks.
+ */
+const REPEAT_BELOW = 8;
 
 /**
  * Only the face near the front is a link.
@@ -233,17 +279,40 @@ export default function SelectedWorks({
 }) {
   const count = works.length;
   /**
-   * Degrees between neighbouring faces.
+   * The faces actually drawn: the projects, repeated if there are too few of
+   * them to close the ring. See REPEAT_BELOW.
+   *
+   * Memoised on the list itself rather than rebuilt per render — this array is
+   * what `.map()` produces the DOM from, so a new array identity every render
+   * would be a new `key` set and a full remount of every card on the ring,
+   * including its photograph, sixty times a second while scrolling.
+   */
+  const faces = useMemo(() => {
+    if (count === 0) return works;
+    const reps = count >= 2 && count < REPEAT_BELOW ? 2 : 1;
+    if (reps === 1) return works;
+    // Built by concatenation rather than `works[i % count]`: the index lookup
+    // is `Work | undefined` under the project's strict index checks, and the
+    // only way to hand that to the renderer is a cast that asserts something
+    // the compiler could otherwise have proved.
+    const out: Work[] = [];
+    for (let r = 0; r < reps; r += 1) out.push(...works);
+    return out;
+  }, [works, count]);
+
+  /**
+   * Degrees between neighbouring FACES — which is not the same as between
+   * projects once the list is repeated.
    *
    * Guarded against an empty list: `360 / 0` is Infinity, and the very next
    * thing that happens to it is `-t * step` with t = 0 — which is 0 × Infinity,
    * or NaN, written straight into `--ring-rot`. A transform with NaN in it is
-   * invalid, so the browser drops the whole declaration and the ring renders
-   * as nine coincident cards. `getWorks()` cannot return an empty array today,
-   * but a component that turns into a pile of cards because a caller passed
-   * `[]` should not be the way we find that out.
+   * invalid, so the browser drops the whole declaration and the ring renders as
+   * coincident cards. `getWorks()` cannot return an empty array today, but a
+   * component that turns into a pile of cards because a caller passed `[]`
+   * should not be the way we find that out.
    */
-  const step = count > 0 ? 360 / count : 0;
+  const step = faces.length > 0 ? 360 / faces.length : 0;
 
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
@@ -943,52 +1012,24 @@ export default function SelectedWorks({
             } as React.CSSProperties
           }
         >
-          {/* ── The ghost numeral ────────────────────────────────────────
-              The active project's index, outlined, hanging off the right edge.
+          {/* ── The ghost numeral is gone ──────────────────────────────
+              An outlined project index at 26vw hung off the right edge here,
+              bleeding a little of itself off the page so it read as a printed
+              folio. It is removed at the studio's request: the note was that it
+              was being cut off by the screen.
 
-              Flat type outside the 3D context (the same reason the title is —
-              see below), sized in `vw`. It is doing composition, not
-              information: the counter in the header already says "05 / 09".
-              What it fixes is that the frame had two dead corners.
+              That is worth recording rather than just deleting, because the
+              cropping was deliberate and it still failed. A number cropped by
+              the page edge reads as a folio only while it is legible AS a
+              number, and at that size the margin between "editorial" and
+              "clipped" turned out to be too fine to hold across viewport
+              widths — narrow the window and the bleed eats a whole digit.
 
-              ── It was centred, and that was useless ──────────────────
-              Measured: at 26vw the glyph box is 288 × 374 and lands at
-              x 576–864 — which is exactly where the front card and its left
-              neighbour are. The whole numeral was occluded except for one
-              stroke of it showing through a gap, where it read as a stray arc
-              across the ground rather than as a numeral. Composition elements
-              have to go where the composition is EMPTY, and on a ring that
-              fills the middle, that is the outer corners.
-
-              So it is ranged right and bleeds off the edge. Bleeding is
-              deliberate — a number cropped by the page edge reads as a printed
-              folio, and one floating clear of it reads as a graphic that did
-              not fit.
-
-              ── How MUCH of it bleeds, though, is a legibility limit ─────
-              It was a third of itself, off a glyph box set at 30vw, and the
-              two together took it past the point where it is a numeral at all:
-              measured on the render, the second digit was cropped so hard that
-              the pair read as a circle followed by an unrelated curve. A folio
-              has to be READABLE as a number or the reference is lost and what
-              is left is decoration — the exact charge the studio levelled at
-              the drawing grid this section's ornament replaced.
-
-              26vw with an eighth bleeding is the same gesture inside the
-              limit: both digits are on the page, the last stroke runs off it.
-              The numeral sits BEHIND the ring — it is declared before
-              `.ring-3d`, so the cards occlude it where they overlap, which is
-              what keeps a 400px glyph from competing with the photographs
-              while still filling the corner they leave empty.
-
-              `-webkit-text-stroke` with a transparent fill: an outline, because
-              a solid numeral this size competes with the photographs. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute top-[3%] right-0 translate-x-[12%] font-serif text-[26vw] leading-[0.8] font-medium tracking-tighter text-transparent select-none [-webkit-text-stroke:2px_color-mix(in_srgb,var(--color-gold)_30%,transparent)]"
-          >
-            {String(active + 1).padStart(2, "0")}
-          </span>
+              What it was doing — filling the upper right of the frame — is now
+              done by things that cannot be cut off: the cyclorama's vignette
+              darkens that corner, and <SheetTexture placement="top" /> already
+              draws a gold vine into it. Do not reintroduce a large glyph here
+              without solving the crop first. */}
 
           <div
             ref={ringRef}
@@ -1009,9 +1050,17 @@ export default function SelectedWorks({
                 where they touch it. */}
             <div aria-hidden className="ring-floor" />
 
-            {works.map((work, i) => (
+            {faces.map((work, i) => {
+              /* Which project this face carries. With one copy of the list
+                 this is just `i`; with two it is what makes face 5 of 8 show
+                 project 2 again, half a turn away from face 1. */
+              const p = i % count;
+
+              return (
               <div
-                key={work.id}
+                /* The id alone is not unique once the list repeats — two faces
+                   would share a key, and React would keep only one of them. */
+                key={`${work.id}-${i}`}
                 ref={(el) => {
                   facesRef.current[i] = el;
                 }}
@@ -1019,12 +1068,15 @@ export default function SelectedWorks({
                 style={
                   {
                     "--face-a": `${i * step}deg`,
+                    /* Indexed by FACE, not by project, so the two copies of a
+                       project sit at different heights and the ring never
+                       reads as mirrored about its own axis. */
                     "--face-y": `${RISE[i % RISE.length] ?? 0}vh`,
                   } as React.CSSProperties
                 }
               >
-                {photo(i)}
-                {reflection(i)}
+                {photo(p)}
+                {reflection(p)}
                 {/* LAST, so it darkens the top of the reflection rather than
                     sitting behind it — the reflection is at full strength
                     exactly where the shadow needs to be darkest. See
@@ -1032,7 +1084,8 @@ export default function SelectedWorks({
                     the card's plane instead of on the floor. */}
                 <div aria-hidden className="ring-contact" />
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* ── The project's name ─────────────────────────────────────────
