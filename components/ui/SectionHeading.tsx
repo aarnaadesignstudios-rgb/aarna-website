@@ -62,10 +62,29 @@ interface SectionHeadingProps {
    * source order would pick the winner. So the tone's colour is only applied
    * when this is absent.
    *
-   * Only use it on a dark surface. Gold display type on cream is around 2:1
-   * contrast — illegible, and the reason gold is not the default title ink.
+   * Exists for the Contact heading, which the client marked to be set in gold.
+   * It is deliberately an opt-in on one caller rather than a new `tone`.
+   *
+   * Only use it on a dark surface. Gold display type on paper is 2.18:1 —
+   * illegible as a title, and the reason gold is not the default title ink.
    */
   titleClassName?: string;
+  /**
+   * Override the eyebrow's ink.
+   *
+   * Same contract as `titleClassName` above, and for the same reason: `cn()` is
+   * a plain joiner with no conflict resolution, so a colour passed here and the
+   * tone's own colour would BOTH land on the element and CSS source order would
+   * decide the winner. The tone's colour is applied only when this is absent.
+   *
+   * Exists for <Practice />, which the studio asked to set in the logo gold to
+   * match the flipping word beneath it. Note what that costs on a light ground:
+   * the tone's default here is `gold-ink` (29% lightness, 5.04:1 on paper)
+   * precisely because plain `gold` measures 2.19:1 — and an eyebrow is 13–16px
+   * at 0.3em tracking, which is the least forgiving type on the page for it.
+   * Reach for this knowingly.
+   */
+  eyebrowClassName?: string;
 }
 
 /**
@@ -118,6 +137,7 @@ export default function SectionHeading({
   align = "left",
   tone = "light",
   titleClassName,
+  eyebrowClassName,
 }: SectionHeadingProps) {
   const dark = tone === "dark";
 
@@ -208,7 +228,7 @@ export default function SectionHeading({
                   variants={chapterItem}
                   className={cn(
                     "font-label block text-[0.82rem] leading-none tracking-[0.3em] md:text-[0.95rem] lg:text-[1rem]",
-                    dark ? "text-gold" : "text-gold-ink"
+                    eyebrowClassName ?? (dark ? "text-gold" : "text-gold-ink")
                   )}
                 >
                   {eyebrow}
@@ -233,9 +253,23 @@ export default function SectionHeading({
           {meta && (
             <motion.span
               variants={chapterItem}
+              /* ── Quiet, not faint ─────────────────────────────────────────
+                 These were `cream/50` and `charcoal/45`, which measure 3.84:1
+                 and 2.80:1 on the two grounds this slot ever sits on — both
+                 under 4.5:1, at 12px, which is the least forgiving type on the
+                 page. The alphas read as "make it recede" rather than as a
+                 chosen value, and nothing else in the system is set at them.
+
+                 60% and 65% measure 4.84:1 and 5.12:1. The slot still reads as
+                 the quietest thing in the header — it is 12px uppercase in a
+                 corner — it is simply legible now, which matters more since the
+                 counter went responsive: below `lg` this label is the ONLY
+                 indication of how many projects or disciplines there are (see
+                 the notes in <SelectedWorks /> and <Services />), where on
+                 desktop it was a supplement to the ring's own index row. */
               className={cn(
                 "font-label",
-                dark ? "text-cream/50" : "text-charcoal/45"
+                dark ? "text-cream/60" : "text-charcoal/65"
               )}
             >
               {meta}
@@ -252,8 +286,30 @@ export default function SectionHeading({
             // No weight: every heading on the site is 400, set once in the base
             // layer. See the type-system note in styles/globals.css.
             "font-serif text-4xl leading-[1.2] tracking-tight md:text-5xl lg:text-6xl",
-            // The tone's ink only applies when the caller has not overridden
-            // it — see the note on `titleClassName`.
+            /* ── The ink follows the ground, and it matches <Practice /> ──
+               Brand green over paper — the same emerald as <Practice />'s
+               statement, which is the heading these were asked to agree with —
+               and cream over the emerald bands.
+
+               Cream rather than emerald on the dark side is not a choice: the
+               bands ARE `--color-emerald`, so an emerald title on one is the
+               same colour as the ground it is printed on. "How we work" and the
+               project pages' titles are the ones that would disappear.
+
+               These were briefly all `text-gold`, to match the masthead
+               wordmark. It is worth recording why that was reverted rather than
+               tuned, because the numbers are the whole argument: gold measures
+               5.17:1 on emerald and 2.18:1 on paper, and seven of these titles
+               are on paper. Display type is the most forgiving place on a page
+               to spend contrast and 2.18:1 is still under the 3:1 that large
+               text is held to — they read as a brass wash rather than as ink.
+
+               The gold has not gone anywhere; it is on the eyebrow above each
+               of these, on the flipping word, on the numerals and on the
+               wordmark. Titles are the one place it was too thin to hold.
+
+               `titleClassName` still wins where a caller sets it — <Contact />
+               passes gold there, which the client marked specifically. */
             titleClassName ?? (dark ? "text-cream" : "text-emerald")
           )}
         />

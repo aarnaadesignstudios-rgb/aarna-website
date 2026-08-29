@@ -62,9 +62,11 @@ export default async function Home() {
       <Spine />
 
       {/* ── Six chapters, and they are numbered 01–06 ─────────────────
-          <Founder /> and <WhyUs /> are commented out at the studio's request.
-          Both components are kept intact — nothing is deleted, so putting
-          either back is a one-line change.
+          Two chapters were dropped from this page at the studio's request.
+          <Founder /> survives — it carries /about now — and <WhyUs /> does not:
+          with no page rendering it, it was dead source, and it went in the
+          clean-out along with its <BentoGrid />. Both are in git history if the
+          studio ever wants that chapter back.
 
           The RENUMBERING is not optional bookkeeping. With those two gone the
           remaining sheets ran 01, 02, 03, 04, 07, 08, and a document that skips
@@ -88,8 +90,7 @@ export default async function Home() {
         <SelectedWorks works={works} />
         <Testimonials />
         <Process />
-        {/* <Founder /> — commented out at the studio's request. */}
-        {/* <WhyUs />  — commented out at the studio's request. */}
+        {/* <Founder /> lived here and is on /about now. */}
         <Services />
         <Contact />
       </main>

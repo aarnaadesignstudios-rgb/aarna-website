@@ -74,8 +74,6 @@ interface MediaProps {
    * portrait viewport can lose its subject. Defaults to centred.
    */
   objectPosition?: string;
-  /** Extra data attribute (e.g. data-image) for animation hooks to target. */
-  "data-image"?: boolean;
 }
 
 export default function Media({
@@ -86,7 +84,6 @@ export default function Media({
   eager = false,
   sizes = "100vw",
   objectPosition,
-  ...rest
 }: MediaProps) {
   return (
     <Image
@@ -102,8 +99,6 @@ export default function Media({
       className={cn("object-cover", className)}
       // Merged last by next/image, so this wins over its own fill styles.
       style={objectPosition ? { objectPosition } : undefined}
-      // Pass through data-image for useImageReveal to target the media element.
-      {...(rest["data-image"] ? { "data-image": "" } : {})}
     />
   );
 }

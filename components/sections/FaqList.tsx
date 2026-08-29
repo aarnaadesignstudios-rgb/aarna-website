@@ -75,7 +75,13 @@ export default function FaqList({ items, className }: FaqListProps) {
               aria-controls={`faq-${faq.id}`}
               className="group flex w-full cursor-pointer items-baseline gap-5 py-7 text-left md:gap-8"
             >
-              <span className="shrink-0 font-label text-gold">
+              {/* `gold-ink`, not `gold`. The token note in styles/globals.css
+                  is explicit: plain `gold` is sampled from the logo and is for
+                  rules, marks and glows, and `gold-ink` is the cut that stays
+                  legible as TYPE on a light ground. This numeral measured
+                  2.18:1 on paper against gold-ink's 5.04:1 — and it is a 12px
+                  index, which is the least forgiving type on the page for it. */}
+              <span className="shrink-0 font-label text-gold-ink">
                 {String(i + 1).padStart(2, "0")}
               </span>
 

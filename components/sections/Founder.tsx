@@ -65,7 +65,9 @@ export default function Founder() {
                     it. It starts below the two-thirds line and stops at 62%. */}
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_66%,color-mix(in_srgb,var(--color-sage)_62%,transparent)_100%)]" />
               </div>
-              <figcaption className="mt-4 flex items-center justify-between gap-4 font-label text-charcoal/50">
+              {/* 65%, matching the meta slot in <SectionHeading />. At 50 this
+                  12px credential line measured 3.23:1 on sage. */}
+              <figcaption className="mt-4 flex items-center justify-between gap-4 font-label text-charcoal/65">
                 <span>{SITE.name}, Gurugram</span>
                 <span>Est. {SITE.founded}</span>
               </figcaption>

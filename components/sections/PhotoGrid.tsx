@@ -22,6 +22,19 @@
  *  · Scroll is locked while it is open, and the lock is released on unmount as
  *    well as on close — otherwise a fast Escape during the exit transition
  *    leaves the page permanently unscrollable.
+ *
+ *    The lock is TWO things, and for a while it was only one of them.
+ *    `body { overflow: hidden }` stops the browser's own scrolling, and on this
+ *    site the browser is not what scrolls: Lenis is, driving <html> from wheel
+ *    and touch events that a hidden <body> does not intercept. So the overlay
+ *    opened, and the page carried on moving underneath it — measured at 646px
+ *    of drift on a phone, which meant closing a photograph dropped you
+ *    somewhere you never chose to be.
+ *
+ *    `setSmoothScrollPaused` is the same freeze the mobile index uses (see
+ *    lib/SmoothScrollProvider.tsx). Both halves are kept: Lenis owns wheel and
+ *    touch, and the body rule still covers anything that reaches the native
+ *    scroller directly — a focus jump, a find-in-page.
  *  · The keydown listener is bound only while open, so the page is not
  *    handling arrow keys the rest of the time (this page also sits next to
  *    sections that use ← / → themselves).
@@ -34,6 +47,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FiX } from "react-icons/fi";
 
 import { Media, Reveal } from "@/components/ui";
+import { setSmoothScrollPaused } from "@/lib/SmoothScrollProvider";
 import { cn } from "@/utils/cn";
 import type { PhotoFrame } from "@/types";
 
@@ -68,13 +82,17 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
 
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Lenis is the actual scroller on this site; the body rule alone does not
+    // reach it. See the note at the top of the file.
+    setSmoothScrollPaused(true);
     window.addEventListener("keydown", onKey);
     closeRef.current?.focus();
 
     return () => {
       window.removeEventListener("keydown", onKey);
-      // Restored on unmount as well as on close — see the note above.
+      // Both released on unmount as well as on close — see the note above.
       document.body.style.overflow = previous;
+      setSmoothScrollPaused(false);
     };
   }, [openIndex, close, step]);
 
@@ -161,7 +179,9 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                 type="button"
                 aria-label="Close"
                 onClick={close}
-                className="cursor-pointer text-charcoal/60 transition-colors duration-300 hover:text-gold-ink"
+                /* `-m-2` so the padded target grows inward and the cross stays
+                   optically on the same corner it was on. */
+                className="-m-2 cursor-pointer p-2 text-charcoal/60 transition-colors duration-300 hover:text-gold-ink"
               >
                 <FiX size={24} />
               </button>
@@ -189,14 +209,14 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
               </motion.div>
             </div>
 
-            <div className="flex shrink-0 items-center justify-center gap-8 pb-8">
+            <div className="flex shrink-0 items-center justify-center gap-2 pb-8">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   step(-1);
                 }}
-                className="cursor-pointer font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
+                className="cursor-pointer px-3 py-2.5 font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
               >
                 ← Previous
               </button>
@@ -206,7 +226,7 @@ export default function PhotoGrid({ frames, className }: PhotoGridProps) {
                   e.stopPropagation();
                   step(1);
                 }}
-                className="cursor-pointer font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
+                className="cursor-pointer px-3 py-2.5 font-label text-charcoal/55 transition-colors duration-300 hover:text-gold-ink"
               >
                 Next →
               </button>

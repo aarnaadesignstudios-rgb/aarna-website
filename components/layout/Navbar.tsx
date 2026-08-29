@@ -677,14 +677,28 @@ export default function Navbar() {
               the single line the brief asked for at every width — it scales
               down on a phone rather than wrapping or disappearing.
 
-              Champagne over a dark band; emerald over a light one, because
-              gold display type on cream is about 2:1 contrast, which is the
-              reason gold is not a text colour on this site. */}
+              ── The dark-band ink is the LOGO gold now ────────────────
+              This was `gold-soft`, the champagne cut — the same hue and
+              saturation lifted from 49% to 64% lightness. It is now `gold`, the
+              value sampled straight from the logo and the one the "How we work"
+              numerals are set in, so the studio's name and the numbered chapter
+              headings read as the same metal rather than as two.
+
+              It costs contrast and stays comfortable: measured on the emerald
+              ground, champagne is 6.72:1 and this is 5.15:1 — still past 4.5:1
+              for type of any size, and this runs at 1.4rem semibold.
+
+              Emerald over a light band is unchanged, and deliberately. Plain
+              gold on paper measures 2.19:1, which is the reason gold is not a
+              text colour on this site at all; the wordmark over a paper section
+              has to be the brand green. (`gold-ink`, the 29%-lightness cut, is
+              the legible gold on light — but a masthead that changed metal as
+              well as value between bands would read as two different marks.) */}
           <span
             data-brand-name
             className={cn(
               "block font-display text-[0.72rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap transition-all duration-700 ease-editorial group-hover:opacity-80 min-[360px]:text-[0.82rem] min-[400px]:text-[0.92rem] sm:text-[1.15rem] lg:text-[1.4rem]",
-              onDark ? "text-gold-soft" : "text-emerald",
+              onDark ? "text-gold" : "text-emerald",
             )}
           >
             {SITE.name}

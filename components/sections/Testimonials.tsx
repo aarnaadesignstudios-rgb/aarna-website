@@ -61,12 +61,19 @@ export default function Testimonials() {
       <PageContainer className="relative z-10">
         <SectionHeading
           eyebrow="Testimonials"
+          /* The logo gold, matching <Practice />'s eyebrow. See the note on
+             `eyebrowClassName` in components/ui/SectionHeading.tsx for what it
+             costs on paper — gold is 2.18:1 there against `gold-ink`'s 5.04:1,
+             and an eyebrow is the smallest type on the page to spend that on. */
+          eyebrowClassName="text-gold"
           title="In their words"
           description={
             <>
               We design for the moment of handover, but also for everything
               that comes after.
-              <span className="mt-3 block italic text-charcoal/55">
+              {/* 65%, not 55%: at 55 this is 3.74:1 on paper, and it is a full
+                  16px sentence of running copy rather than a label. */}
+              <span className="mt-3 block italic text-charcoal/65">
                 These are the people who live, work and gather in our spaces.
               </span>
             </>

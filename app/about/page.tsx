@@ -3,13 +3,14 @@ import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Contact from "@/components/sections/Contact";
 import Founder from "@/components/sections/Founder";
+import StatsStrip from "@/components/sections/StatsStrip";
 import {
   Ornament,
   PageContainer,
   Reveal,
   SheetTexture,
 } from "@/components/ui";
-import { SITE, STATS } from "@/constants";
+import { SITE } from "@/constants";
 
 export const metadata: Metadata = {
   title: "About",
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
  * "About" now points here. #practice is untouched and still opens the home
  * page; it simply no longer has to stand in for a biography.
  *
- * ── Three parts, in the order the question gets asked ─────────────────────
+ * ── Four parts, in the order the question gets asked ──────────────────────
  *
  *   1. AN OPENING. A typographic frame rather than a photograph — the same
  *      choice /faq makes, and for the same reason: there is no landscape image
@@ -42,9 +43,11 @@ export const metadata: Metadata = {
  *      viewport it would be a poster of the founder rather than an
  *      introduction to a practice. It keeps its frame in <Founder /> below,
  *      where the parallax and the veil were built for it.
- *   2. <Founder />. Untouched. Portrait, credentials, the philosophy, the
+ *   2. THE FIGURES, on the emerald band the home page opens with. Same
+ *      component, so the two cannot drift — <StatsStrip />.
+ *   3. <Founder />. Untouched. Portrait, credentials, the philosophy, the
  *      quote in her own words.
- *   3. <Contact />. Every page on this site ends here — the home page's
+ *   4. <Contact />. Every page on this site ends here — the home page's
  *      contact block is the site's footer in all but name (see the note in
  *      that component), so a page that ended anywhere else would need a second
  *      footer kept in sync with the first.
@@ -57,17 +60,6 @@ export const metadata: Metadata = {
  * "About → Ar. Annpurna Kinha" rather than two competing h1s.
  */
 export default function AboutPage() {
-  /**
-   * The figures, as the practice's own measure of itself.
-   *
-   * Read from the same `STATS` the home page's strip uses rather than retyped,
-   * so a number the studio corrects in one place is corrected here too. Set as
-   * a hairline-ruled row instead of the emerald band that carries them on the
-   * home page: this page's opening is paper and a second dark strip inside it
-   * would cut the page in half before the portrait ever arrived.
-   */
-  const figures = STATS.slice(0, 4);
-
   return (
     <>
       <Navbar />
@@ -98,6 +90,11 @@ export default function AboutPage() {
                   note on heading levels above. The measure is held at 18
                   characters so the line breaks fall where they are wanted at
                   every width rather than wherever the box happens to end. */}
+              {/* Brand green, the same ink every other chapter title on a
+                  paper ground takes — see the note in
+                  components/ui/SectionHeading.tsx. Hand-set rather than coming
+                  from that component (this one carries the page's h1), so the
+                  colour has to be repeated here. */}
               <h1 className="mt-5 max-w-[18ch] font-serif text-[2.6rem] leading-[1.04] tracking-tight text-emerald md:text-[3.6rem] lg:text-[4.25rem]">
                 Designing conscious luxury
               </h1>
@@ -124,27 +121,23 @@ export default function AboutPage() {
               </div>
             </Reveal>
 
-            {/* ── The figures ──────────────────────────────────────────────
-                A hairline-ruled row rather than cards. Four columns on a
-                shared top rule reads as a specification table, which is what
-                these numbers are; boxing them would make them feel like
-                marketing tiles on a page whose whole argument is restraint. */}
-            <Reveal delay={0.16}>
-              <dl className="mt-14 grid grid-cols-2 gap-x-8 gap-y-9 border-t border-emerald/15 pt-9 md:mt-16 md:grid-cols-4 md:gap-x-10">
-                {figures.map((stat) => (
-                  <div key={stat.id} className="m-0">
-                    <dt className="font-label text-charcoal/50">
-                      {stat.label}
-                    </dt>
-                    <dd className="m-0 mt-2.5 font-serif text-[2rem] leading-none tracking-tight text-emerald md:text-[2.4rem]">
-                      {stat.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </Reveal>
           </PageContainer>
         </section>
+
+        {/* ── The figures, on the brand ────────────────────────────────────
+            The same band the home page opens with, and the same component —
+            see components/sections/StatsStrip.tsx.
+
+            It was a hairline-ruled row on the paper of the section above, which
+            was correct and quiet and gave this page no green in it at all until
+            <Contact /> arrived three screens later. The band fixes that and
+            fixes the alternation with it: paper, emerald, paper, emerald, so
+            every boundary on the page is a hard edge between two flat colours.
+
+            It sits BETWEEN the sections rather than inside the opening, because
+            it bleeds to both page edges and the section above holds its content
+            to the container's measure. */}
+        <StatsStrip />
 
         <Founder />
 

@@ -80,6 +80,7 @@ import {
   FRAME_ZOOM_CLASS,
 } from "@/components/ui/ImageCycle";
 import Media from "@/components/ui/Media";
+import SheetTexture from "@/components/ui/SheetTexture";
 import { EASE_EDITORIAL, gsap } from "@/lib/gsap";
 import { introHasPlayed, markIntroPlayed } from "@/lib/intro";
 import { cn } from "@/utils/cn";
@@ -510,7 +511,43 @@ export default function LoadingScreen({ slides = HERO_SLIDES }: LoadingScreenPro
          the photograph opening out of it. */
       className="pointer-events-none fixed inset-0 z-100 flex items-center justify-center overflow-hidden bg-paper"
     >
-      {/* ── The window ──────────────────────────────────────────────────────
+      {/* ── The vine ──────────────────────────────────────────
+          Every chapter of the site is drawn into from the margins — gold
+          botanical line-work hanging off the page edges (<Ornament />, and
+          <SheetTexture /> which places it). This screen had none of it: the
+          first thing anyone saw of the studio was the one surface on the site
+          with nothing drawn on it, which is why it read as a holding screen
+          rather than as the cover of the document it opens.
+
+          <SheetTexture /> itself, rather than two hand-placed <Ornament />s.
+          That was the first attempt and it was measurably worse: the drawing's
+          ink is not evenly distributed across its box, and the `top-left` /
+          `bottom-right` pair I reached for first put almost all of it in the
+          ~44% that bleeds off the page — what was left on screen measured as a
+          few strokes in the top corner and read as dust. The `bottom-left` +
+          `top-right` arrangement this component ships is the one that has been
+          composed against a page edge, and both of its vines clear the
+          centred lockup here (the photograph opens at x 534 at 1440 wide; the
+          large vine reaches x 181).
+
+          Using the component rather than its parts also means this screen is
+          decorated by the same call every chapter of the site makes, which is
+          the actual ask: not "put some vines on it" but "make it belong".
+
+          ── The draw time is the load time, and that is the point ───────
+          `.vine` draws itself on `stroke-dashoffset` over 2.6s (see
+          styles/globals.css). The intro runs to about 2.95s — `CUE.dissolve`
+          plus `DISSOLVE_DURATION` — so the vine finishes drawing just as the
+          curtain begins to lift. Nothing coordinates the two; they are simply
+          both the length of the same beat, and the effect is that the screen
+          spends its wait drawing rather than sitting still.
+
+          Desktop-only, which the component already handles: the vine is a
+          MARGINAL flourish and a phone has no margin, so on a 390px screen the
+          bleed would cross the photograph instead of the gutter. */}
+      <SheetTexture />
+
+      {/* ── The window ─────────────────────────────────────────
           A full-bleed copy of the hero's opening frame, clipped down to a
           portrait window in the middle of the screen. The IMAGE never moves or
           resizes; only the clip does. That is the whole trick: when the clip

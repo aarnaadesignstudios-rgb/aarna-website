@@ -10,11 +10,25 @@
   --color-emerald: #0c402d; /* Deep Emerald — primary brand, sampled from the logo */
   --color-emerald-deep: #06291c; /* Near-black pine — for tonal depth/gradients */
   --color-emerald-light: #13573e; /* Lifted emerald — top of gradients / highlights */
-  /* Sampled pixel-exact from the phoenix mark + wordmark in
+  /* Originally sampled pixel-exact from the phoenix mark + wordmark in
      public/images/aarnaa-mark.png — the single most common gold pixel in the
-     logo is #c9a932 (hsl 47.3 60.2% 49.2%). Every gold on the site derives
-     from this one value so nothing drifts off-brand. */
-  --color-gold: #c9a932; /* Warm Gold — accent, sampled from the logo */
+     logo measured #c9a932 (hsl 47.3 60.2% 49.2%). The studio supplied #caa934
+     as the authoritative value and that is what is here now; the two differ by
+     (+1, 0, +2) per channel, which is not a visible change to anything and
+     moves the contrast against emerald from 5.15:1 to 5.17:1.
+
+     ── Why the value moved HERE and not on the one element asked about ──
+     The request named the masthead wordmark. Hard-coding the hex there would
+     have forked it off this token and put a second, near-identical gold in the
+     system — and it would have undone the change immediately before it, which
+     was to make the wordmark, the flipping word in <Practice /> and the "How we
+     work" numerals all read as the SAME metal. They are all `text-gold`, so
+     moving the token moves them together and the invariant survives.
+
+     Every gold on the site derives from this one value so nothing drifts
+     off-brand: 113 utility usages, and `gold-soft` / `gold-ink` below are cuts
+     of this hue. */
+  --color-gold: #caa934; /* Warm Gold — accent, the studio's logo gold */
   --color-gold-soft: #dac36c; /* Champagne gold — same hue/sat, lifted to 64% L */
   /* ── `cream` is INK now, not a ground ─────────────────────────────
      It was both: the page background AND the colour of type set over

@@ -57,9 +57,8 @@ import {
   SectionHeading,
   SheetTexture,
 } from "@/components/ui";
+import StatsStrip from "./StatsStrip";
 import { fadeUp, staggerContainer, VIEWPORT_ONCE } from "@/animations/variants";
-import { STATS } from "@/constants";
-import { cn } from "@/utils/cn";
 
 export default function Practice() {
   return (
@@ -93,70 +92,15 @@ export default function Practice() {
       <SheetTexture />
 
       {/* ── The title plate ──────────────────────────────────────────────
-          Back to deep brand emerald with gold figures, at the studio's request:
-          this line is as it was before the site went light.
+          Deep brand emerald with gold figures, at the studio's request: this
+          line is as it was before the site went light.
 
-          It is the only band on the page that goes to full brand emerald other
-          than the invitation at the end, and the two of them together are the
-          reason it works this time. Framing a story with the brand colour at
-          the top and the bottom is a title plate and a colophon; sprinkling
-          four of them through the middle, which is what the site used to do, is
-          stripes. See the note on `.surface-emerald` in styles/globals.css.
-
-          `data-chrome="dark"` comes back with it — this strip is what the
-          masthead floats over as the hero scrolls away, and it needs cream
-          chrome again (components/layout/Navbar.tsx). */}
-      <div
-        data-chrome="dark"
-        className="relative z-10 border-y border-gold/25 bg-emerald py-7 md:py-8"
-      >
-        <PageContainer>
-          <motion.ul
-            aria-label="The studio in numbers"
-            className="grid list-none grid-cols-2 gap-y-7 p-0 md:grid-cols-5 md:gap-y-0"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={VIEWPORT_ONCE}
-          >
-            {STATS.map((stat, i) => (
-              <motion.li
-                key={stat.id}
-                variants={fadeUp}
-                className={cn(
-                  "flex flex-col items-center border-gold/20 px-3 text-center",
-                  // 2-up: rule between the pair, and across the rows.
-                  i % 2 === 1 && "border-l",
-                  i >= 2 && "border-t pt-7",
-                  // 5-up: one continuous set of verticals, no horizontals.
-                  "md:border-t-0 md:pt-0",
-                  i === 0 ? "md:border-l-0" : "md:border-l",
-                  // The odd fifth figure closes the bottom row while stacked.
-                  i === STATS.length - 1 && "col-span-2 md:col-span-1",
-                )}
-              >
-                {/* `whitespace-nowrap`: "Pan India" and "2 Lakh" are two words
-                    and must not break across lines, or the row's baselines
-                    stop agreeing and one cell sits lower than its neighbours. */}
-                {/* `type-figure` — the serif, with lining numerals. These were
-                    the last Bodoni on the site outside the wordmark, which is
-                    why a row of figures never sat easily above labels set in
-                    Cormorant. See styles/globals.css. */}
-                {/* Champagne figures over gold labels. These need a dark
-                    ground and now have one again — on the light version of this
-                    strip they had to become emerald and charcoal, because
-                    champagne on sage measures about 1.6:1. */}
-                <p className="type-figure m-0 whitespace-nowrap text-[1.5rem] leading-none tracking-tight text-gold-soft md:text-[1.75rem] xl:text-3xl">
-                  {stat.value}
-                </p>
-                <p className="m-0 mt-2.5 font-label leading-normal text-gold">
-                  {stat.label}
-                </p>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </PageContainer>
-      </div>
+          It moved into <StatsStrip /> when /about wanted the same band — the
+          cell rules are five interlocking border conditions that change at
+          `md`, which is not markup that survives being duplicated. Everything
+          that was written here about the band being a title plate rather than a
+          stripe, and about `data-chrome="dark"`, is in that file. */}
+      <StatsStrip />
 
       {/* Was pt-20/24/28. The strip above now fades into this ground instead
           of ending on a rule, so the section no longer needs to clear a hard
@@ -195,6 +139,11 @@ export default function Practice() {
           <SectionHeading
             eyebrow="The Practice"
             align="center"
+            /* The logo gold, matching the flipping word below it and the
+               numerals in "How we work". See the note on `eyebrowClassName` in
+               components/ui/SectionHeading.tsx for what it costs on paper —
+               this is the one caller that opts in. */
+            eyebrowClassName="text-gold"
             className="max-w-full"
           />
 
@@ -228,6 +177,20 @@ export default function Practice() {
             whileInView={{ y: "0%", opacity: 1 }}
             viewport={VIEWPORT_ONCE}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            /* ── Emerald, and deliberately NOT gold with the other titles ──
+               Every other chapter title on the site is the logo gold. This one
+               is the exception, because it is the only heading on the site that
+               contains the flipping word — and the colour is what marks that
+               word.
+
+               It was briefly gold, with the rest. What that cost was the whole
+               point of the line: phrase and word became one ink, so the only
+               thing separating "Design is the brand of our" from the word it
+               hands over to was the italic and the hairline under it. The word
+               stopped arriving and started just being more of the sentence.
+
+               So the phrase is emerald, the word is gold (see `wordClassName`
+               below), and the contrast between them is doing its job again. */
             className="relative z-10 font-serif leading-[1.02] tracking-[-0.025em] text-emerald"
           >
               <LayoutTextFlip
@@ -239,7 +202,17 @@ export default function Practice() {
                   "vision",
                   "artistry",
                 ]}
-                duration={3000}
+                /* ── 2650, so the HOLD is 2s ──────────────────────────────
+                   `duration` is the whole SLOT a word occupies, not the time it
+                   spends still — the slide-and-blur that swaps two words takes
+                   0.65s of it (see <LayoutTextFlip />). So the word actually
+                   stops moving for `duration - 650`.
+
+                   The studio asked for a ~2s hold. 2650 gives exactly that,
+                   where the previous 3000 was holding for 2.35s. Anyone tuning
+                   this again should change it by the amount they want the STILL
+                   time to move, and leave the 650 alone. */
+                duration={2650}
                 // `block` at every width: the phrase owns its line and the word
                 // owns the next, so the line count cannot change as it flips and
                 // the heading can never jump mid-read.
@@ -254,8 +227,21 @@ export default function Practice() {
                 phraseClassName="block font-medium text-[2.4rem] md:text-[3.4rem] lg:text-[4rem] xl:text-[4.8rem] 2xl:text-[5.4rem]"
                 /* The flipping word is part of this sentence, so it is set in the
                  same face — italic and gold to mark it, not a second
-                 typeface. */
-                wordClassName="font-serif font-medium italic text-gold-ink text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
+                 typeface.
+
+                 ── `gold`, not `gold-ink`, at the studio's request ─────────
+                 This was `gold-ink` (#8b6609, the 29%-lightness cut that is the
+                 legible gold on paper at 5.04:1). It is the logo gold now, to
+                 match the "How we work" numerals and the masthead wordmark.
+
+                 The trade, stated plainly: `gold` measures 2.19:1 on this
+                 section's paper, so it reads as a pale brass wash rather than
+                 as ink. It is survivable HERE and nowhere else on a light
+                 ground — the word runs 48–109px, it is one word of five that
+                 the reader has already read in the static phrase above it, and
+                 it carries a gold rule under it doing the marking work. It
+                 would not be survivable on the body copy. */
+                wordClassName="font-serif font-medium italic text-gold text-[3rem] md:text-[4.2rem] lg:text-[5rem] xl:text-[6rem] 2xl:text-[6.8rem]"
               />
             </motion.h2>
 

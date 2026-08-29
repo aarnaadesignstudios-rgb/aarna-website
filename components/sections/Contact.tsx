@@ -291,8 +291,19 @@ export default function Contact() {
             row so the page ends on the enquiry, not on a second block of
             navigation. */}
         <div className="mt-16 flex flex-col gap-6 border-t border-cream/20 pt-8 md:mt-20 lg:flex-row lg:items-center lg:justify-between">
+          {/* ── The colophon's targets are thumb-sized ────────────────────
+              Everything in this row is 12px label type, and a 12px label with
+              no padding is a 14px-tall tap target — measured at 50×14 for these
+              links and 17×17 for the social marks. WCAG 2.2 asks for 24×24, and
+              this row is the last thing on every page on the site, which on a
+              phone means it is the row a thumb reaches for most.
+
+              The padding is added rather than the type enlarged: the label size
+              is a system decision (see `--text-label` in styles/globals.css) and
+              the row is meant to read quietly. `gap-y` comes down to match, so
+              the block's overall height barely moves. */}
           <nav aria-label="Site">
-            <ul className="flex list-none flex-wrap items-center gap-x-7 gap-y-2 p-0">
+            <ul className="-my-1.5 flex list-none flex-wrap items-center gap-x-7 gap-y-0 p-0">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   {/* This block is the site's footer in all but name, and it
@@ -302,7 +313,7 @@ export default function Contact() {
                       contain. */}
                   <SmoothLink
                     href={link.href}
-                    className="font-label text-cream/60 transition-colors duration-500 hover:text-gold"
+                    className="inline-block py-1.5 font-label text-cream/60 transition-colors duration-500 hover:text-gold"
                   >
                     {link.label}
                   </SmoothLink>
@@ -312,7 +323,9 @@ export default function Contact() {
           </nav>
 
           <div className="flex items-center gap-7">
-            <ul className="flex list-none items-center gap-5 p-0">
+            {/* `-m-1.5` cancels the padding at the group's edges, so the marks
+                stay optically where they were and only their targets grow. */}
+            <ul className="-m-1.5 flex list-none items-center gap-2 p-0">
               {SOCIAL_LINKS.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -322,7 +335,7 @@ export default function Contact() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={social.label}
-                      className="block text-cream/55 transition-colors duration-500 hover:text-gold"
+                      className="block p-1.5 text-cream/55 transition-colors duration-500 hover:text-gold"
                     >
                       <Icon size={17} />
                     </a>

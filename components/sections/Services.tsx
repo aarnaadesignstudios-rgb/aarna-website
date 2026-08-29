@@ -151,18 +151,53 @@ export default function Services() {
         <PageContainer className="shrink-0 pt-24 pb-8 md:pt-28">
           <SectionHeading
             eyebrow="Services"
+            /* The logo gold, matching <Practice />'s eyebrow. See the note on
+               `eyebrowClassName` in components/ui/SectionHeading.tsx for what it
+               costs on paper — gold is 2.18:1 there against `gold-ink`'s 5.04:1,
+               and an eyebrow is the smallest type on the page to spend that on. */
+            eyebrowClassName="text-gold"
             title="What we do"
-            meta={`${String(active + 1).padStart(2, "0")} / ${String(
-              SERVICES.length
-            ).padStart(2, "0")}`}
+            /* Same reason as <SelectedWorks />: `active` is written by the
+               horizontal track's ScrollTrigger, which only exists at `lg` and
+               up. Below that the header sat on "01 / 05" while you scrolled
+               past all five. The stack gets the count, which stays true. */
+            meta={
+              <>
+                <span className="lg:hidden">
+                  {SERVICES.length} disciplines
+                </span>
+                <span className="hidden lg:inline">
+                  {`${String(active + 1).padStart(2, "0")} / ${String(
+                    SERVICES.length
+                  ).padStart(2, "0")}`}
+                </span>
+              </>
+            }
             className="max-w-full"
           />
         </PageContainer>
 
         {/* Track */}
+        {/* ── Three layouts, one element ───────────────────────────────────
+            At `lg` and up this is the pinned horizontal TRACK: a flex row that
+            GSAP translates sideways as the section scrolls.
+
+            Below that there is no pin and no translation, so it is free to be a
+            grid — and it needs to be. A full-width 4:5 card is ~490px on a
+            phone and ~960px on a tablet, so five disciplines stacked one per
+            row made this the longest section on the site by a wide margin, with
+            a single photograph on screen at a time and nothing to compare it
+            to. Two up from `sm` halves the run and is what a tablet's width is
+            for.
+
+            Phones keep one column: two 4:5 cards side by side at 390px are
+            170px wide, which turns a discipline's photograph into a thumbnail.
+
+            The order matters — `sm:grid` then `lg:flex` — because the later
+            utility has to win at the larger width. */}
         <div
           ref={trackRef}
-          className="relative flex flex-1 flex-col items-stretch gap-6 px-6 pb-10 will-change-transform md:px-10 lg:flex-row lg:gap-8 lg:px-16"
+          className="relative flex flex-1 flex-col items-stretch gap-6 px-6 pb-10 will-change-transform sm:grid sm:grid-cols-2 sm:gap-7 md:px-10 lg:flex lg:flex-row lg:gap-8 lg:px-16"
         >
           {SERVICES.map((service) => {
             const open = openId === service.id;
@@ -301,7 +336,12 @@ export default function Services() {
                           <SmoothLink
                             href={service.link.href}
                             tabIndex={open ? undefined : -1}
-                            className="group/link mt-4 inline-flex items-center gap-2 border-b border-gold/50 pb-1 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
+                            /* `pt-1.5` on top of the existing `pb-1`: the link
+                               is 12px label type, which is a 21px-tall target
+                               without it. The underline is the bottom BORDER,
+                               so padding added above the text grows the target
+                               without moving the rule. */
+                            className="group/link mt-4 inline-flex items-center gap-2 border-b border-gold/50 pt-1.5 pb-1 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
                           >
                             {service.link.label}
                             <FiArrowUpRight
@@ -328,7 +368,7 @@ export default function Services() {
             </p>
             <SmoothLink
               href="#contact"
-              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pb-1.5 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
+              className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pt-1.5 pb-1.5 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
             >
               Start a conversation
               <FiArrowUpRight

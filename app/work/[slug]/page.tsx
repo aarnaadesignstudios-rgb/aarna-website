@@ -209,7 +209,7 @@ export default async function WorkPage({
             measure. Below that they stack, spec first — on a phone the facts
             are the part someone scrolling wants soonest. */}
         <section
-          className={`surface-paper relative ${
+          className={`bg-paper relative ${
             // A project published before it has been written up has one line in
             // this band. At the full rhythm that line floats in ~500px of empty
             // paper, which reads as a page that failed to load rather than as a
@@ -260,7 +260,7 @@ export default async function WorkPage({
             measure. The grid adapts to whatever number arrives: one photograph
             is one full-width plate, an odd count simply ends on a half. */}
         {gallery.length > 0 && (
-          <section className="surface-paper relative pb-24 md:pb-32">
+          <section className="bg-paper relative pb-24 md:pb-32">
             <PageContainer>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
                 {gallery.map((shot) => (
@@ -304,7 +304,7 @@ export default async function WorkPage({
             the back button. Only rendered when there is one — the first and
             last projects have a single neighbour each. */}
         {(prev || next) && (
-          <section className="surface-paper relative border-t border-emerald/10 py-16 md:py-20">
+          <section className="bg-paper relative border-t border-emerald/10 py-16 md:py-20">
             <PageContainer>
               <div className="grid gap-10 md:grid-cols-2 md:gap-8">
                 {prev ? <Sibling work={prev} side="prev" /> : <span />}

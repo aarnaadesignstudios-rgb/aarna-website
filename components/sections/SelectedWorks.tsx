@@ -806,6 +806,20 @@ export default function SelectedWorks({
     <section
       ref={sectionRef}
       id="projects"
+      /* ── The masthead has to be told this band is dark ───────────────────
+         This section is `bg-emerald` — the same ground <Process /> stands on —
+         and it was the only dark band on the site that did not declare itself.
+         The masthead picks its palette by looking for `[data-chrome="dark"]`
+         under its own midpoint (components/layout/Navbar.tsx), so with the
+         attribute missing it fell through to its LIGHT cut: pale glass, emerald
+         links, an emerald wordmark and an emerald hairline, floating over deep
+         green. Over <Process /> the identical bar renders in its dark cut —
+         cream links, champagne wordmark, gold rule — which is why the two green
+         chapters did not look like the same page.
+
+         One attribute, and there is nothing else to change: every value the bar
+         uses on this ground is the same one it already uses on Process. */
+      data-chrome="dark"
       /* ── The ground is on the PINNED element, not here ──────────────────
          `<section>` is as tall as the whole scroll the pin consumes — about
          five and a half screens. A gradient painted on it is stretched over
@@ -877,9 +891,28 @@ export default function SelectedWorks({
                below. Drawing rather than type, which is what the rest of the
                site does with its margins anyway. */
             tone="dark"
-            meta={`${String(active + 1).padStart(2, "0")} / ${String(
-              count
-            ).padStart(2, "0")}`}
+            /* ── The counter is a DESKTOP counter ─────────────────────────
+               `active` is written by the ring's ScrollTrigger, and that trigger
+               is inside a `(min-width: 1024px)` matchMedia — so below `lg` it
+               is never anything but 0 and the header read "01 / 09" the whole
+               way down a nine-card stack. A position indicator that does not
+               indicate position is worse than no indicator: it says the page is
+               stuck.
+
+               So the counter belongs to the ring, and the stack gets the count
+               instead, which is true at every scroll position. */
+            meta={
+              <>
+                <span className="lg:hidden">
+                  {count} {count === 1 ? "project" : "projects"}
+                </span>
+                <span className="hidden lg:inline">
+                  {`${String(active + 1).padStart(2, "0")} / ${String(
+                    count
+                  ).padStart(2, "0")}`}
+                </span>
+              </>
+            }
           />
         </PageContainer>
 
@@ -1063,7 +1096,9 @@ export default function SelectedWorks({
                     )}
                     <SmoothLink
                       href={`/work/${current.id}`}
-                      className="pointer-events-auto inline-block font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
+                      /* `py-1.5` only for the target: 12px label type on its
+                         own is a 16px-tall hit area, under the 24px minimum. */
+                      className="pointer-events-auto inline-block py-1.5 font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
                     >
                       View project &rarr;
                     </SmoothLink>
@@ -1074,31 +1109,115 @@ export default function SelectedWorks({
           </div>
         </div>
 
-        {/* ── The stack (below lg) ───────────────────────────────────────── */}
-        <div className="flex flex-col gap-10 px-6 pt-6 pb-14 md:px-10 lg:hidden">
-          {works.map((work, i) => (
-            <article
-              key={work.id}
-              ref={(el) => {
-                stackRef.current[i] = el;
-              }}
-            >
-              <div className="aspect-4/5 w-full">{photo(i)}</div>
-              <div className="mt-4">
-                <span className="block font-label text-charcoal/50">
-                  {work.category}
-                </span>
-                <h3 className="mt-1.5 font-serif text-3xl leading-[1.04] tracking-tight text-emerald">
-                  {work.title}
-                </h3>
-                {work.description && (
-                  <p className="mt-2 max-w-[40ch] text-charcoal/65">
-                    {work.description}
-                  </p>
-                )}
-              </div>
-            </article>
-          ))}
+        {/* ── The stack (below lg) ─────────────────────────────────────────
+            ── It carries the SAME caption the ring does ────────────────────
+            The ring's front card is captioned twice over: the category and the
+            name on the left, and a plate on the right with the commission's
+            location, year and area and a link into the project. The stack used
+            to carry the first half only — so on a phone and on a tablet, which
+            is where most people meet this section, the work had no location, no
+            year, no size, and nothing saying the photograph was a way in. The
+            studio's note was exactly that: the name and the location are not
+            there.
+
+            Both halves are here now, in one column rather than two — a phone
+            has no right-hand margin to range a plate into, so the facts sit
+            under the name where they read as a caption instead.
+
+            ── Two up from `sm` ─────────────────────────────────────────────
+            One full-width 4:5 plate per row is ~490px on a phone and ~960px on
+            a tablet, so a nine-project section was nine screens of scrolling
+            with one photograph on each. At `sm` and above the grid goes two up,
+            which halves the run and gives a tablet something to do with its
+            width. The single column stays on phones, where two 4:5 cards side
+            by side would be thumbnails. */}
+        <div className="grid grid-cols-1 gap-x-6 gap-y-10 px-6 pt-6 pb-14 sm:grid-cols-2 sm:gap-y-12 md:px-10 lg:hidden">
+          {works.map((work, i) => {
+            /* Same three facts as the ring's plate, in the same order, with
+               the blanks dropped rather than placeheld — see the note there.
+               Most projects have none of them filled in yet, and a caption
+               that reserved the row would print an empty rule on every card. */
+            const workFacts = [work.location, work.year, work.area].filter(
+              (fact): fact is string => Boolean(fact)
+            );
+
+            return (
+              <article
+                key={work.id}
+                ref={(el) => {
+                  stackRef.current[i] = el;
+                }}
+              >
+                <div className="aspect-4/5 w-full">{photo(i)}</div>
+                {/* ── The ink is CREAM here, like the ring's caption ────────
+                    This block was `text-charcoal` on `text-emerald` — ink cut
+                    for a light ground, on a section whose ground is the brand
+                    green. The title measured 1:1 against it, which is not low
+                    contrast, it is invisible: below `lg` — every phone and
+                    every tablet — the project names were simply not on the
+                    page, and the category and description were at 1.2:1 behind
+                    them.
+
+                    The values are the ring caption's, verbatim (see the desktop
+                    block above): 75% for the category label, full cream for the
+                    name, 70% for the description. That is the point — the stack
+                    and the ring are the same caption at two widths, so they
+                    should be reading off the same three values rather than each
+                    guessing at its own. On emerald they measure 6.3:1, 11.4:1
+                    and 5.6:1. */}
+                <div className="mt-4">
+                  {/* The folio. The ring has an index row under it that says
+                      which of nine you are looking at; the stack had no such
+                      row, so the number rides the category line instead. */}
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-label text-gold-soft">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="font-label text-cream/75">
+                      {work.category}
+                    </span>
+                  </div>
+                  <h3 className="mt-1.5 font-serif text-3xl leading-[1.04] tracking-tight text-cream">
+                    {work.title}
+                  </h3>
+
+                  {workFacts.length > 0 && (
+                    <>
+                      {/* The hairline the ring's plate carries, so the two
+                          captions read as the same object at two widths. */}
+                      <span
+                        aria-hidden
+                        className="mt-4 block h-px w-14 bg-gold/70"
+                      />
+                      <span className="mt-3 block max-w-[34ch] font-label text-cream/70">
+                        {workFacts.join("  ·  ")}
+                      </span>
+                    </>
+                  )}
+
+                  {work.description && (
+                    <p className="mt-3 max-w-[40ch] text-cream/70">
+                      {work.description}
+                    </p>
+                  )}
+
+                  {/* The affordance the stack was missing entirely. The
+                      photograph above is already a link to the same place, but
+                      a photograph does not read as one — on the ring this is
+                      spelled out in words for the same reason, and it is more
+                      necessary here, where there is no pointer to change shape
+                      over the card. */}
+                  <SmoothLink
+                    href={`/work/${work.id}`}
+                    cardLabel={work.title}
+                    className="mt-4 inline-block py-1.5 font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
+                  >
+                    View project &rarr;
+                  </SmoothLink>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         {/* ── Footer: progress, index, and the way out ───────────────────── */}
@@ -1140,7 +1259,10 @@ export default function SelectedWorks({
               the name and the position, and `aria-current` marks the one that
               is showing — none of which the old row had. */}
           <div className="flex items-center justify-between gap-8">
-            <div className="flex flex-wrap gap-x-4 gap-y-1 font-label sm:gap-x-5">
+            {/* The gaps are 16px narrower than they read, because each numeral
+                now carries `px-2` — see the button. Padding plus gap keeps the
+                same optical rhythm the bare gap used to give on its own. */}
+            <div className="flex flex-wrap gap-x-0 gap-y-1 font-label sm:gap-x-1">
               {works.map((work, i) => (
                 <button
                   key={work.id}
@@ -1150,11 +1272,18 @@ export default function SelectedWorks({
                   aria-label={`${work.title} — project ${i + 1} of ${count}`}
                   aria-current={i === active ? "true" : undefined}
                   className={cn(
-                    "group relative cursor-pointer rounded-sm py-3.5 transition-colors duration-300",
+                    // `px-2` as well as the vertical padding: a two-digit
+                    // numeral is only 15px wide, so the target was 15×44 — tall
+                    // enough and half the required width. The row's `gap-x`
+                    // came down by the same amount, so nothing moved.
+                    "group relative cursor-pointer rounded-sm px-2 py-3.5 transition-colors duration-300",
                     // The button is padded to a 44px touch target, so the UA's
                     // default ring drew a tall box around a 12px numeral. Pull
                     // it in to trace the type instead.
-                    "outline-offset-[-10px] focus-visible:outline-1 focus-visible:outline-gold",
+                    // -8, not -10: the box gained 8px of padding on each side,
+                    // so a 10px inset now sits INSIDE the numeral instead of
+                    // around it.
+                    "outline-offset-[-8px] focus-visible:outline-1 focus-visible:outline-gold",
                     i === active ? "text-cream" : "text-cream/50 hover:text-cream/90"
                   )}
                 >
@@ -1169,7 +1298,10 @@ export default function SelectedWorks({
                   <span
                     aria-hidden
                     className={cn(
-                      "absolute inset-x-0 bottom-2 block h-px origin-left bg-gold transition-transform duration-500 ease-editorial",
+                      // `inset-x-2` matches the button's `px-2`, so the rule
+                      // still measures exactly the numeral rather than the
+                      // padded target around it.
+                      "absolute inset-x-2 bottom-2 block h-px origin-left bg-gold transition-transform duration-500 ease-editorial",
                       i === active ? "scale-x-100" : "scale-x-0"
                     )}
                   />
