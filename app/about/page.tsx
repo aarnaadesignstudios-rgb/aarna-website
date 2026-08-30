@@ -5,12 +5,45 @@ import Contact from "@/components/sections/Contact";
 import Founder from "@/components/sections/Founder";
 import StatsStrip from "@/components/sections/StatsStrip";
 import {
+  Media,
   Ornament,
   PageContainer,
   Reveal,
   SheetTexture,
 } from "@/components/ui";
 import { SITE } from "@/constants";
+
+/**
+ * ── The opening plate ─────────────────────────────────────────────────────
+ *
+ * A STOCK photograph, and the same kind of placeholder the Services cards and
+ * the /photography grid already carry — see the inventory in
+ * public/images/README.md. It is here because the opening ran as a single
+ * left-hand column: the heading is held to an 18-character measure and the copy
+ * to 62 characters, which on a 1440 screen left roughly 700×480 of empty paper
+ * to the right of both, with only a vine in it.
+ *
+ * ── Why this frame ───────────────────────────────────────────────────────
+ * It was chosen on PALETTE rather than on subject. Emerald upholstery, brass
+ * legs, cream walls and warm oak is, near enough exactly, `--color-emerald`,
+ * `--color-gold` and `--color-cream` — so it sits on the paper ground as though
+ * it belongs to the brand instead of as a rectangle of someone else's colours.
+ * Every other candidate that read as "luxury interior" brought a competing
+ * accent with it (a yellow chair, a blue pool, a cool grey room), and one
+ * off-palette accent beside the studio's own green is what makes a page look
+ * assembled from a stock library.
+ *
+ * Unsplash's licence covers commercial use with no attribution required, and
+ * `images.unsplash.com` is already allow-listed in next.config.ts.
+ *
+ * ── It is deliberately UNCAPTIONED ───────────────────────────────────────
+ * A captioned image on a studio's About page reads as a claim of authorship,
+ * and this is not the studio's work. It is set as mood — `alt=""`, no credit
+ * line, no project name — and it should be replaced by the practice's own
+ * photography before launch, at which point it can earn a caption.
+ */
+const ABOUT_PLATE =
+  "https://images.unsplash.com/photo-1617806118233-18e1de247200?w=1400&q=80";
 
 export const metadata: Metadata = {
   title: "About",
@@ -82,45 +115,91 @@ export default function AboutPage() {
           />
 
           <PageContainer className="relative z-10">
-            <Reveal>
-              <span className="block font-label text-gold-ink">
-                01 &mdash; About the studio
-              </span>
-              {/* Hand-set rather than <SectionHeading />, for the h1 — see the
-                  note on heading levels above. The measure is held at 18
-                  characters so the line breaks fall where they are wanted at
-                  every width rather than wherever the box happens to end. */}
-              {/* Brand green, the same ink every other chapter title on a
-                  paper ground takes — see the note in
-                  components/ui/SectionHeading.tsx. Hand-set rather than coming
-                  from that component (this one carries the page's h1), so the
-                  colour has to be repeated here. */}
-              <h1 className="mt-5 max-w-[18ch] font-serif text-[2.6rem] leading-[1.04] tracking-tight text-emerald md:text-[3.6rem] lg:text-[4.25rem]">
-                Designing conscious luxury
-              </h1>
-            </Reveal>
+            {/* ── Two columns, and only at `lg` ──────────────────────────────
+                Below that this is one column exactly as it was: the plate is
+                `hidden lg:block`, so a phone and a tablet get the same single
+                stack of type they got before, with no image to download and no
+                extra scrolling. The grid template only exists at `lg` too, so
+                there is nothing for the smaller widths to lay out around.
 
-            <Reveal delay={0.1}>
-              <div className="mt-8 grid max-w-[62ch] gap-5 text-charcoal/75">
-                <p className="text-[1.0625rem] leading-[1.6]">
-                  {SITE.name} is a multidisciplinary practice working across
-                  architecture, commercial interiors and bespoke residential
-                  spaces &mdash; from concept and planning through to design
-                  development and execution.
-                </p>
-                <p>
-                  It is led by{" "}
-                  <strong className="font-normal text-emerald">
-                    Ar. Annpurna Kinha
-                  </strong>
-                  , whose work joins design thinking to a business
-                  understanding of what a space has to do, and whose belief is
-                  that every element in a room should be able to say why it is
-                  there.
-                </p>
+                `items-center` rather than `items-start`: the type block is
+                shorter than the plate, and ranging both to the top leaves the
+                heading floating with a tall photograph beside it. Centred, the
+                two read as one spread.
+
+                `0.85fr` for the plate, not `1fr` — the heading and the copy are
+                the subject of this section and the photograph is accompaniment,
+                so it takes slightly less than half. */}
+            <div className="grid items-center gap-14 lg:grid-cols-[1fr_0.85fr] lg:gap-16 xl:gap-20">
+              <div>
+                <Reveal>
+                  <span className="block font-label text-gold-ink">
+                    01 &mdash; About the studio
+                  </span>
+                  {/* Hand-set rather than <SectionHeading />, for the h1 — see the
+                      note on heading levels above. The measure is held at 18
+                      characters so the line breaks fall where they are wanted at
+                      every width rather than wherever the box happens to end. */}
+                  {/* Brand green, the same ink every other chapter title on a
+                      paper ground takes — see the note in
+                      components/ui/SectionHeading.tsx. Hand-set rather than coming
+                      from that component (this one carries the page's h1), so the
+                      colour has to be repeated here. */}
+                  <h1 className="mt-5 max-w-[18ch] font-serif text-[2.6rem] leading-[1.04] tracking-tight text-emerald md:text-[3.6rem] lg:text-[4.25rem]">
+                    Designing conscious luxury
+                  </h1>
+                </Reveal>
+
+                <Reveal delay={0.1}>
+                  <div className="mt-8 grid max-w-[62ch] gap-5 text-charcoal/75">
+                    <p className="text-[1.0625rem] leading-[1.6]">
+                      {SITE.name} is a multidisciplinary practice working across
+                      architecture, commercial interiors and bespoke residential
+                      spaces &mdash; from concept and planning through to design
+                      development and execution.
+                    </p>
+                    <p>
+                      It is led by{" "}
+                      <strong className="font-normal text-emerald">
+                        Ar. Annpurna Kinha
+                      </strong>
+                      , whose work joins design thinking to a business
+                      understanding of what a space has to do, and whose belief is
+                      that every element in a room should be able to say why it is
+                      there.
+                    </p>
+                  </div>
+                </Reveal>
               </div>
-            </Reveal>
 
+              {/* ── The plate (desktop only) ──────────────────────────────
+                  `hidden lg:block` is the whole responsive story: below `lg`
+                  the element has no layout box, so the browser never fetches
+                  the photograph either — a phone pays nothing for it.
+
+                  4:3, not a portrait crop. The frame is a wide room shot; taking
+                  it to 4:5 cuts the table and the chairs that carry the colour,
+                  which are the reason this image is here at all. At 4:3 in a
+                  ~530px column it stands ~400px tall, which is almost exactly
+                  the height of the type beside it.
+
+                  `bg-stone` under it for the moment before it decodes, and the
+                  emerald-tinted shadow the project cards use — a neutral shadow
+                  on a warm paper ground reads as dirt. See the note on
+                  `--color-ink` in styles/globals.css. */}
+              <Reveal delay={0.15} className="hidden lg:block">
+                <figure className="relative m-0 aspect-4/3 w-full overflow-hidden rounded-2xl border border-emerald/10 bg-stone shadow-[0_30px_60px_-32px_color-mix(in_srgb,var(--color-emerald)_45%,transparent)]">
+                  <Media
+                    src={ABOUT_PLATE}
+                    /* Empty, and deliberately: this is decoration, not
+                       information — there is nothing here a screen reader
+                       needs that the copy beside it does not already say. */
+                    alt=""
+                    sizes="(min-width: 1280px) 40vw, (min-width: 1024px) 44vw, 100vw"
+                  />
+                </figure>
+              </Reveal>
+            </div>
           </PageContainer>
         </section>
 
