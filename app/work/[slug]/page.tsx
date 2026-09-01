@@ -92,7 +92,9 @@ function Spec({ items }: { items: [string, string][] }) {
     <dl className="grid grid-cols-2 gap-x-8 gap-y-7 border-t border-emerald/12 pt-8 sm:grid-cols-3 lg:grid-cols-1 lg:border-t-0 lg:pt-0">
       {items.map(([label, value]) => (
         <div key={label}>
-          <dt className="font-label text-charcoal/45">{label}</dt>
+          {/* 65%, matching the meta slot in <SectionHeading />. At 45 these
+              12px spec labels measured 2.8:1 on paper. */}
+          <dt className="font-label text-charcoal/65">{label}</dt>
           <dd className="mt-1.5 font-serif text-xl leading-snug text-emerald">
             {value}
           </dd>
@@ -102,33 +104,73 @@ function Spec({ items }: { items: [string, string][] }) {
   );
 }
 
-/** The next / previous pair at the foot of the page. */
+/**
+ * The next / previous pair at the foot of the page.
+ *
+ * ── It was a second gallery, and it should be a signpost ──────────────────
+ *
+ * This used to be a 16:9 plate at half the page width — measured at 640×360 on
+ * a 1440 screen, with the title set at `text-3xl` beneath it. Two things went
+ * wrong with that. It out-shouted the project's OWN gallery directly above it,
+ * so the page ended on a big photograph of a different commission; and where a
+ * project has only one neighbour — the first and last always do — the other
+ * half of the row was 640px of nothing.
+ *
+ * So it is a signpost now: a small square thumbnail, the direction, and the
+ * name, on one line. The two ends of the row read as a footer rather than as
+ * more work, the empty half is small enough to pass as margin, and the eye
+ * leaves the page on the studio's photographs rather than on a thumbnail.
+ *
+ * `flex-row-reverse` for `next` mirrors the whole thing — image outboard, type
+ * inboard — so the pair points outward from the centre in the direction each
+ * one travels.
+ *
+ * ── Two things fixed on the way past ──────────────────────────────────────
+ *  · `sizes` was `45vw`, which asked for a ~650px image for what is now an
+ *    80px thumbnail. It is the real box now, so the browser fetches a
+ *    thumbnail-sized file.
+ *  · `cardLabel` was missing, so the chapter card covering the navigation
+ *    announced the raw CMS slug — "33424" — instead of the project's name.
+ *    Same fix as the ring's cards; see <SelectedWorks />.
+ */
 function Sibling({ work, side }: { work: WorkLink; side: "prev" | "next" }) {
+  const isNext = side === "next";
   return (
     <SmoothLink
       href={`/work/${work.id}`}
-      className={`group relative block overflow-hidden rounded-xl ${
-        side === "next" ? "text-right" : ""
+      cardLabel={work.title}
+      /* `ml-auto` on the next-ward one: below `sm` the pair is a stacked
+         column, where `justify-between` has no horizontal axis to work on and
+         the block would otherwise sit wherever its own width left it — mirrored
+         but not ranged. In the `sm` row it is a no-op, because
+         `justify-between` has already pushed it to the far end. */
+      className={`group flex max-w-[17rem] items-center gap-4 ${
+        isNext ? "ml-auto flex-row-reverse text-right" : ""
       }`}
     >
-      <div className="relative aspect-16/9 w-full overflow-hidden rounded-xl bg-emerald-deep">
+      <span className="relative block size-16 shrink-0 overflow-hidden rounded-lg bg-emerald-deep md:size-20">
         <Media
           src={work.image}
           alt=""
           objectPosition={work.objectPosition}
-          sizes="(max-width: 768px) 100vw, 45vw"
-          className="scale-[1.03] transition-transform duration-[1200ms] ease-editorial group-hover:scale-[1.1]"
+          sizes="80px"
+          className="transition-transform duration-700 ease-editorial group-hover:scale-108"
         />
-        <div
+        {/* A whisper of a veil, not the 45% the full plate carried. At this
+            size a heavy tint stops reading as treatment and just makes the
+            thumbnail muddy. */}
+        <span
           aria-hidden
-          className="absolute inset-0 bg-emerald/45 transition-colors duration-500 group-hover:bg-emerald/25"
+          className="absolute inset-0 bg-emerald/20 transition-colors duration-500 group-hover:bg-transparent"
         />
-      </div>
-      <span className="mt-4 block font-label text-gold-ink">
-        {side === "prev" ? "← Previous" : "Next →"}
       </span>
-      <span className="mt-1 block font-serif text-2xl leading-tight tracking-tight text-emerald md:text-3xl">
-        {work.title}
+      <span className="min-w-0">
+        <span className="block font-label text-gold-ink">
+          {isNext ? "Next →" : "← Previous"}
+        </span>
+        <span className="mt-1 block truncate font-serif text-xl leading-tight tracking-tight text-emerald transition-colors duration-500 group-hover:text-gold-ink md:text-2xl">
+          {work.title}
+        </span>
       </span>
     </SmoothLink>
   );
@@ -191,8 +233,11 @@ export default async function WorkPage({
           <PageContainer className="relative z-10 pb-14 md:pb-20">
             <Reveal>
               <SmoothLink
-                href="/#projects"
-                className="font-label text-cream/70 transition-colors duration-300 hover:text-gold-soft"
+                href="/projects"
+                /* `-my-1.5 py-1.5` grows the tap target to 26px without moving
+                   the label: 12px type on its own is a 14px-tall hit area, and
+                   this is the page's only way back to the gallery. */
+                className="-my-1.5 inline-block py-1.5 font-label text-cream/70 transition-colors duration-300 hover:text-gold-soft"
               >
                 {"← Selected Works"}
               </SmoothLink>
@@ -304,10 +349,27 @@ export default async function WorkPage({
             the back button. Only rendered when there is one — the first and
             last projects have a single neighbour each. */}
         {(prev || next) && (
-          <section className="bg-paper relative border-t border-emerald/10 py-16 md:py-20">
+          /* Shallower than the py-16/20 it was: the row is a signpost now
+             rather than a gallery, and it no longer needs a gallery's air. */
+          <section className="bg-paper relative border-t border-emerald/10 py-10 md:py-12">
             <PageContainer>
-              <div className="grid gap-10 md:grid-cols-2 md:gap-8">
-                {prev ? <Sibling work={prev} side="prev" /> : <span />}
+              {/* `justify-between` on a flex, not a two-column grid. The grid
+                  reserved a half-page cell for a neighbour that may not exist —
+                  the first and last projects each have only one — and filled it
+                  with an empty <span>. Here a lone `next` simply ranges right
+                  and a lone `prev` ranges left, which is what a pager does.
+
+                  Stacked below `sm`, where two of these side by side would each
+                  be about 150px wide and the names would all truncate. */}
+              <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-10">
+                {prev ? (
+                  <Sibling work={prev} side="prev" />
+                ) : (
+                  /* Holds the left end of the row so a lone `next` stays
+                     ranged right. `hidden` below `sm`, where the row is a
+                     stack and an empty cell would be a gap in it. */
+                  <span aria-hidden className="hidden sm:block" />
+                )}
                 {next && <Sibling work={next} side="next" />}
               </div>
             </PageContainer>

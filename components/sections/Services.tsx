@@ -19,7 +19,8 @@
  *    the element in a pin-spacer that doubles its height in the document
  *    flow, and on mobile browsers — where the toolbar collapses and the
  *    viewport height changes mid-scroll — that spacer is a reliable source of
- *    jump. Below lg the section releases into an ordinary vertical stack.
+ *    jump. Below lg the section is a different thing entirely: a BENTO of
+ *    tiles that turn over. See <BentoTile /> below.
  *
  * There are now two pinned horizontal sections on this page (the other is
  * <SelectedWorks />). They are sequential rather than nested, which is fine —
@@ -36,6 +37,10 @@
  * and the panel animates `grid-template-rows` so it opens to the copy's real
  * height rather than to a guessed max-height.
  *
+ * Below `lg` the same request is answered by a tile that TURNS OVER rather
+ * than an accordion that pushes the grid around. `openId` is shared, so the
+ * two layouts are the same state read two ways.
+ *
  * Architectural Photography opens its own page instead of expanding, so its
  * card renders a link and says so.
  */
@@ -43,7 +48,7 @@ import { useRef, useState } from "react";
 import { FiArrowUpRight, FiPlus } from "react-icons/fi";
 
 import { gsap, ScrollTrigger } from "@/lib/gsap";
-import { useIsomorphicLayoutEffect } from "@/hooks";
+import { useIsomorphicLayoutEffect, useReveal } from "@/hooks";
 import {
   Media,
   PageContainer,
@@ -52,7 +57,323 @@ import {
   SmoothLink,
 } from "@/components/ui";
 import { SERVICES } from "@/constants";
+import type { Service } from "@/types";
 import { cn } from "@/utils/cn";
+
+/**
+ * ── One discipline, as a bento tile that turns ────────────────────────────
+ *
+ * Below `lg` only. The desktop track is a pinned horizontal run of five tall
+ * cards that expand downward into an accordion; neither half of that survives
+ * the trip to a phone. There is no pin, so there is no horizontal run — the
+ * cards became a vertical stack, one full-width 4:5 photograph per row, five
+ * rows deep. Measured at 390×844 that is about 2,500px of section for five
+ * sentences of copy, with one image on screen at a time and nothing to compare
+ * it against. It was the longest thing on the site.
+ *
+ * A bento is the answer to the length: a two-up grid with the first discipline
+ * taking a double-width tile brings the same five disciplines to about 780px,
+ * and the uneven tile gives the block a composition instead of a queue.
+ *
+ * ── Why it turns rather than expands ─────────────────────────────────────
+ *
+ * The desktop card opens an accordion beneath the name. In a grid that is the
+ * wrong gesture: opening one tile either pushes every tile below it down — so
+ * the thing you tapped jumps away from your thumb — or it has to reflow the
+ * grid, which moves tiles you did not touch. A tile that turns over changes
+ * nothing outside its own footprint, so the grid is exactly as still after a
+ * tap as before it.
+ *
+ * Only one is open at a time all the same: `openId` is a single id shared with
+ * the desktop accordion, so the two layouts are one piece of state read two
+ * ways rather than two implementations of the same idea that can disagree.
+ *
+ * ── The two faces, and where the taps actually go ────────────────────────
+ *
+ * `<button>` is the OUTER element, so the whole tile is one control and there
+ * are no nested interactive elements inside it. The 3D lives entirely within
+ * the button, which matters for more than tidiness: Chrome hit-tests inside a
+ * `transform-style: preserve-3d` context differently from how it paints it
+ * (see the note on the flat click target in components/sections/SelectedWorks.tsx),
+ * and a tap that lands on the button never goes near that test.
+ *
+ * The one discipline with a link is the exception, and it is handled the same
+ * way the ring is: the link is DRAWN on the back face, where it belongs
+ * visually, and a real anchor is laid over that spot as a flat sibling of the
+ * button. See `link` below.
+ */
+function BentoTile({
+  service,
+  wide,
+  open,
+  onToggle,
+}: {
+  service: Service;
+  /** The double-width tile. First discipline only — see the grid. */
+  wide?: boolean;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  /* Both faces carry this. `backface-visibility: hidden` is what makes a flip
+     a flip rather than two stacked panels: without it the front face stays
+     painted, mirrored, through the back. */
+  const face =
+    "absolute inset-0 overflow-hidden rounded-2xl [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
+
+  return (
+    <div
+      data-reveal
+      className={cn("relative", wide && "col-span-2 md:col-span-2")}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={cn(
+          "group block size-full cursor-pointer text-left",
+          // The perspective is on the button and the `preserve-3d` on its
+          // child, never both on one element: perspective applies to an
+          // element's CHILDREN, so putting it on the rotating element would
+          // give the two faces separate vanishing points and the card would
+          // shear as it turned instead of pivoting.
+          "[perspective:1100px]",
+          // ── The press ────────────────────────────────────────────────
+          // A phone has no hover, so the desktop's `group-hover:` states have
+          // nothing to fire on and the tile would give no feedback at all
+          // between the tap and the turn starting. Scaling the whole tile down
+          // by 1.5% under the finger is the standard answer and it reads as
+          // the card being pushed. `duration-200` because press feedback that
+          // eases in over half a second is not feedback.
+          "transition-transform duration-200 ease-editorial active:scale-[0.985]"
+        )}
+      >
+        <span
+          className={cn(
+            "relative block size-full [transform-style:preserve-3d]",
+            "transition-transform duration-700 ease-editorial",
+            open && "[transform:rotateY(180deg)]"
+          )}
+        >
+          {/* ── Front: the photograph, over a white strip ──────────────
+              The desktop card is a white panel with the photograph on top and
+              the name in a band under it, hairlined off with
+              `border-t border-emerald/10`. This is that card at tile size —
+              same surface, same rule, same inks.
+
+              ── What this replaced, and why the replacement was wrong ──────
+              The first build of these tiles had no band. The name and folio
+              sat ON the photograph over an emerald gradient, on the reasoning
+              that a 272px tile could not spare 80px for a band.
+
+              It could. And the gradient cost more than the space it saved: it
+              put a wash of the brand green over the bottom two-thirds of every
+              photograph — five interiors the studio chose, each seen through a
+              green filter — and it made the tiles read as a different
+              component from the desktop cards they are supposed to be. It also
+              needed the gradient to be dense enough to carry type, so "subtle"
+              was never available: at the opacity that made the folio legible
+              (measured: it took 88% emerald to bring the indices from 1.19:1
+              to 5.0:1) the green is the loudest thing in the tile.
+
+              A white band takes the type off the photograph altogether. The
+              picture is then unfiltered, the inks are emerald and gold-ink on
+              white — the values the desktop card already uses, and nowhere
+              near a contrast threshold — and there is no gradient to tune.
+              Removing the problem rather than lighting it well enough to
+              survive. */}
+          <span
+            className={cn(
+              face,
+              "flex flex-col border border-emerald/10 bg-white transition-colors duration-500 ease-editorial"
+            )}
+          >
+            {/* `min-h-0` is not optional: a flex child defaults to
+                `min-height: auto`, refuses to shrink below its content and
+                quietly defeats `flex-1`. Same note as the desktop card.
+
+                `bg-stone` is a ground, not decoration — these images are lazy
+                and a tile can be on screen before its photograph arrives.
+                Without it the tile reads as a hole in the grid. */}
+            <span className="relative block min-h-0 flex-1 overflow-hidden bg-stone">
+              <Media
+                src={service.image}
+                alt=""
+                /* A narrow tile is ~46vw and the wide one ~94vw; claiming the
+                   desktop's 90vw for both made every phone fetch roughly twice
+                   the pixels a small tile paints. */
+                sizes={wide ? "(max-width: 1024px) 94vw, 30vw" : "(max-width: 1024px) 48vw, 30vw"}
+                className={cn(
+                  "transition-transform duration-1400 ease-editorial",
+                  // The desktop's `group-hover:scale-105`, moved onto the
+                  // gesture a touch screen actually has. The image settles
+                  // back as the card turns face-down, so the movement is only
+                  // ever seen on the way in.
+                  "group-active:scale-[1.06]"
+                )}
+              />
+            </span>
+
+            {/* ── The strip ──────────────────────────────────────────────
+                The desktop band's rule and padding, at tile scale. The folio
+                sets above the name rather than beside it because four of the
+                five names run to two lines at a 137px measure, and an inline
+                numeral would push them to three. */}
+            <span className="shrink-0 border-t border-emerald/10 px-3.5 py-3">
+              <span className="flex items-end justify-between gap-2">
+                <span className="block">
+                  <span className="block font-label text-gold-ink">
+                    {service.index}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-1 block font-serif leading-[1.12] text-emerald",
+                      // ── Two lines are reserved on the narrow tiles ───────
+                      // "Vastu" is one line and "Architectural Photography"
+                      // is two, and they share a row — so without this the
+                      // two bands are different heights, the photographs above
+                      // them end at different places, and the row reads as
+                      // misaligned. The wide tile is alone in its row and
+                      // needs no reservation.
+                      wide ? "text-xl" : "min-h-[2.24em] text-base"
+                    )}
+                  >
+                    {service.title}
+                  </span>
+                </span>
+
+                {/* The desktop card's `+`, in the desktop card's ink — this
+                    sits on white now, so `text-gold` (2.18:1 on paper) would
+                    be the wrong half of the gold pair. `gold-ink` is the one
+                    the desktop band uses for exactly this mark.
+
+                    It turns for the same reason it does there: it is the one
+                    thing saying the tile has something behind it.
+                    `group-active:rotate-90` is the press; the flip itself
+                    takes the icon away with the face, and the back carries the
+                    same mark already at 45°. */}
+                <FiPlus
+                  aria-hidden
+                  size={16}
+                  className="mb-0.5 shrink-0 text-gold-ink transition-transform duration-300 ease-editorial group-active:rotate-90"
+                />
+              </span>
+            </span>
+          </span>
+
+          {/* ── Back: the copy ─────────────────────────────────────────── */}
+          <span
+            className={cn(
+              face,
+              "flex flex-col border border-gold/45 bg-white p-4",
+              /* ── Centred, and the linked tile still pins its link down ────
+                 The copy is shorter than the face on every tile — 126px of it
+                 in 238px on the wide one — so top-aligning left a third of a
+                 342px panel empty under the last line, which on the biggest
+                 tile in the grid read as a card that had failed to finish
+                 loading.
+
+                 `justify-center` is safe for the one tile that has a link:
+                 auto margins win over `justify-content` when there is free
+                 space, so that tile's `mt-auto` on the link still packs the
+                 copy to the top and drops the link to the bottom. Nothing
+                 needed a conditional. */
+              "justify-center",
+              // Pre-rotated, so that when the parent turns 180° this face
+              // arrives the right way round.
+              "[transform:rotateY(180deg)]"
+            )}
+          >
+            <span className="flex items-start justify-between gap-2">
+              <span className="font-label text-gold-ink">{service.index}</span>
+              <FiPlus
+                aria-hidden
+                size={15}
+                /* The same mark as the front, already turned — so the pair
+                   reads as one control in two states rather than as a `+` and
+                   an unrelated `×`. */
+                className="shrink-0 rotate-45 text-gold-ink"
+              />
+            </span>
+
+            {/* The section-heading gesture, and the spine's, and the one the
+                mobile projects caption draws — repeating it here is the
+                cheapest way to make a turned tile read as part of the same
+                drawing rather than as a plain white panel that appeared. */}
+            <span aria-hidden className="mt-2.5 block h-px w-10 bg-gold/70" />
+
+            <span
+              className={cn(
+                "mt-2.5 block font-serif leading-[1.12] text-emerald",
+                wide ? "text-xl" : "text-base"
+              )}
+            >
+              {service.title}
+            </span>
+
+            <span
+              className={cn(
+                "mt-2 block text-charcoal/70",
+                // 11.2px on a narrow tile. The disciplines run to ~150
+                // characters and a 165px-wide tile gives about 137px of
+                // measure; at the body's default size that is eight lines and
+                // it does not fit. The wide tile has 314px and keeps the
+                // normal size.
+                wide ? "text-sm leading-[1.55]" : "text-[0.7rem] leading-[1.45]"
+              )}
+            >
+              {service.body}
+            </span>
+
+            {service.link && (
+              /* DRAWN here, but not interactive — the real anchor is the flat
+                 sibling below, outside the 3D. `mt-auto` pins it to the foot of
+                 the tile so the overlay has a fixed place to sit. */
+              <span
+                aria-hidden
+                className={cn(
+                  "mt-auto inline-flex items-center gap-1.5 self-start border-b border-gold/50 pt-2 pb-0.5 font-label text-gold-ink",
+                  // The label is the smallest type on the tile and it is the
+                  // one element competing with the description for the last
+                  // 30px of a narrow face.
+                  !wide && "text-[0.62rem]"
+                )}
+              >
+                {service.link.label}
+                <FiArrowUpRight size={wide ? 12 : 11} />
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+
+      {service.link && (
+        /* ── The real link, flat and outside the button ──────────────────
+           Two reasons it cannot be the drawn one above. An <a> inside a
+           <button> is invalid HTML and browsers disagree about which one a
+           click activates. And an anchor inside `preserve-3d` is subject to
+           the hit-testing mismatch this file's header note describes, where
+           the element paints in one place and is tested in another.
+
+           So it is a sibling of the button, absolutely positioned over the
+           spot the drawn link occupies on the back face. It is inert until the
+           tile is turned: `pointer-events-none` so it cannot swallow a tap
+           meant to flip the card, and out of the tab order so a keyboard user
+           is not sent to a page whose name is currently face-down. */
+        <SmoothLink
+          href={service.link.href}
+          tabIndex={open ? undefined : -1}
+          aria-hidden={!open}
+          className={cn(
+            "absolute right-4 bottom-4 left-4 z-10 h-9",
+            open ? "pointer-events-auto" : "pointer-events-none"
+          )}
+        >
+          <span className="sr-only">{service.link.label}</span>
+        </SmoothLink>
+      )}
+    </div>
+  );
+}
 
 export default function Services() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -60,6 +381,10 @@ export default function Services() {
   const trackRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef(0);
+  /* The bento's entrance. `lg:hidden`, so above 1024px this animates a
+     `display: none` subtree, which costs nothing and keeps the hook
+     unconditional. */
+  const bentoRef = useReveal<HTMLDivElement>({ stagger: 0.09, y: 28 });
 
   const [active, setActive] = useState(0);
   /** Which discipline is expanded. Only one at a time. */
@@ -177,27 +502,108 @@ export default function Services() {
           />
         </PageContainer>
 
-        {/* Track */}
-        {/* ── Three layouts, one element ───────────────────────────────────
-            At `lg` and up this is the pinned horizontal TRACK: a flex row that
-            GSAP translates sideways as the section scrolls.
+        {/* ── The bento (below lg) ──────────────────────────────────────────
+            Five disciplines in a two-up grid with the first taking a
+            double-width tile, each tile turning over to show its copy. See
+            <BentoTile /> above for what this replaced and why it turns rather
+            than expanding.
 
-            Below that there is no pin and no translation, so it is free to be a
-            grid — and it needs to be. A full-width 4:5 card is ~490px on a
-            phone and ~960px on a tablet, so five disciplines stacked one per
-            row made this the longest section on the site by a wide margin, with
-            a single photograph on screen at a time and nothing to compare it
-            to. Two up from `sm` halves the run and is what a tablet's width is
-            for.
+            ── The spans pack exactly, at both column counts ────────────────
+            With the first tile double-width, five disciplines fill a rectangle
+            with no hole in it:
 
-            Phones keep one column: two 4:5 cards side by side at 390px are
-            170px wide, which turns a discipline's photograph into a thumbnail.
+              2 columns   [ 01 -- 01 ]   3 columns   [ 01 -- 01 ][ 02 ]
+                          [ 02 ][ 03 ]               [ 03 ][ 04 ][ 05 ]
+                          [ 04 ][ 05 ]
 
-            The order matters — `sm:grid` then `lg:flex` — because the later
-            utility has to win at the larger width. */}
+            That is the whole reason the wide tile is FIRST and not, say, the
+            photography one at the end: any other position leaves a gap in one
+            of the two layouts, and a bento with a hole in it reads as a broken
+            grid rather than as a composition.
+
+            ── The row height is set, not derived, and it is MEASURED ──────
+            `auto-rows` rather than an aspect ratio on the tiles. A tile's back
+            face has to hold the discipline's whole description at a ~137px
+            measure, so the binding constraint is the COPY's height, not the
+            photograph's proportion — and an aspect ratio would let the longest
+            description decide the grid by overflowing it.
+
+            The faces are `overflow-hidden`, so an overflow here does not
+            scroll or spill: it silently CLIPS the last line or two of a
+            sentence, which is the worst way for this to fail because nothing
+            about the rendered page looks wrong. At 15.5rem it did exactly
+            that — Architectural Photography ran 14px past its face, and at
+            16.5rem, once the hairline was added, 3px past it.
+
+            So the height is picked from the worst case rather than by eye. At
+            17rem the five back faces measure 126, 167, 133, 149 and 204px of
+            copy in 238px of room, the tightest being Architectural Photography
+            (137 characters plus a link). `SERVICES` is a committed constant,
+            not CMS content, so that measurement is a real guarantee — but it
+            is a guarantee about THIS copy: a materially longer description, or
+            another element added to the face, needs it re-checked. The check
+            is `scrollHeight - clientHeight` on each back face, which is 0 for
+            all five. */}
+        <div
+          ref={bentoRef}
+          className="grid grid-cols-2 auto-rows-[17rem] gap-3 px-6 pb-10 sm:auto-rows-[18rem] sm:gap-4 md:grid-cols-3 md:px-10 lg:hidden"
+        >
+          {SERVICES.map((service, i) => (
+            <BentoTile
+              key={service.id}
+              service={service}
+              wide={i === 0}
+              open={openId === service.id}
+              onToggle={() =>
+                setOpenId(openId === service.id ? null : service.id)
+              }
+            />
+          ))}
+        </div>
+
+        {/* ── The closing panel, below lg ──────────────────────────────────
+            The desktop track ends on this and the mobile layout had none of
+            it: below `lg` the section simply stopped after the fifth
+            discipline, so the one chapter that describes what the studio sells
+            offered no way to ask about any of it. The copy and the link are the
+            desktop panel's, verbatim. */}
+        <PageContainer className="pb-12 lg:hidden">
+          <span aria-hidden className="mb-5 block h-px w-16 bg-gold" />
+          <p className="max-w-[24ch] font-serif text-[1.55rem] leading-[1.15] text-emerald">
+            One studio, five disciplines, one continuous idea.
+          </p>
+          <SmoothLink
+            href="/contact"
+            className="group mt-6 inline-flex items-center gap-2.5 border-b border-gold/60 pt-1.5 pb-1.5 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
+          >
+            Start a conversation
+            <FiArrowUpRight
+              size={14}
+              aria-hidden
+              className="transition-transform duration-500 ease-editorial group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </SmoothLink>
+        </PageContainer>
+
+        {/* ── The track (lg and up) ─────────────────────────────────────────
+            The pinned horizontal run: a flex row that GSAP translates sideways
+            as the section scrolls.
+
+            It used to carry the small screens too, as a stack and then a
+            two-up grid — "three layouts, one element". The bento above took
+            those over, and the two are separate elements now because they are
+            no longer the same object at three widths: this is a row of tall
+            cards that open an accordion downward, that is a grid of tiles that
+            turn over. Sharing one element meant every class on it had to be
+            qualified for three layouts, and the interaction could only ever be
+            whichever one both could do.
+
+            Both trees are always in the DOM. That costs nothing in bandwidth:
+            the hidden one is `display: none`, so its lazy images never
+            intersect the viewport and are never fetched. */}
         <div
           ref={trackRef}
-          className="relative flex flex-1 flex-col items-stretch gap-6 px-6 pb-10 will-change-transform sm:grid sm:grid-cols-2 sm:gap-7 md:px-10 lg:flex lg:flex-row lg:gap-8 lg:px-16"
+          className="relative hidden flex-1 items-stretch will-change-transform lg:flex lg:flex-row lg:gap-8 lg:px-16 lg:pb-10"
         >
           {SERVICES.map((service) => {
             const open = openId === service.id;
@@ -367,7 +773,7 @@ export default function Services() {
               One studio, five disciplines, one continuous idea.
             </p>
             <SmoothLink
-              href="#contact"
+              href="/contact"
               className="group mt-7 inline-flex items-center gap-2.5 self-start border-b border-gold/60 pt-1.5 pb-1.5 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
             >
               Start a conversation

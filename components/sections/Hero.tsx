@@ -321,7 +321,7 @@ export default function Hero({ slides = HERO_SLIDES }: HeroProps) {
 
       {/* Animated scroll indicator */}
       <MotionSmoothLink
-        href="#practice"
+        href="/practice"
         /* The cue says "scroll", so it scrolls. Every other link on the site
            lets the distance choose between a glide and a chapter card; this is
            the one place where the travel itself is the promise being made. */

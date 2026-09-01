@@ -52,6 +52,7 @@
  */
 import { NAV_LINKS, SITE } from "@/constants";
 import { markIntroPlayed } from "@/lib/intro";
+import { pathForSection, sectionForPath } from "@/lib/sections";
 import { scrollToHash, SCROLL_OFFSET, targetForHash } from "@/lib/SmoothScrollProvider";
 
 /**
@@ -89,6 +90,14 @@ export interface SectionCard {
   route: string | null;
   /** An in-page target to scroll to while covered, if there is one. */
   hash: string | null;
+  /**
+   * The clean URL to write once we are there — `/services`, not `#services`.
+   *
+   * Only set for an IN-PAGE jump, where nothing navigates and the address bar
+   * would otherwise not move at all. A route change gets its URL from the
+   * router itself. See lib/sections.ts.
+   */
+  urlPath?: string;
   /** Two-digit index, as the mobile index numbers them. */
   index: string | null;
   /** The destination's name, as the visitor just read it on the link. */
@@ -155,12 +164,18 @@ function describe(href: string): {
   const [rawPath = "/", hash] = href.split("#");
   const path = rawPath || "/";
 
-  // The same destination can be written two ways depending on where the link is
-  // rendered: "#practice" on the home page, "/#practice" everywhere else. Both
-  // have to find the same nav entry, or clicking About from /faq produces a card
-  // with nothing on it.
-  const forms = hash ? [href, `#${hash}`] : [href];
-  const i = NAV_LINKS.findIndex((l) => forms.includes(l.href));
+  /* ── Every destination is a PATH now, so one form matches ────────────────
+     This used to reconcile two spellings of the same place — "#practice" on
+     the home page and "/#practice" everywhere else — because a fragment link
+     rendered differently depending on which page it was on. With the chapters
+     on real routes (see lib/sections.ts) there is one spelling: `/services` is
+     `/services` from anywhere, and it is what NAV_LINKS holds.
+
+     A legacy fragment still resolves, by mapping it to the path its chapter now
+     answers to. That keeps a shared `/#services` link naming "Services" on the
+     card rather than falling through to the title-cased-segment branch. */
+  const canonical = !rawPath && hash ? pathForSection(hash) : path;
+  const i = NAV_LINKS.findIndex((l) => l.href === canonical);
   if (i !== -1) {
     return {
       index: String(i + 1).padStart(2, "0"),
@@ -217,9 +232,16 @@ export function navigateToSection(hash: string, travel: Travel = "auto"): boolea
   const target = targetForHash(hash);
   if (target === null) return false;
 
+  /* The chapter's clean URL, so the address bar reads `/services` rather than
+     `/#services` — see lib/sections.ts. Computed from the section id rather
+     than passed in, so every route into this function (a masthead link, the
+     hero's scroll cue, a card's "back to the gallery") produces the same URL
+     for the same destination and they cannot drift apart. */
+  const urlPath = pathForSection(hash.slice(1));
+
   // Reduced motion: no wipe, no tween, no 1.4s of anything. Just be there.
   if (prefersReducedMotion()) {
-    scrollToHash(hash, { immediate: true });
+    scrollToHash(hash, { immediate: true, urlPath });
     return true;
   }
 
@@ -227,15 +249,16 @@ export function navigateToSection(hash: string, travel: Travel = "auto"): boolea
   const far = distance > window.innerHeight * CARD_THRESHOLD;
 
   if (travel === "scroll" || !far || !listener) {
-    scrollToHash(hash);
+    scrollToHash(hash, { urlPath });
     return true;
   }
 
   listener({
     route: null,
     hash,
+    urlPath,
     direction: target > window.scrollY ? 1 : -1,
-    ...describe(hash),
+    ...describe(urlPath),
   });
   return true;
 }
@@ -264,6 +287,30 @@ export function navigateToSection(hash: string, travel: Travel = "auto"): boolea
  */
 export function navigateToRoute(href: string, label?: string): boolean {
   const [path = "/", hash] = href.split("#");
+
+  /* ── A chapter's path is an in-page move when the chapter is HERE ────────
+     `/services` is a real route, but on the home document it names a section
+     that is already rendered a few screens below. Routing to it would tear the
+     page down and rebuild it in order to arrive at something that never left
+     the screen — and it would restart the intro's sibling animations, drop the
+     ring's scroll position and re-run every entrance on the way.
+
+     So: if this path names a chapter AND that chapter's element exists on the
+     page we are on, travel to it the way any in-page destination is travelled —
+     a smooth scroll for a short hop, a chapter card for a long one — and write
+     the clean path into the address bar without a navigation.
+
+     The element test, not the pathname, is what decides. From /faq the same
+     link finds no `#services` and falls through to a real route change below;
+     from `/projects` (which renders the whole home document) it finds one and
+     scrolls. Both are correct, and neither has to know which page it is on. */
+  const sectionId = sectionForPath(path);
+  if (sectionId && typeof document !== "undefined") {
+    if (document.getElementById(sectionId)) {
+      return navigateToSection(`#${sectionId}`);
+    }
+  }
+
   const samePage = path === window.location.pathname;
 
   // Already here: this is a move within the page, not a navigation.
@@ -287,7 +334,22 @@ export function navigateToRoute(href: string, label?: string): boolean {
 
   listener({
     route: href,
-    hash: hash ? `#${hash}` : null,
+    /* ── A chapter reached from ANOTHER page needs its fragment ───────────
+       `/services` clicked from /faq is a real route change, and the page it
+       lands on is the whole home document — whose top is the hero, not
+       Services. <SectionTransition /> scrolls to `hash` while the card still
+       covers the viewport, so handing it one is what makes the reveal show the
+       chapter already in place rather than the top of the page followed by a
+       jump. Without it that branch calls `smoothScrollTo(0)` and the visitor
+       arrives at the hero having asked for Services.
+
+       `hero` is the exception and stays null: its path IS `/`, and the top of
+       the document is where a no-fragment arrival already goes. */
+    hash: hash
+      ? `#${hash}`
+      : sectionId && sectionId !== "hero"
+        ? `#${sectionId}`
+        : null,
     // A page change has no up or down, so it always travels forward: in from
     // the bottom, out through the top, the same way a downward jump does.
     direction: 1,

@@ -320,7 +320,15 @@ export default function SectionTransition() {
           600
         );
         if (requestId.current !== id) return;
-        scrollToHash(card.hash, { immediate: true });
+        /* `updateUrl: false` — the ROUTER already wrote the address, and it
+           wrote the right one. `card.route` is the chapter's clean path
+           (`/services`), so letting this write as well appends the fragment it
+           falls back to and the URL ends up `/services#services`.
+
+           This was invisible before the chapters had routes: `card.route` was
+           then `/#services`, so the fragment this pushed was the one already in
+           the URL and the write was a no-op. It is a real double-write now. */
+        scrollToHash(card.hash, { immediate: true, updateUrl: false });
       } else {
         // No fragment: start at the top. Setting it here rather than trusting
         // the router's own restoration keeps Lenis's bookkeeping and the real
@@ -331,7 +339,12 @@ export default function SectionTransition() {
     } else if (card.hash) {
       // One instant set of the scroll position, with the pinned sections
       // resolving to their new state on the next tick.
-      scrollToHash(card.hash, { immediate: true });
+      //
+      // `urlPath` is the chapter's clean URL — `/services`, not `#services`.
+      // Nothing navigates on an in-page jump, so this is the only thing that
+      // moves the address bar; without it the URL would still say `/` after
+      // travelling five screens. See lib/sections.ts.
+      scrollToHash(card.hash, { immediate: true, urlPath: card.urlPath });
     }
 
     // Give the destination a moment to actually be the destination. For a route

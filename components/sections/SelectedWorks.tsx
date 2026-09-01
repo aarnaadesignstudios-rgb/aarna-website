@@ -77,9 +77,13 @@
  * the section sixty times a second.
  *
  * Kept from the previous version: the pin + scrub, the progress hairline, the
- * "01 / 09" readout, the index buttons, ←/→ stepping, and a release into a
- * plain vertical stack below `lg` (a 3D ring on a phone is a lot of compositing
- * for a 380px-wide arc).
+ * "01 / 09" readout, the index buttons, and ←/→ stepping.
+ *
+ * Below `lg` the ring is released into a horizontal SNAPPING RAIL — the same
+ * carousel gesture without the perspective, because a 3D ring on a phone is a
+ * lot of compositing for a 380px-wide arc and a touch screen has no pointer to
+ * drive the turntable with. See the note on the rail's markup at the foot of
+ * this file for what the two layouts do and do not share.
  */
 import { useCallback, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -313,20 +317,46 @@ export default function SelectedWorks({
   /**
    * ── Two ref arrays, deliberately ──────────────────────────────────────
    *
-   * The ring and the stack are different DOM, and only one of them is ever
-   * mounted (`hidden lg:block` / `lg:hidden`). They started out sharing one ref
-   * array so that `jump` could reach a card in either layout, and that was a
-   * bug: `apply` runs once before the desktop matchMedia is even consulted, so
-   * on a phone it wrote ring geometry onto the STACK's articles — every card
-   * more than 94° round the imaginary ring got `opacity: 0` and the rest got a
-   * near-opaque haze. The whole section rendered as an empty cream box.
+   * The ring's faces and the rail's cards are different DOM, and only one set
+   * is ever laid out. They started out sharing one ref array so that `jump`
+   * could reach a card in either layout, and that was a bug: `apply` runs once
+   * before the desktop matchMedia is even consulted, so on a phone it wrote
+   * ring geometry onto the RAIL's articles — every card more than 94° round the
+   * imaginary ring got `opacity: 0` and the rest got a near-opaque haze. The
+   * whole section rendered as an empty cream box.
    *
    * Separate arrays, and `apply` refuses to run without a ring (below). `jump`
    * takes whichever array has the element.
+   *
+   * `stackRef` keeps its name from the vertical stack the rail replaced — it is
+   * still "the mobile cards", and renaming it would touch six call sites to say
+   * the same thing.
    */
   const facesRef = useRef<(HTMLElement | null)[]>([]);
   const stackRef = useRef<(HTMLElement | null)[]>([]);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * ── The rail (below `lg`) ─────────────────────────────────────────────
+   *
+   * Below `lg` the section is THE SAME RING, turned by a horizontal scroller
+   * instead of by the page. `railRef` is that scroller — a transparent sheet of
+   * snap pages laid over the stage, one page per project. It is the gesture
+   * surface and, because it is flat, the click target too (see the markup).
+   *
+   * The ring it drives is its own: `mobileRingRef` / `mobileFacesRef`. Both
+   * rings are in the DOM at once — `lg:hidden` and `hidden lg:block` only
+   * toggle `display` — so the geometry writer has to be told which one it is
+   * addressing rather than reaching for a single module-wide ref. See `apply`.
+   *
+   * `railFrameRef` is the frame a pending read is queued on. There is no
+   * mobile-only progress bar to hold: the ring's position goes to the same
+   * `progressRef` hairline the desktop footer draws — see the footer.
+   */
+  const railRef = useRef<HTMLDivElement>(null);
+  const railFrameRef = useRef(0);
+  const mobileRingRef = useRef<HTMLDivElement>(null);
+  const mobileFacesRef = useRef<(HTMLElement | null)[]>([]);
 
   const stRef = useRef<ScrollTrigger | null>(null);
   /** Continuous ring position, in faces: 0 = first project at the front. */
@@ -335,22 +365,37 @@ export default function SelectedWorks({
   const [active, setActive] = useState(0);
 
   /**
-   * Put the ring at position `t` (in faces, so 4.5 is halfway between the
-   * fifth and sixth project).
+   * Put a ring at position `t` (in faces, so 4.5 is halfway between the fifth
+   * and sixth project).
    *
    * Everything here is a direct style write. The only React state it touches is
    * `active`, and that is guarded on a change of integer index — so the section
    * re-renders nine times over the whole scroll rather than on every frame.
+   *
+   * ── Why it takes a ring rather than reading one ──────────────────────────
+   *
+   * There are two rings now — the pinned one above `lg` and the swiped one
+   * below it — and BOTH are always in the DOM, because the breakpoint classes
+   * only toggle `display`. A writer that reached for `ringRef` would therefore
+   * always address the desktop ring, including on a phone where it is the
+   * hidden one, and the visible ring would never move.
+   *
+   * So the caller passes the pair it owns. `ctx` omitted means the desktop
+   * ring, which is what the ScrollTrigger and the opening pose both want.
    */
-  const apply = useCallback((t: number, linear?: number) => {
+  const apply = useCallback((
+    t: number,
+    linear?: number,
+    ctx?: { ring: HTMLElement | null; faces: (HTMLElement | null)[] }
+  ) => {
     posRef.current = t;
 
-    // No ring in the DOM means this is the stacked layout, and none of the
-    // geometry below applies to it. See the note on `stackRef`.
-    const ring = ringRef.current;
+    const ring = ctx ? ctx.ring : ringRef.current;
+    const faces = ctx ? ctx.faces : facesRef.current;
+    // The ring this call names is not mounted. Nothing below has a subject.
     if (!ring) return;
 
-    facesRef.current.forEach((face, i) => {
+    faces.forEach((face, i) => {
       if (!face) return;
 
       // Where this face stands THIS frame, as a signed angle from the front.
@@ -441,6 +486,63 @@ export default function SelectedWorks({
   }, [count, step, SPAN, CUT, FADE]);
 
   /**
+   * Read the rail's position and turn it into ring geometry.
+   *
+   * ── The scroller IS the turntable ────────────────────────────────────────
+   *
+   * Each snap page is exactly the rail's own width, so `scrollLeft / width` is
+   * the ring position in faces directly: 0 is the first project square-on, 1.5
+   * is halfway between the second and third. No mapping, no scaling.
+   *
+   * It is fed to `apply` LINEARLY, unlike the desktop trigger which pushes its
+   * progress through `ringPosition`'s dwell first. That dwell exists because a
+   * scrubbed pin has no rest positions of its own and would otherwise spend as
+   * much of its travel halfway between two projects as square-on to one. Scroll
+   * snapping already solves that here — the rail physically comes to rest on
+   * integers — and applying the curve on top would decouple the ring from the
+   * finger dragging it, which is the one thing a touch carousel must not do.
+   */
+  const readRail = useCallback(() => {
+    const rail = railRef.current;
+    // `lg:hidden` leaves the rail mounted but `display: none` above 1024px,
+    // where every measurement below is 0. Nothing to report from a box that is
+    // not laid out.
+    if (!rail || !rail.clientWidth) return;
+
+    const page = rail.clientWidth;
+    const t = Math.max(0, Math.min(count - 1, rail.scrollLeft / page));
+
+    apply(t, undefined, {
+      ring: mobileRingRef.current,
+      faces: mobileFacesRef.current,
+    });
+  }, [apply, count]);
+
+  /** rAF-throttled, because `scroll` on a touch rail fires faster than paint. */
+  const onRailScroll = useCallback(() => {
+    if (railFrameRef.current) return;
+    railFrameRef.current = requestAnimationFrame(() => {
+      railFrameRef.current = 0;
+      readRail();
+    });
+  }, [readRail]);
+
+  /**
+   * Turn the mobile ring to project `i`. Returns false when there is no rail
+   * laid out — i.e. on desktop — so `jump` can fall through to the pin.
+   *
+   * Native `scrollTo` rather than Lenis: this is an INNER scroller, and Lenis
+   * drives the document. `behavior: "smooth"` is the browser's own, which the
+   * UA already flattens under `prefers-reduced-motion`.
+   */
+  const scrollRailTo = useCallback((i: number) => {
+    const rail = railRef.current;
+    if (!rail || !rail.clientWidth) return false;
+    rail.scrollTo({ left: i * rail.clientWidth, behavior: "smooth" });
+    return true;
+  }, []);
+
+  /**
    * Bring project `i` to the front of the ring.
    *
    * Declared ABOVE the effect that uses it, and memoised on `count`. It used to
@@ -460,19 +562,54 @@ export default function SelectedWorks({
       // has to travel through the scroller or the two would disagree the moment
       // the next wheel event arrived.
       if (st) {
-        // Same divide-by-zero as the rail above, and a worse failure: NaN here
-        // is passed to the scroller as a target position.
+        // Same divide-by-zero guard as the progress rail in `apply`, and a
+        // worse failure: NaN here is passed to the scroller as a position.
         const frac = count > 1 ? target / (count - 1) : 0;
         smoothScrollTo(st.start + frac * (st.end - st.start));
         return;
       }
 
-      // No pin — below `lg`, where the section is a stack. Scroll to the card.
+      // No pin — below `lg`, where the section is a horizontal rail. The card
+      // is already on screen; what has to move is the rail, sideways.
+      if (scrollRailTo(target)) return;
+
+      // Neither layout is measurable (the section has not laid out yet). Fall
+      // back to putting the card in view the only way left.
       const card = facesRef.current[target] ?? stackRef.current[target];
       if (card) smoothScrollTo(card, { offset: -90 });
     },
-    [count]
+    [count, scrollRailTo]
   );
+
+  /**
+   * Seed the rail's readout, and keep it honest when the box changes size.
+   *
+   * Without this the gold bar is empty and the counter says 01 until the first
+   * swipe — which is wrong the moment the section is arrived at from a link, or
+   * the phone is turned, or a `sm` breakpoint changes how many cards are in
+   * view and therefore how far the rail can travel at all.
+   *
+   * `ResizeObserver` on the rail rather than a window `resize` listener: a
+   * mobile browser's URL bar collapsing fires `resize` constantly and does not
+   * change the rail's width, and crossing `lg` in either direction changes the
+   * rail's width without any window resize the layout effect would see.
+   */
+  useIsomorphicLayoutEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    readRail();
+    const ro = new ResizeObserver(() => readRail());
+    ro.observe(rail);
+
+    return () => {
+      ro.disconnect();
+      if (railFrameRef.current) {
+        cancelAnimationFrame(railFrameRef.current);
+        railFrameRef.current = 0;
+      }
+    };
+  }, [readRail]);
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -614,6 +751,47 @@ export default function SelectedWorks({
       };
     });
 
+    /**
+     * ── The mobile ring's entrance ────────────────────────────────────────
+     *
+     * The desktop ring opens out from near its own axis when the section comes
+     * into view, and the phone one should too: without it the arc is simply
+     * already there when you scroll to it, which after the rest of this page —
+     * every chapter of which arrives — reads as the one section that failed to
+     * animate.
+     *
+     * It is the same tween on the same property. `--ring-spread` scales the
+     * radius inside `.ring-face`, so this is one tween on one element rather
+     * than nine staggered ones, and because it MULTIPLIES the radius rather
+     * than replacing it, it cannot fight the per-face geometry `readRail` is
+     * writing at the same time.
+     *
+     * `0.42` rather than the desktop's `0.28`: a phone stage is small enough
+     * that nesting the cards that tightly stacks nine near-identical
+     * rectangles into a smear before it opens.
+     *
+     * Inside `matchMedia` so GSAP reverts it on a crossing of the breakpoint,
+     * and guarded on reduced motion — where the ring is simply already open,
+     * `--ring-spread` being declared as 1 on the element.
+     */
+    mm.add(
+      "(max-width: 1023px) and (prefers-reduced-motion: no-preference)",
+      () => {
+        const ring = mobileRingRef.current;
+        if (!ring) return;
+        gsap.fromTo(
+          ring,
+          { "--ring-spread": 0.42 },
+          {
+            "--ring-spread": 1,
+            duration: 1.3,
+            ease: "expo.out",
+            scrollTrigger: { trigger: section, start: "top 78%", once: true },
+          }
+        );
+      }
+    );
+
     // ←/→ steps between projects while the ring is on screen.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -663,7 +841,7 @@ export default function SelectedWorks({
     (fact): fact is string => Boolean(fact)
   );
 
-  /** One project's photograph, used by both the ring and the mobile stack. */
+  /** One project's photograph, used by both the ring and the mobile rail. */
   const photo = (i: number) => {
     const work = works[i];
     if (!work) return null;
@@ -700,7 +878,10 @@ export default function SelectedWorks({
         <Media
           src={work.image}
           alt={work.title}
-          sizes="(max-width: 1024px) 100vw, 30vw"
+          /* 62vw below `lg`, not 100vw: the ring's faces are ~58vw wide there
+             (see the mobile stage), and claiming the full viewport made every
+             phone download an image nearly three times the area it draws. */
+          sizes="(max-width: 1024px) 62vw, 30vw"
           /* The focal point the studio set in the CMS. Undefined for the
              committed constants, which are centred — see the note on
              `objectPosition` in types/index.ts. */
@@ -709,7 +890,7 @@ export default function SelectedWorks({
         />
 
         {/* The haze. Its opacity is written per frame by `apply` on the ring;
-            in the mobile stack it stays at 0 and costs nothing. */}
+            in the mobile rail it stays at 0 and costs nothing. */}
         <div
           aria-hidden
           className="absolute inset-0 bg-emerald"
@@ -786,7 +967,7 @@ export default function SelectedWorks({
           <Media
             src={work.image}
             alt=""
-            sizes="(max-width: 1024px) 100vw, 30vw"
+            sizes="(max-width: 1024px) 62vw, 30vw"
             objectPosition={work.objectPosition}
             className="scale-[1.04]"
           />
@@ -891,28 +1072,24 @@ export default function SelectedWorks({
                below. Drawing rather than type, which is what the rest of the
                site does with its margins anyway. */
             tone="dark"
-            /* ── The counter is a DESKTOP counter ─────────────────────────
-               `active` is written by the ring's ScrollTrigger, and that trigger
-               is inside a `(min-width: 1024px)` matchMedia — so below `lg` it
-               is never anything but 0 and the header read "01 / 09" the whole
-               way down a nine-card stack. A position indicator that does not
-               indicate position is worse than no indicator: it says the page is
-               stuck.
+            /* ── One counter, one number ──────────────────────────────────
+               Both layouts are rings and both report through `active`, so this
+               is a single expression again rather than a pair of breakpoint
+               variants. The two rings are turned by different things — a pinned
+               ScrollTrigger above `lg`, a snapping scroller below it — but each
+               writes its position through the same `apply`, and `apply` owns
+               `active`.
 
-               So the counter belongs to the ring, and the stack gets the count
-               instead, which is true at every scroll position. */
-            meta={
-              <>
-                <span className="lg:hidden">
-                  {count} {count === 1 ? "project" : "projects"}
-                </span>
-                <span className="hidden lg:inline">
-                  {`${String(active + 1).padStart(2, "0")} / ${String(
-                    count
-                  ).padStart(2, "0")}`}
-                </span>
-              </>
-            }
+               This used to print the project COUNT below `lg` — "9 projects" —
+               and that was correct for what was there: the vertical stack that
+               preceded the rail had no notion of a current project, so `active`
+               was never anything but 0 and a counter would have read "01 / 09"
+               the whole way down it. A position indicator that does not
+               indicate position is worse than none: it says the page is
+               stuck. */
+            meta={`${String(active + 1).padStart(2, "0")} / ${String(
+              count
+            ).padStart(2, "0")}`}
           />
         </PageContainer>
 
@@ -980,6 +1157,63 @@ export default function SelectedWorks({
               </div>
             ))}
           </div>
+
+          {/* ── The click target, and why it is not the card ─────────────────
+              The front card is a real <SmoothLink> and it is NOT reliably
+              clickable, for a reason that has nothing to do with this code:
+              Chrome hit-tests differently inside a `transform-style:
+              preserve-3d` context than it paints.
+
+              Measured, on a production build: `elementsFromPoint()` at the
+              centre of the front card returns that card's own <a> with nothing
+              above it — and a real mouse click at the same coordinates is
+              delivered to `div.ring-stage`. The anchor is not in the event
+              path at all. So the click did nothing: no route change, no chapter
+              card, no scroll. That is the "clicking a project does not open it"
+              report, and clicking harder never helps, because the event was
+              never going to reach the link.
+
+              `pointer-events` is not the cause — the front face computes
+              `auto`, the flanks `none`, exactly as `apply()` intends. The
+              geometry is what disagrees.
+
+              So the mouse gets a FLAT target: a plain absolutely-positioned
+              anchor that is a sibling of the 3D context rather than inside it,
+              so no 3D hit-testing is involved in reaching it. Its box is the
+              face's own `w`/`h` — the same two clamps, so they cannot drift —
+              parked where the front face actually lands.
+
+              ── 50% / 35%, and both are measured ────────────────────────────
+              The front face sits at `translateZ(0)` after the ring's own
+              `translateZ(-r)`, so it lands ON the perspective plane at scale 1
+              and dead centre horizontally. The camera's fixed `rotateX(7deg)`
+              is what pushes it above the stage's middle. Sampled at 1024×768,
+              1280×800, 1440×900 and 1920×1080, its centre came out at 50.0%,
+              50.0%, 50.0%, 49.0% across and 35.7%, 34.1%, 34.8%, 36.0% down.
+              35% covers all four with room to spare, and the target is bigger
+              than the artwork it stands in for anyway.
+
+              ── It is invisible to assistive tech, on purpose ───────────────
+              `aria-hidden` + `tabIndex={-1}`: the face anchors are still real
+              links with real labels, so the crawler and the keyboard already
+              have a complete, correct path to every project — pressing Enter
+              on a focused anchor dispatches to the element and never goes near
+              a hit test, which is why keyboard was the one route that always
+              worked. Exposing this as a second link would announce every
+              project twice to a screen reader in order to fix a mouse bug. */}
+          {current && (
+            <SmoothLink
+              href={`/work/${current.id}`}
+              cardLabel={current.title}
+              aria-hidden
+              tabIndex={-1}
+              className="absolute top-[35%] left-1/2 z-5 h-[clamp(330px,52vh,540px)] w-[clamp(250px,30vw,450px)] -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+            >
+              {/* Deliberately empty. This is a hit area, not a control with a
+                  face — everything a visitor sees is the card behind it. */}
+              <span className="sr-only">{current.title}</span>
+            </SmoothLink>
+          )}
 
           {/* ── The project's name ─────────────────────────────────────────
               Flat type on the page, deliberately NOT on the card. Inside a 3D
@@ -1109,119 +1343,285 @@ export default function SelectedWorks({
           </div>
         </div>
 
-        {/* ── The stack (below lg) ─────────────────────────────────────────
-            ── It carries the SAME caption the ring does ────────────────────
-            The ring's front card is captioned twice over: the category and the
-            name on the left, and a plate on the right with the commission's
-            location, year and area and a link into the project. The stack used
-            to carry the first half only — so on a phone and on a tablet, which
-            is where most people meet this section, the work had no location, no
-            year, no size, and nothing saying the photograph was a way in. The
-            studio's note was exactly that: the name and the location are not
-            there.
+        {/* ── The ring, below lg ───────────────────────────────────────────
+            The SAME turntable the desktop draws, at phone scale, turned by a
+            horizontal scroller instead of by the page.
 
-            Both halves are here now, in one column rather than two — a phone
-            has no right-hand margin to range a plate into, so the facts sit
-            under the name where they read as a caption instead.
+            ── Why not the vertical stack this replaced ─────────────────────
+            Below `lg` this section used to release into a column of cards, and
+            then into a flat horizontal rail of them. Both were legible and
+            neither was this site: the desktop chapter is nine photographs on a
+            turntable, and a phone that shows the same nine as a filmstrip reads
+            as a different studio's page. The client's note was exactly that —
+            make it consistent with the desktop.
 
-            ── Two up from `sm` ─────────────────────────────────────────────
-            One full-width 4:5 plate per row is ~490px on a phone and ~960px on
-            a tablet, so a nine-project section was nine screens of scrolling
-            with one photograph on each. At `sm` and above the grid goes two up,
-            which halves the run and gives a tablet something to do with its
-            width. The single column stays on phones, where two 4:5 cards side
-            by side would be thumbnails. */}
-        <div className="grid grid-cols-1 gap-x-6 gap-y-10 px-6 pt-6 pb-14 sm:grid-cols-2 sm:gap-y-12 md:px-10 lg:hidden">
-          {works.map((work, i) => {
-            /* Same three facts as the ring's plate, in the same order, with
-               the blanks dropped rather than placeheld — see the note there.
-               Most projects have none of them filled in yet, and a caption
-               that reserved the row would print an empty rule on every card. */
-            const workFacts = [work.location, work.year, work.area].filter(
-              (fact): fact is string => Boolean(fact)
-            );
+            Everything visual is shared verbatim: `.ring-stage`, `.ring-3d`,
+            `.ring-face`, `.ring-floor` and `.ring-reflect` in globals.css, and
+            `photo()` / `reflection()` above. What changes is three numbers (the
+            radius, the perspective and where the floor sits) and what turns it.
 
-            return (
-              <article
-                key={work.id}
-                ref={(el) => {
-                  stackRef.current[i] = el;
-                }}
-              >
-                <div className="aspect-4/5 w-full">{photo(i)}</div>
-                {/* ── The ink is CREAM here, like the ring's caption ────────
-                    This block was `text-charcoal` on `text-emerald` — ink cut
-                    for a light ground, on a section whose ground is the brand
-                    green. The title measured 1:1 against it, which is not low
-                    contrast, it is invisible: below `lg` — every phone and
-                    every tablet — the project names were simply not on the
-                    page, and the category and description were at 1.2:1 behind
-                    them.
+            ── What turns it ───────────────────────────────────────────────
+            Not a pin. A pinned, scrubbed 3D ring on a phone means holding the
+            page still while compositing nine transformed layers per frame, and
+            it takes the page's own scroll away from a visitor who was trying to
+            get past the section. The scroller over the stage does it instead:
+            one snap page per project, each exactly the stage's width, so
+            `scrollLeft / width` IS the ring position in faces. Native momentum,
+            native snapping, and the page keeps scrolling vertically through the
+            whole thing. See `readRail`. */}
+        <div
+          /* The height the stage gets to work in. Tall enough for a card plus
+             its reflection and the floor ellipse under it; capped so that on a
+             short phone in landscape the caption below is still on screen with
+             it. */
+          className="relative h-[clamp(340px,50vh,440px)] w-full lg:hidden"
+        >
+          <div
+            className="ring-stage absolute inset-0"
+            style={
+              {
+                /* ── Three numbers, and each is the desktop's rescaled ──────
+                   RADIUS. Desktop is `46vw` against a `30vw` card — a ratio of
+                   ~1.53, which is what puts the flanks a little INSIDE their
+                   neighbours' edges rather than clear of them. The card here is
+                   58vw, so the same ratio is ~89vw; 80vw is used instead
+                   because the overlap is what makes the arc read as one
+                   continuous object, and a phone needs proportionally more of
+                   it to fill 390px with three cards.
 
-                    The values are the ring caption's, verbatim (see the desktop
-                    block above): 75% for the category label, full cream for the
-                    name, 70% for the description. That is the point — the stack
-                    and the ring are the same caption at two widths, so they
-                    should be reading off the same three values rather than each
-                    guessing at its own. On emerald they measure 6.3:1, 11.4:1
-                    and 5.6:1. */}
-                <div className="mt-4">
-                  {/* The folio. The ring has an index row under it that says
-                      which of nine you are looking at; the stack had no such
-                      row, so the number rides the category line instead. */}
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-label text-gold-soft">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="font-label text-cream/75">
-                      {work.category}
-                    </span>
-                  </div>
-                  <h3 className="mt-1.5 font-serif text-3xl leading-[1.04] tracking-tight text-cream">
-                    {work.title}
-                  </h3>
+                   PERSPECTIVE. `.ring-stage` sets 1250px, chosen against a
+                   1440px stage. The same absolute distance against a 390px one
+                   is a far longer lens — the arc flattens into a row of
+                   overlapping rectangles and the whole point is lost. 620
+                   holds roughly the desktop's ratio of viewport to focal
+                   length, so the flanks foreshorten by about as much.
 
-                  {workFacts.length > 0 && (
-                    <>
-                      {/* The hairline the ring's plate carries, so the two
-                          captions read as the same object at two widths. */}
-                      <span
-                        aria-hidden
-                        className="mt-4 block h-px w-14 bg-gold/70"
-                      />
-                      <span className="mt-3 block max-w-[34ch] font-label text-cream/70">
-                        {workFacts.join("  ·  ")}
-                      </span>
-                    </>
-                  )}
+                   FLOOR. Just under the tallest card, as on desktop: half the
+                   card's height plus a little air. */
+                "--ring-r": "clamp(230px, 80vw, 360px)",
+                "--ring-persp": "620px",
+                "--floor-y": "clamp(130px, 20vh, 190px)",
+              } as React.CSSProperties
+            }
+          >
+            <div
+              ref={mobileRingRef}
+              className="ring-3d absolute inset-0"
+              /* Declared rather than left to the `var()` fallbacks for the same
+                 reason as the desktop ring: GSAP needs a computed value to
+                 tween `--ring-spread` from. Unitless — the degrees are applied
+                 in the CSS. */
+              style={
+                {
+                  "--ring-tilt": 0,
+                  "--ring-yaw": 0,
+                  "--ring-spread": 1,
+                } as React.CSSProperties
+              }
+            >
+              {/* The footprint. First child so it sorts under the cards even
+                  where they touch it. */}
+              <div aria-hidden className="ring-floor" />
 
-                  {work.description && (
-                    <p className="mt-3 max-w-[40ch] text-cream/70">
-                      {work.description}
-                    </p>
-                  )}
-
-                  {/* The affordance the stack was missing entirely. The
-                      photograph above is already a link to the same place, but
-                      a photograph does not read as one — on the ring this is
-                      spelled out in words for the same reason, and it is more
-                      necessary here, where there is no pointer to change shape
-                      over the card. */}
-                  <SmoothLink
-                    href={`/work/${work.id}`}
-                    cardLabel={work.title}
-                    className="mt-4 inline-block py-1.5 font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
-                  >
-                    View project &rarr;
-                  </SmoothLink>
+              {works.map((work, i) => (
+                <div
+                  key={work.id}
+                  ref={(el) => {
+                    mobileFacesRef.current[i] = el;
+                  }}
+                  className="ring-face h-[clamp(250px,34vh,330px)] w-[clamp(185px,58vw,250px)] will-change-transform"
+                  style={
+                    {
+                      /* The station this face starts at, so the frame before
+                         hydration is the same arc as the first real one rather
+                         than a pile of coincident cards. `readRail` overwrites
+                         it from there on. */
+                      "--face-a": `${wrapInto(i * step, SPAN)}deg`,
+                      /* Half the desktop's scatter. The amplitude there is
+                         tuned so the front card stays near the centre of a
+                         900px stage; on a 440px one the same vh figures throw
+                         the cards far enough off-axis that the arc stops
+                         reading as level. */
+                      "--face-y": `${(RISE[i % RISE.length] ?? 0) / 2}vh`,
+                    } as React.CSSProperties
+                  }
+                >
+                  {photo(i)}
+                  {reflection(i)}
                 </div>
-              </article>
-            );
-          })}
+              ))}
+            </div>
+          </div>
+
+          {/* ── The scroller: the gesture surface AND the click target ───────
+              A transparent sheet of snap pages over the stage. It does three
+              jobs that would otherwise need three mechanisms:
+
+                · it TURNS the ring — `scrollLeft / clientWidth` is the ring
+                  position in faces, read by `readRail`
+                · it gives the section native touch physics for free: momentum,
+                  rubber-banding at the ends, and snapping that comes to rest
+                  exactly on a project
+                · it is what a tap actually hits
+
+              The third is not a convenience. Chrome hit-tests inside a
+              `transform-style: preserve-3d` context differently from how it
+              paints it — measured on the desktop ring, `elementsFromPoint` at
+              the centre of the front card returns that card's own <a> with
+              nothing above it, and a real click at the same coordinates is
+              delivered to the stage instead, with the anchor nowhere in the
+              event path. That is the "clicking a project does nothing" bug, and
+              it applies here for exactly the same reason. A flat anchor that is
+              a SIBLING of the 3D context, not a descendant, is never subject to
+              that test. The desktop ring carries one; this carries one per page,
+              because the pages had to exist anyway.
+
+              ── `data-lenis-prevent-horizontal`, and only horizontal ─────────
+              Lenis smooths the WHEEL for the whole document, which means it
+              calls `preventDefault` on wheel events and re-drives the scroll
+              itself — so a horizontal trackpad flick over this was swallowed
+              and the ring never moved. Lenis classifies each gesture by its
+              dominant axis and honours this attribute only for the horizontal
+              ones, so sideways gestures reach the scroller while a vertical
+              wheel over the same element still eases the PAGE, exactly as it
+              does everywhere else. Verified: a vertical drag starting on the
+              ring scrolls the document past the section rather than trapping
+              the visitor in it.
+
+              Touch needs no attribute at all: Lenis runs with
+              `syncTouch: false`, so it leaves touch to the browser entirely. */}
+          <div
+            ref={railRef}
+            onScroll={onRailScroll}
+            data-lenis-prevent-horizontal
+            className="no-scrollbar absolute inset-0 z-10 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
+          >
+            {works.map((work) => (
+              <div
+                key={work.id}
+                /* One page per project, each exactly the scroller's width —
+                   that identity is what makes the scroll position a face
+                   index with no arithmetic. `snap-center` rather than
+                   `snap-start`: a full-width page has no gutter to start
+                   against, and centre is where the front face is. */
+                className="relative w-full shrink-0 snap-center"
+              >
+                {/* ── The tappable region is the CARD, not the page ─────────
+                    If the whole page were the link, tapping a flank — a
+                    photograph that is plainly a different project — would open
+                    the one at the front. So the anchor is a box the size of a
+                    face, parked where the front face lands, and the rest of the
+                    page is bare: swipeable, not tappable.
+
+                    `top-[38%]`, and it is measured rather than reasoned. The
+                    front face sits at the stage's centre and the camera's fixed
+                    `rotateX(7deg)` lifts it above the middle; how far depends
+                    on the stage's height, which is a clamp. Sampled on the
+                    running page at 360×740, 390×844, 414×896, 430×932, 768×1024
+                    and 820×1180, its centre came out at 38.0, 38.6, 38.4, 38.0,
+                    37.3 and 36.8 percent down, and at exactly 50% across every
+                    time. 38% is within 8px of the worst of those on a 287px-tall
+                    target, which is well inside the card.
+
+                    ── Invisible to assistive tech, on purpose ───────────────
+                    `aria-hidden` + `tabIndex={-1}`. The face anchors inside the
+                    ring are real links with real labels and `apply` leaves
+                    exactly one of them — the front — out of `inert`, so the
+                    keyboard and the crawler already have a complete, correct
+                    path to every project. Pressing Enter on a focused anchor
+                    dispatches to the element and never goes near a hit test,
+                    which is why keyboard was the one route that always worked.
+                    Exposing these as a second set of links would announce every
+                    project twice to a screen reader in order to fix a touch
+                    bug. */}
+                <SmoothLink
+                  href={`/work/${work.id}`}
+                  cardLabel={work.title}
+                  aria-hidden
+                  tabIndex={-1}
+                  className="absolute top-[38%] left-1/2 h-[clamp(250px,34vh,330px)] w-[clamp(185px,58vw,250px)] -translate-x-1/2 -translate-y-1/2"
+                >
+                  {/* Deliberately empty. This is a hit area, not a control with
+                      a face — everything a visitor sees is the card behind it. */}
+                  <span className="sr-only">{work.title}</span>
+                </SmoothLink>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ── Footer: progress, index, and the way out ───────────────────── */}
-        <PageContainer className="relative z-20 hidden shrink-0 pb-4 lg:block">
+        {/* ── The caption, below lg ────────────────────────────────────────
+            The desktop's caption, in one column instead of two. It carries the
+            same four things in the same order — category, name, the hairline,
+            the facts — and for the same reason: a photograph on a turntable
+            does not read as a link, so the section has to say in words that
+            there is somewhere to go.
+
+            Ranged left rather than split to both edges: the desktop version
+            holds the name in one corner and the plate in the other because it
+            has 1440px to range across. A phone has no second corner. */}
+        <PageContainer className="relative z-20 lg:hidden">
+          {current && (
+            <div className="overflow-hidden pt-6">
+              <motion.div
+                /* Keyed on the project so it re-enters on every change rather
+                   than swapping the string in place, which at this size reads
+                   as a glitch. Masked by the `overflow-hidden` above, so it
+                   rises out of the ring rather than fading in. */
+                key={current.id}
+                initial={{ y: "108%" }}
+                animate={{ y: "0%" }}
+                transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="block font-label text-cream/75">
+                  {current.category}
+                </span>
+                {/* `min-h`: the names run from one line to two and the block
+                    below them would otherwise step up and down as the ring
+                    turns, dragging the footer with it. Two lines are reserved
+                    at every position, so nothing under the caption moves. */}
+                <h3 className="mt-1.5 min-h-[2.12em] font-serif text-[1.9rem] leading-[1.06] tracking-tight text-cream sm:text-4xl">
+                  {current.title}
+                </h3>
+
+                <span
+                  aria-hidden
+                  className="mt-4 block h-px w-14 bg-gold/70"
+                />
+                {facts.length > 0 && (
+                  <span className="mt-3 block font-label text-cream/55">
+                    {facts.join("  ·  ")}
+                  </span>
+                )}
+
+                <SmoothLink
+                  href={`/work/${current.id}`}
+                  cardLabel={current.title}
+                  /* `py-1.5` only for the target: 12px label type on its own is
+                     a 16px-tall hit area, under the 24px minimum. */
+                  className="mt-3 inline-block py-1.5 font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
+                >
+                  View project &rarr;
+                </SmoothLink>
+              </motion.div>
+            </div>
+          )}
+        </PageContainer>
+
+        {/* ── Footer: progress, index, and the way out ─────────────────────
+            One footer for both rings. It was `hidden lg:block` for as long as
+            the mobile layout was a stack and then a flat rail, neither of which
+            had a ring position for the progress hairline to report or a face
+            for the index to jump to. Both do now — `jump` turns whichever ring
+            is mounted (see `scrollRailTo`) — so the same three things are true
+            at every width and the phone got a duplicate of none of them.
+
+            It replaced a mobile-only footer that carried its own gold bar and
+            its own "01 / 04". The bar was the same bar and the counter was the
+            SectionHeading's counter printed a second time, forty pixels below
+            it. The index row here says more than either: it is nine tap targets
+            that go somewhere. */}
+        <PageContainer className="relative z-20 shrink-0 pb-10 lg:pb-4">
           <div className="relative mb-0.5 h-px bg-cream/25">
             <div
               ref={progressRef}
@@ -1261,7 +1661,13 @@ export default function SelectedWorks({
           <div className="flex items-center justify-between gap-8">
             {/* The gaps are 16px narrower than they read, because each numeral
                 now carries `px-2` — see the button. Padding plus gap keeps the
-                same optical rhythm the bare gap used to give on its own. */}
+                same optical rhythm the bare gap used to give on its own.
+
+                `flex-wrap` earns its place on a phone rather than being
+                defensive: nine numerals at a 44px-wide target come to ~279px,
+                which clears a 390px screen's 342px of content width, but a
+                studio publishing a twelfth project would overflow it. It wraps
+                to a second row instead. */}
             <div className="flex flex-wrap gap-x-0 gap-y-1 font-label sm:gap-x-1">
               {works.map((work, i) => (
                 <button
@@ -1315,7 +1721,7 @@ export default function SelectedWorks({
                 the invitation moved here, where it also gives the index row a
                 right-hand edge. */}
             <SmoothLink
-              href="#contact"
+              href="/contact"
               className="shrink-0 py-4 font-label whitespace-nowrap text-gold-soft transition-colors duration-300 hover:text-cream"
             >
               More, on request &rarr;

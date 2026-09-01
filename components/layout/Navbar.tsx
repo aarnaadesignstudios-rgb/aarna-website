@@ -90,10 +90,11 @@ import { useIsomorphicLayoutEffect } from "@/hooks";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { introDelay, introHasPlayed, onIntroCleared } from "@/lib/intro";
 import { setSmoothScrollPaused } from "@/lib/SmoothScrollProvider";
+import { sectionForPath } from "@/lib/sections";
 import { cn } from "@/utils/cn";
 
 /** Links shown inline on desktop. Contact is the CTA, so it is excluded. */
-const INLINE_LINKS = NAV_LINKS.filter((l) => l.href !== "#contact");
+const INLINE_LINKS = NAV_LINKS.filter((l) => l.href !== "/contact");
 
 /**
  * Every link in the bar goes through <SmoothLink />, which is what makes an
@@ -380,8 +381,13 @@ export default function Navbar() {
   // Scroll-spy: mark the nav link whose section is currently in view.
   // Route links (/faq) have no section to observe and are simply skipped.
   useIsomorphicLayoutEffect(() => {
-    const sections = NAV_LINKS.filter((l) => l.href.startsWith("#"))
-      .map((l) => document.getElementById(l.href.slice(1)))
+    /* The nav's hrefs are clean paths now (`/services`), so the section each
+       one names is looked up through the route table rather than by slicing a
+       "#" off the front. `/about` and `/faq` map to nothing and are skipped, as
+       they were before — they are pages, not chapters. See lib/sections.ts. */
+    const sections = NAV_LINKS.map((l) => sectionForPath(l.href))
+      .filter((id): id is NonNullable<typeof id> => Boolean(id) && id !== "hero")
+      .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
 
     const observer = new IntersectionObserver(
@@ -459,21 +465,35 @@ export default function Navbar() {
   const introWait = introDelay(INTRO.navbarMs);
 
   /**
-   * ── The brand must never be able to stay hidden ─────────────────────
+   * ── The brand comes up UNDER the intro, not after it ─────────────────
    *
-   * It waits for the intro to fly it in, and `onIntroCleared` only ever fires
-   * for a load that actually PLAYED an intro. <LoadingScreen /> is rendered
-   * from `app/page.tsx` alone — so on `/faq`, on `/photography`, and on any
-   * direct load of a route without one, that signal never comes and the brand
-   * would sit at opacity 0 for the whole visit.
+   * The intro used to fly its own copy of the mark and the wordmark into this
+   * exact spot, so the bar had to hold its brand at zero until that copy had
+   * landed and faded — otherwise the last frame of the flight was two
+   * overlapping wordmarks. That flight is gone (the note in
+   * components/sections/LoadingScreen.tsx records why it could never land: this
+   * masthead is itself still arriving during those milliseconds, so the rect
+   * the intro measured was stale before it started using it).
    *
-   * Two ways out, because this is the site's name and it failing open is not
-   * acceptable:
+   * Which leaves this state with one job. There is no copy to collide with any
+   * more, but the panel is still opaque and still covering the bar, so the
+   * brand can be raised at `holdMs` — the moment the window begins to open —
+   * and be at full strength, at rest, by the time the panel is gone. The
+   * handover reads as one brand that was always there rather than as one that
+   * faded in over a live page.
    *
-   *   · no `[data-intro]` in the DOM means nothing is going to deliver it, so
-   *     show it on the spot. That covers every route but `/`
-   *   · a timer past the latest the intro could possibly finish, in case one is
-   *     present but never completes
+   * ── And it must never be able to stay hidden ─────────────────────────
+   *
+   * <LoadingScreen /> is rendered from `app/page.tsx` alone, so on `/faq`, on
+   * `/photography`, and on any direct load of a route without one there is no
+   * intro to wait behind at all. Three ways out, because this is the site's
+   * name and it failing open is not acceptable:
+   *
+   *   · no `[data-intro]` in the DOM means nothing is covering the bar, so show
+   *     it on the spot. That covers every route but `/`
+   *   · the timer above, which is the normal path
+   *   · `onIntroCleared`, in case the panel leaves early — it cannot leave
+   *     later without the timer having already fired
    */
   useEffect(() => {
     if (brandReady) return;
@@ -484,19 +504,32 @@ export default function Navbar() {
     }
 
     const off = onIntroCleared(() => setBrandReady(true));
-    const failsafe = window.setTimeout(
-      () => setBrandReady(true),
-      INTRO.clearedMs + INTRO.revealWaitCapMs + 600,
-    );
+    const raise = window.setTimeout(() => setBrandReady(true), INTRO.holdMs);
 
     return () => {
       off();
-      window.clearTimeout(failsafe);
+      window.clearTimeout(raise);
     };
   }, [brandReady]);
 
-  const isActive = (href: string) =>
-    href.startsWith("#") ? activeId === href.slice(1) : pathname === href;
+  /**
+   * Which link to mark as current.
+   *
+   * A chapter of the home document is marked by what is ON SCREEN, not by what
+   * the URL says: scrolling from `/services` down into Process should move the
+   * highlight even though the address bar still reads `/services` until you
+   * click something. `activeId` comes from the IntersectionObserver above.
+   *
+   * The pathname is the fallback for the first paint — before the observer has
+   * fired there is no `activeId`, and on an arriving `/services` link the right
+   * answer is already knowable from the URL — and the only test for the real
+   * pages, `/about` and `/faq`, which have no section to observe.
+   */
+  const isActive = (href: string) => {
+    const id = sectionForPath(href);
+    if (id && id !== "hero") return activeId ? activeId === id : pathname === href;
+    return pathname === href;
+  };
 
   // The emblem is sized by a prop rather than a class, because <Mark /> pins
   // width/height inline so `size` stays authoritative (see that component).
@@ -643,30 +676,22 @@ export default function Navbar() {
             Centred by the grid, not by absolute positioning — see the note
             at the top of the file. `min-w-0` lets this track give way before
             it can push the edge controls off the bar. */}
-        {/* ── It is not visible until the intro has delivered it ─────────
-            The loader flies its own copy of the mark and the wordmark into
-            exactly this spot and fades it out on arrival. If this one were
-            already painted underneath, the last frame of that flight would be
-            two overlapping wordmarks — so it holds at zero until the intro
-            signals cleared, and the two crossfade at the same position and
-            scale, which is invisible.
+        {/* ── It comes up while the intro is still covering the bar ──────
+            Not after the panel has gone: it is raised at `INTRO.holdMs`, as
+            the intro's window starts opening, so it is at rest and at full
+            strength by the time anything can see it. See the note on
+            `brandReady` above.
 
             `brandReady` is true from the first render when the intro is not
             playing at all (a return visit, or any route that is not `/`). */}
         <MotionSmoothLink
           variants={barItem}
-          href="#hero"
+          href="/"
           aria-label={`${SITE.name} — back to top`}
           style={{ opacity: brandReady ? 1 : 0 }}
           className="group relative z-10 flex min-w-0 items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 ease-out"
         >
-          {/* `data-brand-mark` / `data-brand-name` are what <LoadingScreen />
-              measures to fly its own mark and wordmark into this position at
-              the end of the intro — see the note there. They are attributes
-              rather than refs because the two components never meet: the
-              loader is a sibling, mounted and unmounted on its own clock. */}
           <span
-            data-brand-mark
             className="inline-flex shrink-0 transition-transform duration-700 ease-editorial group-hover:scale-108"
           >
             <Mark size={markSize} priority />
@@ -695,7 +720,6 @@ export default function Navbar() {
               the legible gold on light — but a masthead that changed metal as
               well as value between bands would read as two different marks.) */}
           <span
-            data-brand-name
             className={cn(
               "block font-display text-[0.72rem] leading-none font-semibold tracking-[0.015em] whitespace-nowrap transition-all duration-700 ease-editorial group-hover:opacity-80 min-[360px]:text-[0.82rem] min-[400px]:text-[0.92rem] sm:text-[1.15rem] lg:text-[1.4rem]",
               onDark ? "text-gold" : "text-emerald",
@@ -713,7 +737,7 @@ export default function Navbar() {
         <div className="relative z-10 flex min-w-0 items-center justify-end">
           <MotionSmoothLink
             variants={barItem}
-            href="#contact"
+            href="/contact"
             aria-label="Enquire"
             className={cn(
               "group relative inline-flex shrink-0 items-center gap-2 overflow-hidden rounded-full border px-2.5 py-2 transition-colors duration-500 ease-editorial sm:px-5 sm:py-2.5",

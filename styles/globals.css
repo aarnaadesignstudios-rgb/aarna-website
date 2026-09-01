@@ -618,8 +618,16 @@ html.lenis body {
        orthographic row of cards, technically rotating and reading as flat.
        1250 foreshortens the flanks hard enough that the cylinder is legible
        as a solid object. Below ~1000 the near edge of the front card starts
-       to keystone visibly and it reads as a fisheye. */
-    perspective: 1250px;
+       to keystone visibly and it reads as a fisheye.
+
+       ── It is a variable because the stage is not always 1440px wide ──────
+       Those numbers are all relative to the stage they were judged against.
+       The same absolute 1250px in front of a 390px phone stage is a far longer
+       lens: the arc flattens into a row of overlapping rectangles and the
+       cylinder stops reading as one. The mobile ring overrides this — see the
+       stage in components/sections/SelectedWorks.tsx — and everything else
+       takes the default. */
+    perspective: var(--ring-persp, 1250px);
     perspective-origin: 50% 44%;
   }
 

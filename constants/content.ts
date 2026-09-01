@@ -48,11 +48,17 @@ export const NAV_LINKS: NavLink[] = [
   // masthead, the mobile index and the Contact colophon a link that scrolls
   // nowhere — which is the bug the "Projects" link had before the client
   // review, and it is invisible until someone clicks it.
-  { label: "Services", href: "#services" },
-  { label: "Projects", href: "#projects" },
-  { label: "Process", href: "#process" },
+  /* ── Paths, not fragments ────────────────────────────────────────────
+     These were "#services", "#projects", "#process" and "#contact". Every
+     chapter of the home page has a real route now — see lib/sections.ts for
+     why — so the masthead, the mobile index and the Contact colophon all link
+     to an address that can be shared, crawled and typed. Nothing about the
+     page changed; it is still one scrolling document. */
+  { label: "Services", href: "/services" },
+  { label: "Projects", href: "/projects" },
+  { label: "Process", href: "/process" },
   { label: "FAQ", href: "/faq" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 /**

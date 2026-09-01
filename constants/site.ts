@@ -24,12 +24,13 @@
  *         and the mark fades up above it
  *   0.28  a gold RULE draws outward from the centre — the     (ends 0.93)
  *         same hairline that opens every section on this site
- *   0.42  the NAME is drawn up out of that rule, letter by    (ends 1.34)
- *         letter, from behind a clipped edge. Bodoni's
- *         thin/thick strokes arrive as if printed. A COUNTER
- *         starts running in the corner
- *   1.34  a HELD BEAT — the finished lockup simply sits there
- *   1.90  the LOCKUP lifts away, clearing the frame           (ends 2.45)
+ *   0.42  the NAME RESOLVES — the letters start spread wide    (ends 1.37)
+ *         and airy and CLOSE to their set tracking as the
+ *         line pulls out of a soft blur into focus. A
+ *         COUNTER starts running in the corner
+ *   1.37  a HELD BEAT — the finished lockup simply sits there
+ *   1.75  the LOCKUP RECEDES — the rule un-draws, the mark    (ends 2.20)
+ *         and the name settle back and soften out
  *   2.05  the WINDOW OPENS to full-bleed and the counter      (ends 2.95)
  *         reads 100. What is inside it is the hero's own
  *         opening frame — same source, same `sizes`, same
@@ -43,7 +44,7 @@
  * counter honest rather than decorative: it reports on the one asset whose
  * absence anybody would actually notice.
  *
- * ── One beat that was cut ────────────────────────────────────────────────
+ * ── Two beats that were cut ──────────────────────────────────────────────
  *
  * A light sweep across the gold — a specular pass, the way light catches
  * foil-stamped type — sat in the held beat for a while. It is gone. It needed a
@@ -52,6 +53,22 @@
  * reads as almost nothing) it still could not be seen reliably in a screenshot.
  * A gesture nobody can see is not restraint, it is a duplicated DOM layer whose
  * alignment depends on both copies loading the same font — cost with no benefit.
+ *
+ * The LOCKUP used to FLY into the masthead: a cross-tree FLIP that measured the
+ * navbar's own mark and wordmark and tweened the intro's copies onto them. It
+ * never landed, and it could not have. Measured at 1440x900, the masthead is
+ * still arriving while the flight is running — its mark's centre travels from
+ * y26 to y54 between 2.4s and 2.8s — so the target rect the FLIP read at build
+ * time was ~28px stale and kept moving. The panel then unmounted with the
+ * wordmark still 115px short of its slot and the mark 21% oversized and 24px
+ * off to the side. What a visitor actually saw was the studio's name stranded
+ * across the photograph and then blinking out.
+ *
+ * The lesson is in the geometry, not the tuning: nothing in this panel may
+ * promise to land on the masthead, because the masthead is in motion at exactly
+ * that moment. So the lockup no longer travels at all — it recedes where it
+ * stands, and the bar brings its own brand up underneath, behind the panel,
+ * while there is still something covering it. See `navbarMs` below.
  *
  * The end times are written down because they are the constraint. The beats have
  * to CHAIN, not overlap: an earlier cut of this had a light sweeping across
@@ -72,10 +89,17 @@ const CUE = {
   settle: 0,
   /** The gold rule draws out from the centre. */
   rule: 0.28,
-  /** The wordmark's letters rise out of the rule, and the counter starts. */
+  /** The wordmark's letters close into place, and the counter starts. */
   name: 0.42,
-  /** The lockup begins to lift, clearing the frame before it opens. */
-  lift: 1.9,
+  /**
+   * The lockup begins to recede, clearing the frame before it opens.
+   *
+   * It has to be FINISHED before `dissolve` has carried the window far enough
+   * to reach it, or the name is left sitting on top of the photograph — which
+   * is precisely how the old flying version failed. 1.75 + a 0.45s fade lands
+   * at 2.20, by which point the window has opened about a quarter of the way.
+   */
+  lift: 1.75,
   /**
    * The window opens to full-bleed — the reveal.
    *
@@ -117,7 +141,9 @@ export const INTRO = {
    * When the navbar settles into place, in ms.
    *
    * Deliberately before the dissolve finishes, so the masthead is already at
-   * rest behind the intro rather than fading in over a live page.
+   * rest behind the intro rather than fading in over a live page. That is also
+   * how the brand reaches the corner now that the intro no longer carries it
+   * there: the bar raises its own, while the panel is still covering it.
    */
   navbarMs: (CUE.dissolve - 0.3) * 1000,
 } as const;

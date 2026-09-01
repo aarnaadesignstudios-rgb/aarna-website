@@ -21,6 +21,7 @@ import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { sectionForPath } from "@/lib/sections";
 
 // Shared handle to the live Lenis instance.
 let lenisInstance: Lenis | null = null;
@@ -52,6 +53,25 @@ export function smoothScrollTo(
   options?: { offset?: number; duration?: number; immediate?: boolean }
 ) {
   if (lenisInstance) {
+    /* ── Re-MEASURE before moving ─────────────────────────────────────────
+       Lenis caches the document's scroll limit and only recomputes it from its
+       own ResizeObserver, which fires asynchronously. Every `scrollTo` is
+       clamped to that cached limit, so a stale one silently truncates the
+       target instead of failing.
+
+       That is what broke every client-side route change from a SHORT page to
+       the home document. /faq is 2442px tall against a 900px viewport, so
+       Lenis's limit was 1542 — and arriving at /services, whose section sits
+       at 6011, the scroll was clamped to exactly 1542 and stopped there. It
+       looked like the wrong section had been targeted; the target was right and
+       the ceiling was three thousand pixels too low. Both later corrections
+       clamped to the same number, which is why re-scrolling never helped.
+
+       `resize()` recomputes it synchronously. It is a measurement on a
+       deliberate, user-initiated scroll — a handful per session — so the cost
+       is irrelevant next to being able to arrive at the right place. */
+    lenisInstance.resize();
+
     // ── Re-sync before moving ────────────────────────────────────────────
     // Lenis animates its OWN idea of the scroll position, and something else
     // can move the page underneath it: the browser jumping to a fragment on a
@@ -136,7 +156,11 @@ export function targetForHash(hash: string): number | null {
  */
 export function scrollToHash(
   hash: string,
-  { updateUrl = true, immediate = false } = {}
+  {
+    updateUrl = true,
+    immediate = false,
+    urlPath,
+  }: { updateUrl?: boolean; immediate?: boolean; urlPath?: string } = {}
 ): boolean {
   const id = hash.slice(1);
   const el = id ? document.getElementById(id) : null;
@@ -144,11 +168,23 @@ export function scrollToHash(
 
   smoothScrollTo(el, { offset: SCROLL_OFFSET, immediate });
 
-  // Keep the address bar honest without letting the browser jump: pushing a
-  // hash through `history` does not scroll, whereas assigning `location.hash`
-  // would — instantly, to the wrong place, in the middle of our own tween.
-  if (updateUrl && window.location.hash !== hash) {
-    window.history.pushState(null, "", hash);
+  if (!updateUrl) return true;
+
+  /* ── The address bar gets a PATH, not a fragment ────────────────────────
+     `urlPath` is the chapter's own clean URL — `/services` rather than
+     `#services`; see lib/sections.ts for why the fragments went away. It is
+     written with `history.pushState`, which changes the URL WITHOUT asking the
+     router to render anything: the document is already the home page and the
+     section is already on screen, so a real navigation here would tear down
+     and rebuild the page we are looking at.
+
+     Falling back to the hash keeps this honest for anything that is still a
+     fragment — a section with no route of its own would otherwise silently
+     stop updating the URL at all. */
+  const next = urlPath ?? hash;
+  const current = window.location.pathname + window.location.hash;
+  if (current !== next) {
+    window.history.pushState(null, "", next);
   }
   return true;
 }
@@ -179,6 +215,8 @@ function completeHashNavigation(hash: string) {
   if (!id) return () => {};
 
   // ── Take the fragment out of the URL while we work ──────────────────────
+  // (Only relevant to a real fragment; `completeSectionArrival` below has no
+  // fragment to fight and skips all of this.)
   // Chrome scrolls to a fragment when the document commits AND AGAIN once it
   // has finished loading, which on a page this tall — lazy images, two pinned
   // sections — is well after our own scroll has finished. That second attempt
@@ -226,6 +264,105 @@ function completeHashNavigation(hash: string) {
   return () => {
     cancelAnimationFrame(frame);
     clearTimeout(restore);
+  };
+}
+
+/**
+ * Finish a navigation that ARRIVED on a chapter's own path — `/services` typed
+ * in, shared as a link, opened from a search result, or client-side-routed to
+ * from /faq.
+ *
+ * It waits for the same three things `completeHashNavigation` does, and for the
+ * same reasons: the intro screen holds the page unscrollable for its first
+ * ~2.9s, the heavier sections arrive through `next/dynamic`, and two of them
+ * are ScrollTrigger-PINNED, so the document's height — and therefore every
+ * target position below them — is wrong until those spacers exist.
+ *
+ * ── What it does NOT have to do ─────────────────────────────────────────
+ * All of the fragment juggling in `completeHashNavigation`: there is no `#` in
+ * the URL, so Chrome has nothing to re-anchor to when the document finishes
+ * loading, and the URL never has to be taken apart and put back. That whole
+ * class of bug — the one where a cold load of `/#process` landed 96px lower
+ * than the same link clicked in-page — cannot happen on a path.
+ */
+function completeSectionArrival(id: string) {
+  let frame = 0;
+  let settle = 0;
+  const deadline = performance.now() + 8000;
+
+  /**
+   * ── Landing once is not enough ─────────────────────────────────────────
+   *
+   * <SelectedWorks /> and <Services /> are ScrollTrigger-PINNED, and a pin
+   * inserts a spacer that adds about five and a half screens to the document.
+   * Those two sections also arrive through `next/dynamic`, so their pins are
+   * built a beat AFTER the section elements exist — which means there is a
+   * window where `#services` is in the DOM, measurable, and at completely the
+   * wrong y, because the spacer that pushes it down has not been created yet.
+   *
+   * Scrolling in that window lands short. Measured on a client-side move from
+   * /faq to /services: the scroll resolved to y=1542 and, once the projects pin
+   * materialised, that position was showing <SelectedWorks /> instead — the
+   * visitor asked for Services and arrived at Projects.
+   *
+   * A cold load hid this, which is why the direct-arrival tests all passed: the
+   * intro holds the page unscrollable for ~2.9s, and everything has mounted and
+   * pinned by the time the lock lifts. A client-side route change has no intro,
+   * so it fires into exactly that window.
+   *
+   * So the arrival re-asserts itself while the document is still growing:
+   * whenever `scrollHeight` changes, ScrollTrigger is re-measured and the
+   * position re-applied. It stops once the height has held still for three
+   * consecutive checks, or after 2.5s, whichever comes first. Every correction
+   * is `immediate`, and on a card-covered navigation all of this happens behind
+   * the panel — there is nothing to see either way.
+   */
+  const holdPosition = () => {
+    let lastHeight = -1;
+    let stable = 0;
+    const settleDeadline = performance.now() + 2500;
+
+    const check = () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const height = document.documentElement.scrollHeight;
+      if (height !== lastHeight) {
+        lastHeight = height;
+        stable = 0;
+        ScrollTrigger.refresh();
+        smoothScrollTo(el, { offset: SCROLL_OFFSET, immediate: true });
+      } else {
+        stable += 1;
+      }
+      if (stable < 3 && performance.now() < settleDeadline) {
+        settle = window.setTimeout(check, 120);
+      }
+    };
+    settle = window.setTimeout(check, 120);
+  };
+
+  const tick = () => {
+    const el = document.getElementById(id);
+    // The intro sets this inline and clears it inline; reading the inline
+    // style keeps the check specific to that lock.
+    const locked = document.body.style.overflow === "hidden";
+
+    if (el && !locked) {
+      ScrollTrigger.refresh();
+      // `immediate`: an arriving link should simply BE at its chapter. Easing
+      // there means tweening the whole document past two pinned galleries as
+      // the first thing a visitor sees.
+      smoothScrollTo(el, { offset: SCROLL_OFFSET, immediate: true });
+      holdPosition();
+      return;
+    }
+    if (performance.now() < deadline) frame = requestAnimationFrame(tick);
+  };
+
+  frame = requestAnimationFrame(tick);
+  return () => {
+    cancelAnimationFrame(frame);
+    clearTimeout(settle);
   };
 }
 
@@ -279,6 +416,14 @@ export default function SmoothScrollProvider({
    * not re-trigger this — <SmoothLink /> has already scrolled for those.
    */
   useEffect(() => {
+    /* A chapter's own path — `/services`. This is the normal case now; the
+       fragment branch below is back-compatibility for links shared before the
+       chapters had routes. `hero` is excluded because its path is `/`, where
+       the top of the document is already the destination and scrolling to it
+       would fight the router's own scroll restoration. */
+    const section = sectionForPath(pathname);
+    if (section && section !== "hero") return completeSectionArrival(section);
+
     if (!window.location.hash) return;
     return completeHashNavigation(window.location.hash);
   }, [pathname]);
