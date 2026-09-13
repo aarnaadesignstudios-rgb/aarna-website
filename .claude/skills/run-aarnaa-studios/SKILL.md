@@ -9,6 +9,13 @@ Next.js 15 (App Router) + React 19 + Tailwind v4, with Lenis smooth scroll, GSAP
 ScrollTrigger pinning and framer-motion. Routes: `/`, `/about`, `/faq`, plus
 `/work/[slug]` and the five chapter routes that re-render the home document.
 
+Those all live under `app/(site)/`, a route group whose layout carries the
+grain, the custom cursor, the chapter card and Lenis. The parentheses are not
+part of any URL. `/studio`, `/api`, `robots.txt` and `sitemap.xml` sit outside
+it and get none of that — the Studio is Sanity's own application and the
+cursor and Lenis actively broke it. Global site furniture goes in
+`app/(site)/layout.tsx`, never `app/layout.tsx`.
+
 The site is driven by **`.claude/skills/run-aarnaa-studios/driver.mjs`** —
 puppeteer-core against the locally installed Chrome. There is no `chromium-cli`
 on this Windows machine and puppeteer-core ships no browser, so the driver
@@ -165,6 +172,26 @@ negative** — the metric reads zero and looks like broken code.
   2.05s + `DISSOLVE_DURATION` 0.9s, plus `INTRO.revealWaitCapMs` 800ms while the
   hero photograph is still loading — 3.75s worst case. The driver waits 4000ms.
   Screenshot earlier and you photograph the loading screen.
+- **Web3Forms rejects headless Chrome's user agent.** The enquiry form posts to
+  `api.web3forms.com`, whose free plan refuses non-browser callers. Headless
+  Chrome advertises `HeadlessChrome/...`, so a driven submit comes back with no
+  `Access-Control-Allow-Origin` on the response and the page shows its "That
+  didn't send" panel — which looks exactly like broken code. `page.setUserAgent`
+  with a normal Chrome string and it goes through (verified: `200
+  {"success":true}`). curl cannot substitute: the same plan blocks server-side
+  calls outright (`Use our API in client side`), so a 403 from curl says nothing
+  about the browser path.
+- **Mocking that endpoint needs CORS headers.** Intercept and reply without
+  `Access-Control-Allow-Origin` and every scenario fails identically, because
+  the browser blocks the response rather than the app rejecting it. The POST is
+  `multipart/form-data` (deliberately — see the note on the fetch in
+  `components/sections/Contact.tsx`), so there is no preflight to answer; a mock
+  that reverts the app to JSON has to answer the `OPTIONS` too.
+- **Removing a Sanity module leaves `.next` poisoned.** Deleting
+  `sanity/schemas/service.ts` left the running dev server requiring a vendor
+  chunk that no longer existed — `Cannot find module './vendor-chunks/@sanity.js'`,
+  every route 500, and hot reload could not recover. Kill the listeners,
+  `rm -rf .next`, restart.
 - **If you measure screenshots with sharp, materialise the crop.**
   `.extract().stats()` silently ignores the crop and returns whole-image stats —
   it reported an identical stdev of 80.6 for 14 different bands. Chain

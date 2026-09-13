@@ -154,7 +154,13 @@ export const SITE = {
   tagline: "Architecture of quiet luxury",
   description:
     "Aarnaa Design Studios is a multidisciplinary architecture and interior design practice in Gurugram, specialising in architecture, commercial interiors and bespoke spaces.",
-  email: "studio@aarnaa.com",
+  /**
+   * The studio's real inbox, as supplied. It is a Gmail address rather than
+   * one on the site's own domain, which is why the colophon carries a Gmail
+   * mark beside the Instagram and LinkedIn ones rather than a generic envelope
+   * — see SOCIAL_LINKS in constants/content.ts.
+   */
+  email: "aarnaadesignstudios@gmail.com",
   /** As supplied by the studio. */
   phone: "+91 99903 47716",
   /** Dial string for tel: links — digits only. */

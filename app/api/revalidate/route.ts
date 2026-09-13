@@ -30,7 +30,7 @@ import { CONTENT_TAGS } from "@/sanity/lib/tags";
  *     URL       https://<your-domain>/api/revalidate
  *     Dataset   production
  *     Trigger   Create, Update, Delete
- *     Filter    _type in ["work","heroSlide","service","testimonial","siteImages"]
+ *     Filter    _type in ["work","heroSlide","testimonial","siteImages"]
  *     Projection  {"_type": _type}
  *     Secret    the same value as SANITY_REVALIDATE_SECRET
  */
@@ -81,8 +81,7 @@ export async function POST(req: NextRequest) {
      * The normal path: only the type that changed.
      *
      * The reads tag themselves by document type, so replacing a project photo
-     * drops the projects and leaves the hero, the services and the quotes
-     * cached. Revalidating everything every time would be simpler and would
+     * drops the projects and leaves the hero and the quotes cached. Revalidating everything every time would be simpler and would
      * throw away a page's worth of warm cache for one edited photograph.
      *
      * An unrecognised `_type` is a harmless no-op — `revalidateTag` on a tag

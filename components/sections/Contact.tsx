@@ -39,10 +39,24 @@
  * the smallest one that keeps the client's decision intact instead of quietly
  * dropping it: it still reads as gold at display size, and it is legible.
  *
- * The form is non-functional (submit is prevented); it establishes the layout
- * and the interaction surface.
+ * ── The form sends, and it only says so when it did ──────────────────────
  *
- * TODO (future phases): wire submission to a route handler / form service.
+ * It did not, for the whole of phase 1. `handleSubmit` was
+ * `e.preventDefault(); setSubmitted(true)` with a TODO over it, which is the
+ * worst shape this bug can take: the visitor read "We read every enquiry
+ * ourselves and will be in touch shortly", closed the tab, and waited. Nothing
+ * had been sent and nobody could tell how many had been lost.
+ *
+ * It posts to Web3Forms now — no server of our own, no domain to verify, and
+ * the enquiry arrives in the studio's Gmail inbox. See `ACCESS_KEY` below.
+ *
+ * The part worth keeping straight is the STATE MACHINE, not the endpoint.
+ * "Thank you" is now reachable from exactly one place: a response that came
+ * back `ok` with `success: true` in its body. A network failure, a rejected
+ * key, a 500 at the other end, or no key configured at all each land on the
+ * error panel, which keeps the form intact and gives the studio's email and
+ * phone so the enquiry has somewhere else to go. Nothing on this page will
+ * claim delivery it cannot see.
  */
 import { useState, type FormEvent } from "react";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -66,6 +80,31 @@ const FIELDS = [
   { name: "project", label: "Project type", type: "text" },
 ] as const;
 
+/**
+ * Web3Forms' access key, which identifies the inbox to deliver to.
+ *
+ * ── `NEXT_PUBLIC_`, and that is correct rather than a compromise ─────────
+ *
+ * The browser makes this request, so the key is in the bundle whichever prefix
+ * it carries — and Web3Forms designs it that way: the key is an ADDRESS, not a
+ * credential. It grants one thing, posting a message to the studio's inbox,
+ * which is what the form in front of every visitor already does. There is
+ * nothing to read with it and nothing to change.
+ *
+ * It is read at module scope, not inside the handler, because
+ * `process.env.NEXT_PUBLIC_*` is substituted at BUILD time — it is not an
+ * object to look things up in at runtime, and `process.env[name]` with a
+ * computed name silently yields undefined in a client bundle.
+ *
+ * Empty when nobody has set it. That is a real state and it is handled: the
+ * submit goes straight to the error panel rather than to a fetch that would
+ * 400, and — crucially — never to "Thank you".
+ */
+const ACCESS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY ?? "";
+
+/** idle → sending → sent, or → error, from which the form can be retried. */
+type Status = "idle" | "sending" | "sent" | "error";
+
 const YEAR = 2026; // Phase 1: static; wire to build-time date later.
 
 /**
@@ -84,12 +123,90 @@ interface ContactProps {
 export default function Contact({
   backdrop = SITE_IMAGES.contactBackdrop,
 }: ContactProps) {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: replace with real submission handler.
-    setSubmitted(true);
+    // A second click while the first request is in flight would send the
+    // enquiry twice. The button is disabled too; this is the guard that holds
+    // when the form is submitted with the keyboard.
+    if (status === "sending") return;
+
+    const data = new FormData(e.currentTarget);
+
+    /* ── The honeypot ─────────────────────────────────────────────────
+       `botcheck` is hidden from people and left empty by them; a bot that
+       fills every field it finds fills this one too. Dropped SILENTLY and
+       shown the thank-you — telling a scraper which of its submissions were
+       rejected is how it learns to stop filling the field. A person cannot
+       reach this line: the input is `hidden`, so there is no way to type in
+       it and no way to focus it by tab. */
+    if (data.get("botcheck")) {
+      setStatus("sent");
+      return;
+    }
+
+    if (!ACCESS_KEY) {
+      setStatus("error");
+      return;
+    }
+
+    /* The subject line the studio sees in Gmail. The project type is in it
+       because these arrive in a personal inbox alongside everything else —
+       "New enquiry — Restaurant" is scannable in a list where "New Submission"
+       is not. It falls back rather than rendering an empty tail: the field is
+       `required`, but a browser that submits anyway should not produce a
+       subject ending in a dash. */
+    data.append("subject", `New enquiry — ${data.get("project") || SITE.name}`);
+    data.append("from_name", SITE.name);
+    data.append("access_key", ACCESS_KEY);
+
+    setStatus("sending");
+
+    try {
+      /* ── The FormData goes as-is, and NO headers are set ─────────────────
+         This is the difference between a form that works and one that cannot
+         send at all, and it is not a style choice.
+
+         A cross-origin `fetch` only skips the CORS PREFLIGHT when it qualifies
+         as a "simple request", and the test that matters here is the
+         Content-Type: `multipart/form-data`, `application/x-www-form-urlencoded`
+         and `text/plain` are safelisted, and everything else — including
+         `application/json` — makes the browser send an OPTIONS first and wait
+         for permission.
+
+         This was written the JSON way, the way Web3Forms' AJAX example shows,
+         and every submission failed: their API answers that preflight
+         `403` with no `Access-Control-Allow-Origin` on it, so Chrome blocked
+         the POST before it was ever sent (`net::ERR_FAILED`). The endpoint is
+         fine; the preflight is what it will not serve.
+
+         Passing the FormData object straight through means the browser sets
+         `multipart/form-data` with its own boundary, the request is simple, no
+         OPTIONS is sent, and the POST goes. Setting ANY `Content-Type` here —
+         even the correct one — breaks it again, because a hand-written value
+         has no boundary parameter. That is why there is no `headers` key at
+         all rather than an empty one: there is nothing safe to put in it. */
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: data,
+      });
+
+      /* Both halves are checked. Web3Forms answers a rejected key or a
+         malformed payload with a NON-2xx and a `success: false` body, but it
+         is a third party: a 200 whose body says the submission failed is the
+         case that would otherwise print "Thank you" over a lost enquiry, which
+         is the exact bug this replaced. `.catch` because a proxy or an offline
+         captive portal can return 200 with a body that is not JSON. */
+      const json = (await res.json().catch(() => null)) as {
+        success?: boolean;
+      } | null;
+
+      setStatus(res.ok && json?.success ? "sent" : "error");
+    } catch {
+      // Offline, DNS, CORS, a blocked request — the enquiry did not arrive.
+      setStatus("error");
+    }
   };
 
   return (
@@ -244,7 +361,7 @@ export default function Contact({
                 colour underneath it is now decided by the palette rather than
                 by whatever happened to be in the photograph. */}
             <div className="glass-bar rounded-2xl border border-gold/25 bg-[color-mix(in_srgb,var(--color-emerald-deep)_80%,transparent)] p-7 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-gold-soft)_20%,transparent),0_34px_72px_-32px_color-mix(in_srgb,var(--color-emerald-deep)_85%,transparent)] md:p-9">
-            {submitted ? (
+            {status === "sent" ? (
               <div className="border-t border-gold/50 pt-8">
                 <p className="m-0 font-serif text-3xl text-gold">Thank you.</p>
                 <p className="mt-4 max-w-[36ch] text-cream/75">
@@ -253,6 +370,21 @@ export default function Contact({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+                {/* ── The honeypot ────────────────────────────────────────
+                    `type="hidden"` rather than a visually-hidden text input:
+                    a hidden input is out of the tab order and cannot be typed
+                    into, so no person — sighted, screen-reader, or keyboard —
+                    can trip it, which is the failure mode that makes the usual
+                    off-screen version an accessibility problem. `tabIndex` and
+                    `autoComplete` are belt-and-braces against a password
+                    manager filling it. See the check in `handleSubmit`. */}
+                <input
+                  type="hidden"
+                  name="botcheck"
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+
                 {FIELDS.map((field) => (
                   <label key={field.name} className="flex flex-col gap-2">
                     <span className="font-label text-cream/60">
@@ -284,12 +416,67 @@ export default function Contact({
                   />
                 </label>
 
+                {/* ── When it did not send ────────────────────────────────
+                    The form stays up, so nothing the visitor typed is thrown
+                    away and the button can simply be pressed again. What this
+                    adds is the two channels that do not depend on the studio's
+                    form working — the same address and number printed on the
+                    left of this section, repeated here because this is where
+                    someone is standing when they find out.
+
+                    `role="alert"` so a screen reader is told: the button they
+                    pressed is above this, the focus has not moved, and without
+                    a live region the failure is silent.
+
+                    It reads "did not send" rather than "something went wrong".
+                    The visitor's question at this moment is whether the studio
+                    has their enquiry, and the answer is no. */}
+                {status === "error" && (
+                  <div
+                    role="alert"
+                    className="border-l-2 border-gold/60 pl-4"
+                  >
+                    <p className="m-0 font-serif text-xl text-gold">
+                      That didn’t send.
+                    </p>
+                    <p className="mt-2 text-cream/75">
+                      Nothing has reached us — please try again, or write to us
+                      directly at{" "}
+                      <a
+                        href={`mailto:${SITE.email}`}
+                        className="border-b border-gold/50 text-cream transition-colors duration-500 hover:text-gold"
+                      >
+                        {SITE.email}
+                      </a>{" "}
+                      or call{" "}
+                      <a
+                        href={`tel:${SITE.phoneHref}`}
+                        className="border-b border-gold/50 text-cream transition-colors duration-500 hover:text-gold"
+                      >
+                        {SITE.phone}
+                      </a>
+                      .
+                    </p>
+                  </div>
+                )}
+
                 <div className="mt-2">
                   {/* The same control as the masthead's, down to the arrow:
                       one instruction, one object. See the note on the
-                      `outline` variant in components/ui/Button.tsx. */}
-                  <Button type="submit" variant="outline">
-                    Send Enquiry
+                      `outline` variant in components/ui/Button.tsx.
+
+                      `aria-busy` alongside the label change: the word is what a
+                      sighted visitor reads, and the attribute is what tells
+                      assistive tech the control is working rather than that a
+                      second, different button has appeared. `disabled` carries
+                      the dimming — see `disabled:opacity-50` in the base. */}
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={status === "sending"}
+                    aria-busy={status === "sending"}
+                  >
+                    {status === "sending" ? "Sending…" : "Send Enquiry"}
                     <FiArrowUpRight
                       size={14}
                       aria-hidden
@@ -345,12 +532,28 @@ export default function Contact({
             <ul className="-m-1.5 flex list-none items-center gap-2 p-0">
               {SOCIAL_LINKS.map((social) => {
                 const Icon = social.icon;
+                /* ── A new tab for a profile, none for the mail client ────
+                   The row is Instagram, LinkedIn and the studio's Gmail
+                   address, and the last one is a `mailto:`. `target="_blank"`
+                   on a mailto is not harmless: a browser that hands the URL to
+                   a desktop mail client leaves the tab it opened for it sitting
+                   there empty, and one with no handler registered at all leaves
+                   a blank tab and no explanation. The two profiles genuinely do
+                   want a new tab — this row is the last thing on every page,
+                   and a visitor who taps Instagram at the end of the enquiry
+                   form should still have the enquiry form to come back to.
+
+                   `rel` follows `target`, not the scheme: `noopener` exists to
+                   deny the opened page a handle on `window.opener`, which a
+                   mail client never has. */
+                const external = social.href.startsWith("http");
                 return (
                   <li key={social.label}>
                     <a
                       href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      {...(external
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
                       aria-label={social.label}
                       className="block p-1.5 text-cream/55 transition-colors duration-500 hover:text-gold"
                     >

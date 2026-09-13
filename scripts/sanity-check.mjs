@@ -131,7 +131,6 @@ if (token) console.log(`  ${PASS}  read token set ${dim("(draft previews availab
 const TYPES = [
   "work",
   "heroSlide",
-  "service",
   "testimonial",
   "siteImages",
 ];
@@ -189,10 +188,13 @@ try {
   // (service, photoFrame, siteImages) had a schema and no reader, which is the
   // exact failure this column exists to name. It stays because the next type
   // added will start out unwired, and this is what will say so.
+  //
+  // `service` is no longer in this list at all: the disciplines went back to
+  // constants/content.ts at the studio's request, so there is no schema to
+  // publish into and nothing for this to report. See sanity/schemas/index.ts.
   const TYPES_INFO = {
     work: { label: "Projects", wired: true, where: "Selected Works" },
     heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
-    service: { label: "Services", wired: true, where: "Services" },
     testimonial: { label: "Testimonials", wired: true, where: "Testimonials" },
     siteImages: {
       label: "Site photographs",

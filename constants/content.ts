@@ -14,9 +14,10 @@ import {
   FiHome,
   FiAward,
 } from "react-icons/fi";
-import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
+import { FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { SiGmail } from "react-icons/si";
 
-import { whatsappLink } from "./site";
+import { SITE, whatsappLink } from "./site";
 
 import type {
   Faq,
@@ -567,11 +568,48 @@ export const FAQS: Faq[] = [
   },
 ];
 
-/** Social links, shown in the contact block. */
+/**
+ * The marks in the colophon — the row that ends every page on the site.
+ *
+ * ── Two real profiles, and the inbox ─────────────────────────────────────
+ *
+ * Behance and Pinterest used to sit here pointing at `https://behance.net` and
+ * `https://pinterest.com` — the services' own front pages, not the studio's
+ * profiles on them. A mark that carries a brand's logo and lands on that
+ * brand's homepage is worse than no mark: it looks like a profile that has been
+ * taken down. They are out until there is something to point them at.
+ *
+ * ── The Instagram address is the plain one ───────────────────────────────
+ *
+ * As supplied it carried `?stkn=…&utm_source=qr`, which is what Instagram
+ * appends when you copy the link out of your own profile's QR sheet. Neither
+ * belongs on the studio's own website: `stkn` is a share token that can expire,
+ * and `utm_source=qr` would label every visitor who arrived from the website as
+ * having scanned a QR code, which quietly ruins the one number the tag exists
+ * to report. The profile is the same either way.
+ *
+ * ── Gmail is a link, not a logo ──────────────────────────────────────────
+ *
+ * The studio is reached at a Gmail address, so the mark is Gmail's rather than
+ * a generic envelope, and it opens `mailto:` — the visitor's own mail client,
+ * whatever that is, with the address filled in. It is NOT a link to Gmail's web
+ * compose: that only works for someone signed into Google in that browser, and
+ * sends everyone else to a login screen instead of to an email.
+ *
+ * <Contact /> reads the scheme to decide on `target="_blank"` — a new tab for
+ * the two profiles, and none for the mail client. See the note there.
+ */
 export const SOCIAL_LINKS: SocialLink[] = [
-  { label: "Instagram", href: "https://instagram.com", icon: FaInstagram },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: FaLinkedinIn },
-  { label: "Behance", href: "https://behance.net", icon: FaBehance },
-  { label: "Pinterest", href: "https://pinterest.com", icon: FaPinterestP },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/aarnaadesignstudios/",
+    icon: FaInstagram,
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/aarnaa-estudo/",
+    icon: FaLinkedinIn,
+  },
+  { label: "Email", href: `mailto:${SITE.email}`, icon: SiGmail },
 ];
 

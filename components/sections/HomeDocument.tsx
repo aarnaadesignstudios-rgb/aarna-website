@@ -26,7 +26,6 @@ import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
 import {
   getHeroSlides,
-  getServices,
   getSiteImages,
   getTestimonials,
   getWorks,
@@ -68,19 +67,22 @@ const SelectedWorks = dynamic(() => import("@/components/sections/SelectedWorks"
 export default async function HomeDocument() {
   /**
    * In parallel. Awaiting these in sequence would make the page's TTFB the SUM
-   * of five round trips to the Content Lake for no reason — no query's input
+   * of four round trips to the Content Lake for no reason — no query's input
    * depends on another's result.
    *
-   * Five and not one combined query, deliberately: each read is tagged with its
+   * Four and not one combined query, deliberately: each read is tagged with its
    * own document type, which is what lets the publish webhook drop exactly the
-   * projects when a project changes and leave the hero, the quotes and the
-   * disciplines cached. See app/api/revalidate/route.ts.
+   * projects when a project changes and leave the hero and the quotes cached.
+   * See app/api/revalidate/route.ts.
+   *
+   * <Services /> is NOT among them. The disciplines are repo content — see the
+   * note on its own file, and on what is deliberately absent from
+   * sanity/schemas/index.ts.
    */
-  const [works, slides, testimonials, services, siteImages] = await Promise.all([
+  const [works, slides, testimonials, siteImages] = await Promise.all([
     getWorks(),
     getHeroSlides(),
     getTestimonials(),
-    getServices(),
     getSiteImages(),
   ]);
 
@@ -126,7 +128,7 @@ export default async function HomeDocument() {
         <Testimonials items={testimonials} />
         <Process />
         {/* <Founder /> lived here and is on /about now. */}
-        <Services services={services} />
+        <Services />
         <Contact backdrop={siteImages.contactBackdrop} />
       </main>
     </>

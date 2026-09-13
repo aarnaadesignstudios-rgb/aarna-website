@@ -34,10 +34,10 @@ import { schemaTypes } from "./sanity/schemas";
 /**
  * ── Two shapes of content, shown as two shapes of navigation ─────────────
  *
- * The lists (projects, hero images, services, testimonials) are collections and
- * behave like collections. "Site photographs" is a SINGLETON — there is exactly
- * one founder and one contact backdrop, forever — so it is pinned open as a
- * single editable page.
+ * The lists (projects, hero images, testimonials) are collections and behave
+ * like collections. "Site photographs" is a SINGLETON — there is exactly one
+ * founder and one contact backdrop, forever — so it is pinned open as a single
+ * editable page.
  *
  * Left to the default, it would render as a list containing one item with an
  * inviting "+" that produces a second copy nothing reads. This is the whole
@@ -49,7 +49,6 @@ const structure: StructureResolver = (S) =>
     .items([
       S.documentTypeListItem("work").title("Projects"),
       S.documentTypeListItem("heroSlide").title("Hero images"),
-      S.documentTypeListItem("service").title("Services"),
       S.documentTypeListItem("testimonial").title("Testimonials"),
       S.divider(),
       S.listItem()

@@ -153,8 +153,7 @@ function BentoTile({
      ── `overflow` is NOT here ────────────────────────────────────────────
      It used to be, as `overflow-hidden`, because both faces are rounded and
      the front one has a photograph to clip to those corners. The back face
-     needs the opposite now that its copy comes from the CMS — see the note on
-     the grid's row height — and stacking `overflow-y-auto` on top of
+     needs the opposite — see the note on the grid's row height — and stacking `overflow-y-auto` on top of
      `overflow-hidden` would leave which one won to the order Tailwind happens
      to emit two utilities for the same box. Each face states its own. */
   const face =
@@ -305,12 +304,12 @@ function BentoTile({
           <span
             className={cn(
               face,
-              /* `overflow-y-auto`, not `overflow-hidden`: the description is
-                 CMS copy now and nothing stops one being published that is
-                 taller than the 17rem row. Scrolling keeps it reachable; the
-                 alternative silently cuts a sentence off a service the studio
-                 sells. It is inert at every length that fits, which is all of
-                 them today — see the note on the grid below. */
+              /* `overflow-y-auto`, not `overflow-hidden`: a description
+                 rewritten longer than the 17rem row should stay REACHABLE, and
+                 the alternative silently cuts the last line off a service the
+                 studio sells — which looks like nothing at all is wrong. It is
+                 inert at every length that fits, which is all six today (the
+                 measurement is in the note on the grid below). */
               "flex flex-col overflow-y-auto border border-gold/45 bg-white p-4",
               /* ── Centred, and the linked tile still pins its link down ────
                  The copy is shorter than the face on every tile — 126px of it
@@ -451,18 +450,26 @@ function BentoTile({
 }
 
 /**
- * `services` comes from the CMS, and defaults to the studio's five.
+ * ── The disciplines are repo content, and that is a decision ─────────────
  *
- * Same contract as <Hero />'s `slides` and <Testimonials />'s `items`: the
- * section is rendered from a server component that reads Sanity (see
- * <HomeDocument />), and it is also the component a developer reaches for in
- * isolation. See sanity/lib/content.ts.
+ * This took a `services` prop and <HomeDocument /> filled it from Sanity, the
+ * same contract <Hero />'s `slides` and <Testimonials />'s `items` still have.
+ * The studio asked for it back, and the layout agrees with them.
+ *
+ * Three things here are computed from the list rather than merely rendering it:
+ * the bento's tile spans are packed from the COUNT (`wideIndex` below), the
+ * pinned track's progress readout divides by it, and every tile's back face has
+ * to hold its description inside a 272px box. None of those fail loudly when a
+ * seventh discipline is published or a description is rewritten at twice the
+ * length — the grid just grows a hole and a face starts scrolling, and nothing
+ * about the page looks broken enough for anyone to notice.
+ *
+ * In constants/content.ts that copy can only change in a commit, which is also
+ * where the two measurements it affects can be re-run. See
+ * `.claude/skills/run-aarnaa-studios` for how.
  */
-interface ServicesProps {
-  services?: Service[];
-}
-
-export default function Services({ services = SERVICES }: ServicesProps) {
+export default function Services() {
+  const services = SERVICES;
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -482,9 +489,10 @@ export default function Services({ services = SERVICES }: ServicesProps) {
    *
    * The track's active index is `progress × (count - 1)`, so the count is part
    * of the timeline's arithmetic rather than something it reads incidentally.
-   * With the list coming from the CMS, a sixth discipline published while the
-   * page is cached would otherwise leave the ScrollTrigger dividing by five and
-   * the header counting to a number the row no longer has.
+   * Listing it as a dependency is what makes adding a seventh discipline a
+   * one-line edit to constants/content.ts: without it the ScrollTrigger goes on
+   * dividing by the number of cards there were when the effect first ran, and
+   * the header counts to a number the row no longer has.
    */
   const count = services.length;
 
@@ -510,8 +518,8 @@ export default function Services({ services = SERVICES }: ServicesProps) {
    * where it is free and it is not worth a hole.
    *
    * (It comes back on its own at eleven, and at five if a discipline is ever
-   * unpublished, which is the point of deriving it: the CMS decides the count,
-   * and nobody has to remember this note when it changes.)
+   * dropped, which is the point of deriving it rather than writing `i === 0`:
+   * whoever edits the list next does not have to find this note first.)
    */
   const wideIndex = (count + 1) % 6 === 0 ? 0 : -1;
 
@@ -672,16 +680,18 @@ export default function Services({ services = SERVICES }: ServicesProps) {
             copy in 238px of room, the tightest being Architectural Photography
             (137 characters plus a link).
 
-            ── That measurement is no longer a guarantee ──────────────────
-            It was, while `SERVICES` was a committed constant: the copy could
-            only change in a commit, so the check could be re-run when it did.
-            The disciplines come from the Studio now, and nothing stops a
-            longer description being published on a Tuesday. The back face
-            therefore SCROLLS rather than clipping — `overflow-y-auto` on it,
-            below — so overflowing copy is reachable instead of cut off. 17rem
-            is still the right height for the copy that exists; it is just a
-            layout decision now rather than a proof. The check, if you change
-            it, is `scrollHeight - clientHeight` on each back face. */}
+            ── The check, when the copy changes ────────────────────────────
+            `SERVICES` is a committed constant, so the copy can only change in
+            a commit — which means this measurement can be re-run in the same
+            one. It is `scrollHeight - clientHeight` on each back face, and it
+            should be 0; the driver in .claude/skills/run-aarnaa-studios is how
+            to get at them. Re-measured at six disciplines, 390x844: 0 on all
+            six, the tightest being Design Consultation and Architectural
+            Photography, the two carrying a link.
+
+            The face SCROLLS rather than clips all the same — `overflow-y-auto`
+            on it, above. A clipped last line is the worse failure of the two
+            because nothing about the rendered page looks wrong. */}
         <div
           ref={bentoRef}
           className="grid grid-cols-2 auto-rows-[17rem] gap-3 px-6 pb-10 sm:auto-rows-[18rem] sm:gap-4 md:grid-cols-3 md:px-10 lg:hidden"

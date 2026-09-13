@@ -3,8 +3,6 @@ import { Cormorant_Garamond, Bodoni_Moda, Inter } from "next/font/google";
 
 import "@/styles/globals.css";
 import { SITE } from "@/constants";
-import SmoothScrollProvider from "@/lib/SmoothScrollProvider";
-import { GrainOverlay, Cursor, SectionTransition } from "@/components/ui";
 
 /* The studio's voice. Section headings, every small uppercase label, and the
    figures in the statistics strip — one family carries all three, so a label
@@ -86,19 +84,15 @@ export default function RootLayout({
       className={`${cormorant.variable} ${bodoni.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
-      <body suppressHydrationWarning>
-        {/* Subtle film-grain texture across the whole page. */}
-        <GrainOverlay />
-        {/* The gold dot that replaces the pointer. Hides the native cursor
-            from JS, not from CSS — see the note in the component. */}
-        <Cursor />
-        {/* The chapter card that carries in-page navigation over any real
-            distance. Mounted once, above everything except the intro and the
-            cursor — see the component. */}
-        <SectionTransition />
-        {/* SmoothScrollProvider initialises Lenis + GSAP once for the whole app. */}
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
-      </body>
+      {/* ── Nothing but the shell ──────────────────────────────────────
+          The grain, the cursor, the chapter card and Lenis were all mounted
+          here, which put them over `/studio` as well — and the Studio is not a
+          page of this site but Sanity's own application. Two of them actively
+          broke it: the cursor took the Studio's pointer away, and Lenis took
+          its scrolling. They live in app/(site)/layout.tsx now, which wraps
+          every visitor-facing route and nothing else. See the note there,
+          including where to add the next one. */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

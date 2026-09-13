@@ -4,14 +4,12 @@ import { groq } from "next-sanity";
 
 import {
   HERO_SLIDES,
-  SERVICES,
   SITE_IMAGES,
   TESTIMONIALS,
   WORKS,
 } from "@/constants";
 import type {
   HeroSlide,
-  Service,
   SiteImages,
   Testimonial,
   Work,
@@ -445,99 +443,6 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     return quotes.length ? quotes : TESTIMONIALS;
   } catch {
     return TESTIMONIALS;
-  }
-}
-
-/* ────────────────────────────────────────────────────────────────────────
-   Services
-   ──────────────────────────────────────────────────────────────────────── */
-
-const SERVICES_QUERY = groq`*[_type == "service"] | order(order asc, _createdAt asc) {
-  "id": coalesce(slug.current, _id),
-  title,
-  index,
-  body,
-  price,
-  photo,
-  href,
-  linkLabel
-}`;
-
-type ServiceDoc = {
-  id: string;
-  title?: string;
-  index?: string;
-  body?: string;
-  price?: string;
-  photo?: Photo;
-  href?: string;
-  linkLabel?: string;
-};
-
-/**
- * The disciplines on the Services track.
- *
- * ── The index falls back to the position, rather than the other way round ─
- *
- * `index` is a field in the Studio ("01", "02"…) and it is also the card's
- * place in a row the studio already orders with `order`. Two ways of saying the
- * same thing, which drift the moment a discipline is inserted in the middle and
- * nobody renumbers: the row reads 01, 02, 02, 03, and that looks like a bug in
- * the site rather than a typo in the CMS. The field still wins when it is set,
- * because a studio may want to number from 00 or skip one — but leaving it
- * empty now produces the right number instead of a blank.
- *
- * ── A discipline with no photograph is KEPT ──────────────────────────────
- *
- * Unlike a hero slide, where an empty frame holds the whole screen for two
- * seconds. A service card is a number, a name and a body; the photograph is the
- * face of it, but the card is still legible and still clickable without one,
- * and <Media /> sits on `bg-stone`, the ground those tiles already show while
- * their images load. Dropping it instead would take a real service off the site
- * because nobody had uploaded a picture for it yet.
- */
-export async function getServices(): Promise<Service[]> {
-  if (!client) return SERVICES;
-
-  try {
-    const docs = await client.fetch<ServiceDoc[]>(
-      SERVICES_QUERY,
-      {},
-      { next: { tags: ["service" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
-    );
-
-    if (!docs?.length) return SERVICES;
-
-    const services = docs.flatMap((doc, i) => {
-      const title = doc.title?.trim();
-      if (!title) return [];
-      const photo = resolvePhoto(doc.photo, title);
-      const href = doc.href?.trim();
-      return [
-        {
-          id: doc.id,
-          index: doc.index?.trim() || String(i + 1).padStart(2, "0"),
-          title,
-          body: doc.body?.trim() ?? "",
-          // Blank on all but the one discipline sold at a fixed fee, and
-          // `undefined` rather than "" so the card's `service.price &&` test
-          // does not have to know the difference between an empty string the
-          // Studio wrote and a field nobody filled in.
-          price: doc.price?.trim() || undefined,
-          image: photo?.src ?? "",
-          // A label is meaningless without a destination, and a destination
-          // with no label renders an empty link — so they arrive together or
-          // not at all. See the note on `linkLabel` in the schema.
-          link: href
-            ? { label: doc.linkLabel?.trim() || "See more", href }
-            : undefined,
-        },
-      ];
-    });
-
-    return services.length ? services : SERVICES;
-  } catch {
-    return SERVICES;
   }
 }
 
