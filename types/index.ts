@@ -44,6 +44,21 @@ export interface Service {
   body: string;
   image: string;
   /**
+   * An optional figure, set above the body's link.
+   *
+   * A whole string rather than a number, and formatted by whoever writes it —
+   * "₹6,999 per session". The studio does not price architecture or
+   * interiors by the unit and never will, so this is not a field four of the
+   * six cards are leaving blank by oversight: it belongs to the one discipline
+   * that is sold as a fixed, bookable thing, and a card without it is a card
+   * where the answer is genuinely "it depends on the project".
+   *
+   * Kept out of `body` because it is not a sentence. It is the one line on the
+   * card a visitor scans for, it sets in the card's own type rather than in
+   * running copy, and a price buried mid-paragraph is one nobody finds.
+   */
+  price?: string;
+  /**
    * An optional link at the foot of the body, revealed with it.
    *
    * ── This replaced `href`, which made the whole card a link ──────────────

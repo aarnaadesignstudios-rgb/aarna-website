@@ -159,6 +159,14 @@ export const SITE = {
   phone: "+91 99903 47716",
   /** Dial string for tel: links — digits only. */
   phoneHref: "+919990347716",
+  /**
+   * The same line in the form wa.me wants: country code and digits, no `+`,
+   * no spaces. Written out rather than derived from `phone` at the call site
+   * so there is still one number on the site and one place to change it —
+   * and so that a studio using a separate business line for WhatsApp can set
+   * it here without the two silently disagreeing.
+   */
+  whatsappHref: "919990347716",
   address: "Gurugram Sec 103, India",
   url: "https://aarnaadesignstudios.com",
   /** Display form of the URL, for the contact block. */
@@ -166,3 +174,22 @@ export const SITE = {
   /** The year the studio was founded. Drives every "Est." line on the site. */
   founded: "2019",
 } as const;
+
+/**
+ * A wa.me link with the first message already typed into the composer.
+ *
+ * `wa.me` is WhatsApp's own short domain and it does the right thing on every
+ * platform without us having to guess: it opens the app on a phone and
+ * WhatsApp Web in a desktop browser. The alternative, `whatsapp://send`, is a
+ * custom scheme — it does nothing at all on a desktop that has no client
+ * installed, and the click reads as a dead link rather than as a link to an
+ * app you do not have.
+ *
+ * The message is encoded here rather than at the call site so the copy stays
+ * readable where it is written. It is a STARTING point, not a form: the
+ * visitor sees it in the composer before sending and can change any of it,
+ * which is why it names the thing they tapped ("the 60-minute consultation")
+ * instead of asking them for details the studio will ask for anyway.
+ */
+export const whatsappLink = (message: string) =>
+  `https://wa.me/${SITE.whatsappHref}?text=${encodeURIComponent(message)}`;

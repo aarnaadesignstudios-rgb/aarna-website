@@ -16,6 +16,8 @@ import {
 } from "react-icons/fi";
 import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/fa";
 
+import { whatsappLink } from "./site";
+
 import type {
   Faq,
   Feature,
@@ -194,7 +196,7 @@ export const STATS: Stat[] = [
 ];
 
 /**
- * The studio's five disciplines.
+ * The studio's six disciplines.
  *
  * `body` is revealed when the discipline's NAME is clicked (client request);
  * it is not shown at rest.
@@ -236,9 +238,37 @@ export const SERVICES: Service[] = [
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80",
   },
+  /* ── Sold by the session, not by the project ───────────────────────────
+     The other five disciplines are engagements: a brief, a site, a fee that
+     depends on all of it. This one is a fixed, bookable hour, and it is on
+     this track rather than in <Contact /> because a visitor reading "what we
+     do" is exactly the person who has one floor plan and one question and no
+     appetite for a full-service appointment. It sits fifth so it is the last
+     thing offered before the track hands over to a practice that is not ours.
+
+     It carries the two fields no discipline needed until now — a `price`,
+     because an hour with a fixed fee is the one thing here a visitor can
+     compare, and a `link` that opens WhatsApp rather than a page, because the
+     next step after "book" is a conversation and the studio already answers
+     on that number. See `whatsappLink` in constants/site.ts. */
+  {
+    id: "consultation",
+    index: "05",
+    title: "Design Consultation",
+    body: "A focused 60-minute online session with an architect — review a floor plan, work through space planning, or get your design questions answered.",
+    price: "₹6,999 per session",
+    image:
+      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&q=80",
+    link: {
+      label: "Book your consultation",
+      href: whatsappLink(
+        "Hi Aarnaa Design Studios — I’d like to book the 60-minute Space & Design Consultation (₹6,999). Could you share the next available slots?"
+      ),
+    },
+  },
   {
     id: "photography",
-    index: "05",
+    index: "06",
     title: "Architectural Photography",
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     image:

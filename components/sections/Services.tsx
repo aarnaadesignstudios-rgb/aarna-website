@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Services — the five disciplines, on a pinned horizontal scroll.
+ * Services — the studio's disciplines, on a pinned horizontal scroll.
  *
  * ── The scroll ────────────────────────────────────────────────────────────
  *
@@ -41,8 +41,15 @@
  * than an accordion that pushes the grid around. `openId` is shared, so the
  * two layouts are the same state read two ways.
  *
- * Architectural Photography opens its own page instead of expanding, so its
- * card renders a link and says so.
+ * Two cards carry a link at the foot of their copy rather than only a
+ * description: Architectural Photography sends you to Postcard of Life, and
+ * Design Consultation opens WhatsApp with the booking message already typed.
+ * Both are off-site, so both open in a new tab — see `linkOut` below.
+ *
+ * Design Consultation also carries a `price`, the only figure on the track.
+ * It is drawn between the body and the link on both layouts, because a fee is
+ * the thing a visitor scans for and the last thing they should have to find
+ * inside a paragraph.
  */
 import { useRef, useState } from "react";
 import { FiArrowUpRight, FiPlus } from "react-icons/fi";
@@ -71,9 +78,11 @@ import { cn } from "@/utils/cn";
  * sentences of copy, with one image on screen at a time and nothing to compare
  * it against. It was the longest thing on the site.
  *
- * A bento is the answer to the length: a two-up grid with the first discipline
- * taking a double-width tile brings the same five disciplines to about 780px,
- * and the uneven tile gives the block a composition instead of a queue.
+ * A bento is the answer to the length: a two-up grid brings the same
+ * disciplines to about a thousand pixels instead of two and a half thousand,
+ * and a tile that is wider than its neighbours — when the count leaves room
+ * for one, see `wideIndex` below — gives the block a composition instead of a
+ * queue.
  *
  * ── Why it turns rather than expands ─────────────────────────────────────
  *
@@ -132,7 +141,7 @@ function BentoTile({
   onToggle,
 }: {
   service: Service;
-  /** The double-width tile. First discipline only — see the grid. */
+  /** The double-width tile, when the count affords one. See `wideIndex`. */
   wide?: boolean;
   open: boolean;
   onToggle: () => void;
@@ -362,6 +371,30 @@ function BentoTile({
               {service.body}
             </span>
 
+            {/* ── The fee ──────────────────────────────────────────────
+                `type-figure` rather than the body face: Cormorant defaults to
+                OLD-STYLE figures, where 6 and 9 hang below the baseline and 0
+                sits at x-height, so "₹6,999" sets as a wobbling line of
+                numerals that reads as a rendering fault rather than a price.
+                Same utility <StatsStrip /> uses on its figures, same reason.
+
+                Emerald rather than `gold-ink`: the index above and the link
+                below are both already gold, and a third gold element on a
+                272px face makes the one line a visitor is looking for the
+                hardest of the three to pick out. The brand ink is also what
+                the title is set in, which is the association wanted here —
+                this is the card talking, not a piece of chrome. */}
+            {service.price && (
+              <span
+                className={cn(
+                  "mt-2 block type-figure leading-none text-emerald",
+                  wide ? "text-base" : "text-[0.82rem]"
+                )}
+              >
+                {service.price}
+              </span>
+            )}
+
             {service.link && (
               /* DRAWN here, but not interactive — the real anchor is the flat
                  sibling below, outside the 3D. `mt-auto` pins it to the foot of
@@ -454,6 +487,33 @@ export default function Services({ services = SERVICES }: ServicesProps) {
    * the header counting to a number the row no longer has.
    */
   const count = services.length;
+
+  /**
+   * Which bento tile, if any, is double-width — and `-1` for "none".
+   *
+   * ── Why this is arithmetic rather than `i === 0` ─────────────────────
+   *
+   * The bento runs two columns on a phone and three from `md`, and a tile that
+   * spans two of them costs two cells. For the grid to end on a full row at
+   * BOTH counts, the total number of cells has to divide by two and by three —
+   * so by six. With one wide tile that is `count + 1`.
+   *
+   * Five disciplines was exactly that case: 5 + 1 = 6, which packs 3 rows of
+   * two and 2 rows of three with nothing left over, and the uneven first tile
+   * gave the block a composition instead of a queue. Six disciplines is not:
+   * 6 + 1 = 7 leaves a hole beside the last tile at two columns and two holes
+   * at three, and a bento with a gap in it reads as a grid that failed to load
+   * rather than as a deliberate shape.
+   *
+   * Six equal tiles pack perfectly on their own — 3x2 and 2x3 — so at this
+   * count the wide tile is simply not spent. The composition is worth having
+   * where it is free and it is not worth a hole.
+   *
+   * (It comes back on its own at eleven, and at five if a discipline is ever
+   * unpublished, which is the point of deriving it: the CMS decides the count,
+   * and nobody has to remember this note when it changes.)
+   */
+  const wideIndex = (count + 1) % 6 === 0 ? 0 : -1;
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -574,17 +634,24 @@ export default function Services({ services = SERVICES }: ServicesProps) {
             than expanding.
 
             ── The spans pack exactly, at both column counts ────────────────
-            With the first tile double-width, five disciplines fill a rectangle
-            with no hole in it:
+            Six disciplines fill a rectangle with no hole in it at either
+            column count without needing a wide tile at all:
 
-              2 columns   [ 01 -- 01 ]   3 columns   [ 01 -- 01 ][ 02 ]
-                          [ 02 ][ 03 ]               [ 03 ][ 04 ][ 05 ]
-                          [ 04 ][ 05 ]
+              2 columns   [ 01 ][ 02 ]   3 columns   [ 01 ][ 02 ][ 03 ]
+                          [ 03 ][ 04 ]               [ 04 ][ 05 ][ 06 ]
+                          [ 05 ][ 06 ]
 
-            That is the whole reason the wide tile is FIRST and not, say, the
-            photography one at the end: any other position leaves a gap in one
-            of the two layouts, and a bento with a hole in it reads as a broken
-            grid rather than as a composition.
+            Five did too, but only WITH one — [01 -- 01] over four singles.
+            Which of the two the grid is showing is `wideIndex` above, and the
+            note there has the arithmetic. The rule either way is that the last
+            row has to be full: a bento with a gap in it reads as a grid that
+            failed to load rather than as a composition.
+
+            Note where the sixth tile lands as a result. Design Consultation
+            and Architectural Photography share the bottom row at two columns
+            and the bottom-right pair at three — the two cards that send you
+            somewhere, side by side at the foot of the grid, which is the
+            closest this layout gets to the desktop track's closing panel.
 
             ── The row height is set, not derived, and it is MEASURED ──────
             `auto-rows` rather than an aspect ratio on the tiles. A tile's back
@@ -623,7 +690,7 @@ export default function Services({ services = SERVICES }: ServicesProps) {
             <BentoTile
               key={service.id}
               service={service}
-              wide={i === 0}
+              wide={i === wideIndex}
               open={openId === service.id}
               onToggle={() =>
                 setOpenId(openId === service.id ? null : service.id)
@@ -641,7 +708,7 @@ export default function Services({ services = SERVICES }: ServicesProps) {
         <PageContainer className="pb-12 lg:hidden">
           <span aria-hidden className="mb-5 block h-px w-16 bg-gold" />
           <p className="max-w-[24ch] font-serif text-[1.55rem] leading-[1.15] text-emerald">
-            One studio, five disciplines, one continuous idea.
+            One studio, every discipline, one continuous idea.
           </p>
           <SmoothLink
             href="/contact"
@@ -803,6 +870,15 @@ export default function Services({ services = SERVICES }: ServicesProps) {
                           {service.body}
                         </p>
 
+                        {/* The fee, between the copy and the link it belongs
+                            to. See the note on the bento's copy of this for
+                            why `type-figure` and why emerald. */}
+                        {service.price && (
+                          <p className="mt-3 type-figure text-[1.05rem] leading-none text-emerald">
+                            {service.price}
+                          </p>
+                        )}
+
                         {/* The discipline's own destination, offered where the
                             reader already is rather than by turning the whole
                             card into a link. `tabIndex` follows the panel: a
@@ -853,7 +929,7 @@ export default function Services({ services = SERVICES }: ServicesProps) {
           <div className="hidden shrink-0 flex-col justify-end pb-8 lg:flex lg:w-[24vw]">
             <span aria-hidden className="mb-6 block h-px w-16 bg-gold" />
             <p className="font-serif text-[1.7rem] leading-[1.15] text-emerald xl:text-3xl">
-              One studio, five disciplines, one continuous idea.
+              One studio, every discipline, one continuous idea.
             </p>
             <SmoothLink
               href="/contact"

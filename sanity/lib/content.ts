@@ -457,6 +457,7 @@ const SERVICES_QUERY = groq`*[_type == "service"] | order(order asc, _createdAt 
   title,
   index,
   body,
+  price,
   photo,
   href,
   linkLabel
@@ -467,6 +468,7 @@ type ServiceDoc = {
   title?: string;
   index?: string;
   body?: string;
+  price?: string;
   photo?: Photo;
   href?: string;
   linkLabel?: string;
@@ -517,6 +519,11 @@ export async function getServices(): Promise<Service[]> {
           index: doc.index?.trim() || String(i + 1).padStart(2, "0"),
           title,
           body: doc.body?.trim() ?? "",
+          // Blank on all but the one discipline sold at a fixed fee, and
+          // `undefined` rather than "" so the card's `service.price &&` test
+          // does not have to know the difference between an empty string the
+          // Studio wrote and a field nobody filled in.
+          price: doc.price?.trim() || undefined,
           image: photo?.src ?? "",
           // A label is meaningless without a destination, and a destination
           // with no label renders an empty link — so they arrive together or
