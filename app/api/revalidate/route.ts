@@ -28,7 +28,7 @@ import { parseBody } from "next-sanity/webhook";
  *     URL       https://<your-domain>/api/revalidate
  *     Dataset   production
  *     Trigger   Create, Update, Delete
- *     Filter    _type in ["work","heroSlide","service","photoFrame","siteImages"]
+ *     Filter    _type in ["work","heroSlide","service","testimonial","photoFrame","siteImages"]
  *     Projection  {"_type": _type}
  *     Secret    the same value as SANITY_REVALIDATE_SECRET
  */

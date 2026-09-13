@@ -29,10 +29,26 @@
  *  - "Est. 2008" corrected to `SITE.founded`.
  */
 import { Media, PageContainer, Reveal, SectionHeading } from "@/components/ui";
-import { SITE } from "@/constants";
+import { SITE, SITE_IMAGES } from "@/constants";
 import { useParallax } from "@/hooks";
+import type { Photograph } from "@/types";
 
-export default function Founder() {
+/**
+ * `portrait` comes from the CMS, and defaults to the committed photograph.
+ *
+ * Same contract as every other section that takes content: the page reading
+ * Sanity passes it down (app/about/page.tsx), and the component still renders
+ * on its own. The default is SITE_IMAGES rather than a path written here,
+ * because a fallback inside the component that consumes it is a second source
+ * of truth for the same picture — see constants/content.ts.
+ */
+interface FounderProps {
+  portrait?: Photograph;
+}
+
+export default function Founder({
+  portrait = SITE_IMAGES.founderPortrait,
+}: FounderProps) {
   const portraitRef = useParallax<HTMLDivElement>({ from: -7, to: 7 });
 
   return (
@@ -48,9 +64,15 @@ export default function Founder() {
               <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-stone">
                 <div ref={portraitRef} className="absolute inset-0 scale-110">
                   <Media
-                    src="/images/founder/annapurna.jpg"
-                    alt="Ar. Annpurna Kinha, Founder and Principal Architect"
+                    src={portrait.src}
+                    alt={portrait.alt}
                     sizes="(max-width: 1024px) 100vw, 40vw"
+                    /* The frame is a tall 4:5 and the parallax scales it a
+                       further 110%, so a portrait dropped in without a hotspot
+                       set on the face is centre-cropped to her midriff. The
+                       Studio's hotspot arrives here as `objectPosition` — see
+                       sanity/lib/image.ts. */
+                    objectPosition={portrait.objectPosition}
                   />
                 </div>
                 {/* Lower veil — settles the portrait into the ground it sits on,

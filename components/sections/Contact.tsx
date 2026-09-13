@@ -56,7 +56,8 @@ import {
   SheetTexture,
   SmoothLink,
 } from "@/components/ui";
-import { NAV_LINKS, SITE, SOCIAL_LINKS } from "@/constants";
+import { NAV_LINKS, SITE, SITE_IMAGES, SOCIAL_LINKS } from "@/constants";
+import type { Photograph } from "@/types";
 
 // Field definitions kept declarative so the form stays DRY.
 const FIELDS = [
@@ -67,7 +68,22 @@ const FIELDS = [
 
 const YEAR = 2026; // Phase 1: static; wire to build-time date later.
 
-export default function Contact() {
+/**
+ * `backdrop` comes from the CMS, and defaults to the committed photograph.
+ *
+ * Whatever replaces it in the Studio inherits this section's one hard
+ * constraint: the veil below sits at 94%, so the room has to be warm and dense
+ * or it disappears into the green entirely rather than reading as a texture
+ * inside it. The field's description in sanity/schemas/siteImages.ts says so
+ * where the person choosing it will actually read it.
+ */
+interface ContactProps {
+  backdrop?: Photograph;
+}
+
+export default function Contact({
+  backdrop = SITE_IMAGES.contactBackdrop,
+}: ContactProps) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -104,9 +120,10 @@ export default function Contact() {
           better closing argument than a rented one. */}
       <div className="absolute inset-0">
         <Media
-          src="/images/hero/kapalimall.jpg"
-          alt=""
+          src={backdrop.src}
+          alt={backdrop.alt}
           sizes="100vw"
+          objectPosition={backdrop.objectPosition}
         />
         {/* A FLAT veil, not a graded one. Three stacked linear-gradients used
             to do this job and they are what the studio meant by green smears.

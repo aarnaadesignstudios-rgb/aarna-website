@@ -43,15 +43,25 @@ export const photo = defineField({
  * it, so it has to survive a title being reworded. Generated from the title
  * once and then left alone — which is what `slug` is for.
  */
-export const slug = defineField({
-  name: "slug",
-  title: "ID",
-  type: "slug",
-  description:
-    "Generated from the title. Safe to leave alone — changing it will not break anything visible, but there is no reason to.",
-  options: { source: "title", maxLength: 64 },
-  validation: (rule) => rule.required(),
-});
+export const slugFrom = (source: string) =>
+  defineField({
+    name: "slug",
+    title: "ID",
+    type: "slug",
+    description:
+      "Generated from the title. Safe to leave alone — changing it will not break anything visible, but there is no reason to.",
+    options: { source, maxLength: 64 },
+    validation: (rule) => rule.required(),
+  });
+
+/**
+ * The usual case: generated from a document's `title`.
+ *
+ * A document with no `title` field takes `slugFrom` directly — see
+ * ./testimonial.ts, which generates from the client's name because its only
+ * other text is the quote itself.
+ */
+export const slug = slugFrom("title");
 
 /**
  * Manual ordering.
@@ -67,4 +77,38 @@ export const order = defineField({
   type: "number",
   description: "Lower numbers come first.",
   validation: (rule) => rule.required().integer().min(0),
+});
+
+/**
+ * An optional second crop, for phones.
+ *
+ * ── Why a second FILE and not a second hotspot ───────────────────────────
+ *
+ * The hotspot already solves "this landscape photograph is being centre-cropped
+ * and the subject has fallen out of the frame" — see the note on `photo` above.
+ * What it cannot solve is a picture whose SUBJECT does not survive a portrait
+ * crop at all: a wide lobby shot reduced to a 390px-wide slice is a picture of
+ * one column, whatever point you drag onto it. The answer to that is a
+ * different photograph, framed for the shape it will be seen in, which is what
+ * this field is.
+ *
+ * It is optional in the strong sense — leave it empty and the main photograph
+ * is used at every width, exactly as it is today. So this adds a choice to the
+ * Studio without adding an obligation.
+ */
+export const mobilePhoto = defineField({
+  name: "mobilePhoto",
+  title: "Photograph — phones",
+  type: "image",
+  options: { hotspot: true },
+  description:
+    "Optional. Shown below 768px in place of the photograph above — use it where a wide shot loses its subject in a portrait crop. Leave empty and the main photograph is used at every size.",
+  fields: [
+    defineField({
+      name: "alt",
+      title: "Alt text",
+      type: "string",
+      description: "Optional. Falls back to the main photograph's alt text.",
+    }),
+  ],
 });

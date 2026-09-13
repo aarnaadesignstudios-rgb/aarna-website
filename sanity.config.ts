@@ -50,6 +50,7 @@ const structure: StructureResolver = (S) =>
       S.documentTypeListItem("work").title("Projects"),
       S.documentTypeListItem("heroSlide").title("Hero images"),
       S.documentTypeListItem("service").title("Services"),
+      S.documentTypeListItem("testimonial").title("Testimonials"),
       S.documentTypeListItem("photoFrame").title("Photography page"),
       S.divider(),
       S.listItem()

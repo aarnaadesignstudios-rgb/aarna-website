@@ -84,12 +84,19 @@ export interface ProcessStep {
   description: string;
 }
 
-/** A client testimonial. */
+/**
+ * A client testimonial.
+ *
+ * `role` is the commission and its city, printed under the name. Optional
+ * because it comes from the CMS now and a quote with no project attached is a
+ * normal thing for a studio to have — see sanity/schemas/testimonial.ts. The
+ * card renders the line only when there is something to put in it.
+ */
 export interface Testimonial {
   id: string;
   quote: string;
   author: string;
-  role: string;
+  role?: string;
 }
 
 /**
@@ -178,6 +185,25 @@ export interface HeroSlide {
    * Only set it where centring loses the subject on narrow viewports.
    */
   position?: string;
+  /**
+   * An optional second photograph, used below 768px in place of `image`.
+   *
+   * ── Art direction, not a smaller file ───────────────────────────────────
+   *
+   * Every image on this site is already served at the width it is rendered at,
+   * so this is not about bytes. The hero is the one full-VIEWPORT frame on the
+   * site, which means a phone shows a landscape photograph through a ~9:19
+   * window: `object-cover` keeps the height and throws away most of the width,
+   * and `--frame-zoom` then crops in further (see <ImageCycle />). A hotspot
+   * can choose WHICH slice survives that; it cannot make the slice a picture of
+   * a room. A shot framed vertically can.
+   *
+   * Undefined — the default, and what every committed entry uses — means the
+   * one photograph is shown at every width, exactly as before.
+   */
+  mobileImage?: string;
+  /** `object-position` for `mobileImage`. Independent of `position`. */
+  mobilePosition?: string;
 }
 
 /**
@@ -211,4 +237,26 @@ export interface SocialLink {
   label: string;
   href: string;
   icon: IconType;
+}
+
+/**
+ * A single photograph that is not part of a list — the founder's portrait, the
+ * backdrop behind the enquiry form.
+ *
+ * It is `src` / `alt` / `objectPosition` because that is exactly what
+ * <Media /> takes, which is what lets `getSiteImages()` hand its result
+ * straight to the component with no adapter in between. The committed
+ * fallbacks are in `constants/content.ts` as SITE_IMAGES.
+ */
+export interface Photograph {
+  src: string;
+  alt: string;
+  /** CSS `object-position`, from the photograph's hotspot when it came from the CMS. */
+  objectPosition?: string;
+}
+
+/** The two one-off photographs, together. See `Photograph` above. */
+export interface SiteImages {
+  founderPortrait: Photograph;
+  contactBackdrop: Photograph;
 }

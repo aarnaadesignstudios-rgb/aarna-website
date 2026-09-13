@@ -37,6 +37,18 @@ export interface ImageCycleFrame {
   alt: string;
   /** CSS `object-position` for the crop. Defaults to centred. */
   position?: string;
+  /**
+   * An optional second photograph, used below 768px in place of `image`.
+   *
+   * This stack is the one place on the site that fills a whole viewport, so it
+   * is the one place where a phone shows a landscape picture through a portrait
+   * window — and `PORTRAIT_ZOOM` below then crops in FURTHER, which helps the
+   * composition and costs more width again. A frame shot vertically escapes all
+   * of that. See components/ui/Media.tsx.
+   */
+  mobileImage?: string;
+  /** `object-position` for `mobileImage`. Independent of `position`. */
+  mobilePosition?: string;
 }
 
 /**
@@ -518,6 +530,8 @@ export default function ImageCycle({
                   eager={i > 0}
                   sizes={sizes}
                   objectPosition={frame.position}
+                  mobileSrc={frame.mobileImage}
+                  mobileObjectPosition={frame.mobilePosition}
                 />
               </div>
             </div>

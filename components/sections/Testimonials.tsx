@@ -44,8 +44,21 @@ import {
   SheetTexture,
 } from "@/components/ui";
 import { TESTIMONIALS } from "@/constants";
+import type { Testimonial } from "@/types";
 
-export default function Testimonials() {
+/**
+ * `items` comes from the CMS, and defaults to the committed quotes.
+ *
+ * Same contract as <Hero />'s `slides`: the section is rendered from a server
+ * component that reads Sanity (see <HomeDocument />), but it is also the
+ * component a developer reaches for in isolation, and neither should have to
+ * know whether a Content Lake exists. See sanity/lib/content.ts.
+ */
+interface TestimonialsProps {
+  items?: Testimonial[];
+}
+
+export default function Testimonials({ items = TESTIMONIALS }: TestimonialsProps) {
   return (
     <section
       id="testimonials"
@@ -78,7 +91,7 @@ export default function Testimonials() {
               </span>
             </>
           }
-          meta={`${TESTIMONIALS.length} clients`}
+          meta={`${items.length} ${items.length === 1 ? "client" : "clients"}`}
           className="max-w-full"
         />
       </PageContainer>
@@ -87,7 +100,7 @@ export default function Testimonials() {
           so the wall feels continuous rather than boxed into the container. */}
       <div className="relative z-10 mt-10 md:mt-12">
         <InfiniteMovingCards
-          items={TESTIMONIALS}
+          items={items}
           direction="left"
           speed="normal"
           tone="light"

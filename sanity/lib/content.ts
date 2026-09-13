@@ -2,8 +2,24 @@ import "server-only";
 
 import { groq } from "next-sanity";
 
-import { HERO_SLIDES, WORKS } from "@/constants";
-import type { HeroSlide, Work, WorkDetail, WorkLink } from "@/types";
+import {
+  HERO_SLIDES,
+  PHOTOGRAPHY_FRAMES,
+  SERVICES,
+  SITE_IMAGES,
+  TESTIMONIALS,
+  WORKS,
+} from "@/constants";
+import type {
+  HeroSlide,
+  PhotoFrame,
+  Service,
+  SiteImages,
+  Testimonial,
+  Work,
+  WorkDetail,
+  WorkLink,
+} from "@/types";
 
 import { client } from "./client";
 import { resolvePhoto, type Photo } from "./image";
@@ -121,10 +137,16 @@ export async function getWorks(): Promise<Work[]> {
 const HERO_QUERY = groq`*[_type == "heroSlide"] | order(order asc, _createdAt asc) {
   "id": coalesce(slug.current, _id),
   title,
-  photo
+  photo,
+  mobilePhoto
 }`;
 
-type HeroDoc = { id: string; title: string; photo?: Photo };
+type HeroDoc = {
+  id: string;
+  title: string;
+  photo?: Photo;
+  mobilePhoto?: Photo;
+};
 
 /**
  * The opening screen's frames.
@@ -157,6 +179,13 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     const slides = docs.flatMap((doc) => {
       const photo = resolvePhoto(doc.photo, doc.title);
       if (!photo) return [];
+      /**
+       * The phone crop is optional in both directions: a slide can have one and
+       * a slide can not, and `mobileImage` being undefined is what tells
+       * <Media /> to render a plain <Image /> rather than a <picture>. So an
+       * unused field costs the page nothing — see components/ui/Media.tsx.
+       */
+      const mobile = resolvePhoto(doc.mobilePhoto, photo.alt || doc.title);
       return [
         {
           id: doc.id,
@@ -164,6 +193,8 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
           alt: photo.alt || doc.title,
           title: doc.title,
           position: photo.objectPosition,
+          mobileImage: mobile?.src,
+          mobilePosition: mobile?.objectPosition,
         },
       ];
     });
@@ -324,5 +355,277 @@ export async function getWork(slug: string): Promise<WorkDetail | null> {
     };
   } catch {
     return detailFromConstants(slug);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Testimonials
+   ──────────────────────────────────────────────────────────────────────── */
+
+const TESTIMONIALS_QUERY = groq`*[_type == "testimonial"] | order(order asc, _createdAt asc) {
+  "id": coalesce(slug.current, _id),
+  quote,
+  author,
+  role
+}`;
+
+type TestimonialDoc = {
+  id: string;
+  quote?: string;
+  author?: string;
+  role?: string;
+};
+
+/**
+ * The client wall.
+ *
+ * ── A quote with no words is dropped, like a slide with no photograph ────
+ *
+ * `quote` and `author` are both required in the Studio, so a published
+ * testimonial has them. A DRAFT does not, and a half-written document is the
+ * normal state of one someone is still typing. The row would render its card
+ * regardless — a quote glyph, a hairline and the phoenix around an empty
+ * space — and with the sequence repeated to fill the track that blank card
+ * comes past twice a lap. Filtering is cheap and the failure is not.
+ *
+ * Same three-way fallback as everything else here: unconfigured, empty, or
+ * nothing usable all land on the committed quotes.
+ */
+export async function getTestimonials(): Promise<Testimonial[]> {
+  if (!client) return TESTIMONIALS;
+
+  try {
+    const docs = await client.fetch<TestimonialDoc[]>(
+      TESTIMONIALS_QUERY,
+      {},
+      { next: { tags: ["testimonial"], revalidate: 3600 } }
+    );
+
+    if (!docs?.length) return TESTIMONIALS;
+
+    const quotes = docs.flatMap((doc) => {
+      const quote = doc.quote?.trim();
+      const author = doc.author?.trim();
+      if (!quote || !author) return [];
+      return [{ id: doc.id, quote, author, role: doc.role?.trim() || undefined }];
+    });
+
+    return quotes.length ? quotes : TESTIMONIALS;
+  } catch {
+    return TESTIMONIALS;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   Services
+   ──────────────────────────────────────────────────────────────────────── */
+
+const SERVICES_QUERY = groq`*[_type == "service"] | order(order asc, _createdAt asc) {
+  "id": coalesce(slug.current, _id),
+  title,
+  index,
+  body,
+  photo,
+  href,
+  linkLabel
+}`;
+
+type ServiceDoc = {
+  id: string;
+  title?: string;
+  index?: string;
+  body?: string;
+  photo?: Photo;
+  href?: string;
+  linkLabel?: string;
+};
+
+/**
+ * The disciplines on the Services track.
+ *
+ * ── The index falls back to the position, rather than the other way round ─
+ *
+ * `index` is a field in the Studio ("01", "02"…) and it is also the card's
+ * place in a row the studio already orders with `order`. Two ways of saying the
+ * same thing, which drift the moment a discipline is inserted in the middle and
+ * nobody renumbers: the row reads 01, 02, 02, 03, and that looks like a bug in
+ * the site rather than a typo in the CMS. The field still wins when it is set,
+ * because a studio may want to number from 00 or skip one — but leaving it
+ * empty now produces the right number instead of a blank.
+ *
+ * ── A discipline with no photograph is KEPT ──────────────────────────────
+ *
+ * Unlike a hero slide, where an empty frame holds the whole screen for two
+ * seconds. A service card is a number, a name and a body; the photograph is the
+ * face of it, but the card is still legible and still clickable without one,
+ * and <Media /> sits on `bg-stone`, the ground those tiles already show while
+ * their images load. Dropping it instead would take a real service off the site
+ * because nobody had uploaded a picture for it yet.
+ */
+export async function getServices(): Promise<Service[]> {
+  if (!client) return SERVICES;
+
+  try {
+    const docs = await client.fetch<ServiceDoc[]>(
+      SERVICES_QUERY,
+      {},
+      { next: { tags: ["service"], revalidate: 3600 } }
+    );
+
+    if (!docs?.length) return SERVICES;
+
+    const services = docs.flatMap((doc, i) => {
+      const title = doc.title?.trim();
+      if (!title) return [];
+      const photo = resolvePhoto(doc.photo, title);
+      const href = doc.href?.trim();
+      return [
+        {
+          id: doc.id,
+          index: doc.index?.trim() || String(i + 1).padStart(2, "0"),
+          title,
+          body: doc.body?.trim() ?? "",
+          image: photo?.src ?? "",
+          // A label is meaningless without a destination, and a destination
+          // with no label renders an empty link — so they arrive together or
+          // not at all. See the note on `linkLabel` in the schema.
+          link: href
+            ? { label: doc.linkLabel?.trim() || "See more", href }
+            : undefined,
+        },
+      ];
+    });
+
+    return services.length ? services : SERVICES;
+  } catch {
+    return SERVICES;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   The photography grid
+   ──────────────────────────────────────────────────────────────────────── */
+
+const PHOTO_FRAMES_QUERY = groq`*[_type == "photoFrame"] | order(order asc, _createdAt asc) {
+  "id": coalesce(slug.current, _id),
+  photo,
+  caption,
+  span,
+  aspect
+}`;
+
+type PhotoFrameDoc = {
+  id: string;
+  photo?: Photo;
+  caption?: string;
+  span?: string;
+  aspect?: string;
+};
+
+/**
+ * /photography's irregular grid.
+ *
+ * `span` and `aspect` are Tailwind classes arriving from the CMS, which is the
+ * one place in this file where that is true. It is safe for exactly one reason:
+ * the schema constrains both to a radio list of four values, so the studio
+ * picks "Wide" and "Portrait" and never types a class name at all — see
+ * sanity/schemas/photoFrame.ts. The defaults below cover a document created
+ * before those fields existed, not a free-text mistake.
+ *
+ * A frame with no photograph is dropped. Unlike a service, a frame IS its
+ * photograph — there is nothing else on it but an optional caption — so an
+ * empty one is a hole in the grid.
+ */
+export async function getPhotoFrames(): Promise<PhotoFrame[]> {
+  if (!client) return PHOTOGRAPHY_FRAMES;
+
+  try {
+    const docs = await client.fetch<PhotoFrameDoc[]>(
+      PHOTO_FRAMES_QUERY,
+      {},
+      { next: { tags: ["photoFrame"], revalidate: 3600 } }
+    );
+
+    if (!docs?.length) return PHOTOGRAPHY_FRAMES;
+
+    const frames = docs.flatMap((doc) => {
+      const photo = resolvePhoto(doc.photo, doc.caption ?? "");
+      if (!photo) return [];
+      return [
+        {
+          id: doc.id,
+          image: photo.src,
+          span: doc.span?.trim() || "md:col-span-6",
+          aspect: doc.aspect?.trim() || "aspect-4/3",
+          caption: doc.caption?.trim() || "",
+        },
+      ];
+    });
+
+    return frames.length ? frames : PHOTOGRAPHY_FRAMES;
+  } catch {
+    return PHOTOGRAPHY_FRAMES;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   The two one-off photographs
+   ──────────────────────────────────────────────────────────────────────── */
+
+const SITE_IMAGES_QUERY = groq`*[_id == "siteImages"][0] {
+  founderPortrait,
+  contactBackdrop
+}`;
+
+type SiteImagesDoc = {
+  founderPortrait?: Photo;
+  contactBackdrop?: Photo;
+};
+
+/**
+ * The founder's portrait and the backdrop behind the enquiry form.
+ *
+ * ── The fallback is per PHOTOGRAPH, not per document ─────────────────────
+ *
+ * Every other read here falls back as a whole: an empty collection means the
+ * committed list, all of it. This one must not. The singleton holds two
+ * unrelated pictures and they will not be uploaded on the same afternoon, so
+ * under an all-or-nothing rule a document with the portrait filled in and the
+ * backdrop still empty would throw the portrait away and show both committed
+ * images — and the studio's first upload would appear to have done nothing.
+ *
+ * `*[_id == "siteImages"]` rather than `*[_type == "siteImages"]`: the Studio
+ * pins this open at that exact id (see sanity.config.ts), so there is one
+ * document and this is its address. Querying by type would also match a second
+ * copy if one were ever created, and `[0]` would then pick by creation order
+ * rather than by identity.
+ */
+export async function getSiteImages(): Promise<SiteImages> {
+  if (!client) return SITE_IMAGES;
+
+  try {
+    const doc = await client.fetch<SiteImagesDoc | null>(
+      SITE_IMAGES_QUERY,
+      {},
+      { next: { tags: ["siteImages"], revalidate: 3600 } }
+    );
+
+    if (!doc) return SITE_IMAGES;
+
+    const portrait = resolvePhoto(
+      doc.founderPortrait,
+      SITE_IMAGES.founderPortrait.alt
+    );
+    const backdrop = resolvePhoto(
+      doc.contactBackdrop,
+      SITE_IMAGES.contactBackdrop.alt
+    );
+
+    return {
+      founderPortrait: portrait ?? SITE_IMAGES.founderPortrait,
+      contactBackdrop: backdrop ?? SITE_IMAGES.contactBackdrop,
+    };
+  } catch {
+    return SITE_IMAGES;
   }
 }

@@ -38,6 +38,23 @@ export const service = defineType({
       description:
         'Only set where the discipline has a page of its own — currently just "/photography". Leave blank and the card expands in place instead.',
     }),
+    /**
+     * The link's WORDING, because the link is a line of copy at the foot of the
+     * body rather than a button. "See the photography" is a sentence about that
+     * discipline; a generic "Read more" underneath one card in five is the kind
+     * of filler the rest of this site does not have.
+     *
+     * Ignored when there is no `href`.
+     */
+    defineField({
+      name: "linkLabel",
+      title: "Link text",
+      type: "string",
+      initialValue: "See more",
+      description:
+        'What the link above reads as — "See the photography". Only used when a page is set.',
+      hidden: ({ parent }) => !parent?.href,
+    }),
     order,
   ],
   orderings: [

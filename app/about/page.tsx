@@ -12,6 +12,7 @@ import {
   SheetTexture,
 } from "@/components/ui";
 import { SITE } from "@/constants";
+import { getSiteImages } from "@/sanity/lib/content";
 
 /**
  * ── The opening plate ─────────────────────────────────────────────────────
@@ -92,7 +93,16 @@ export const metadata: Metadata = {
  * founder block below keeps its h2, so the outline reads
  * "About → Ar. Annpurna Kinha" rather than two competing h1s.
  */
-export default function AboutPage() {
+export default async function AboutPage() {
+  /**
+   * One read, two consumers: the portrait belongs to <Founder /> and the
+   * backdrop to <Contact />, and they live in the same singleton because there
+   * is exactly one of each forever. Reading it here rather than in each section
+   * is what keeps both of them ordinary components that take props — see
+   * sanity/lib/content.ts.
+   */
+  const siteImages = await getSiteImages();
+
   return (
     <>
       <Navbar />
@@ -218,9 +228,9 @@ export default function AboutPage() {
             to the container's measure. */}
         <StatsStrip />
 
-        <Founder />
+        <Founder portrait={siteImages.founderPortrait} />
 
-        <Contact />
+        <Contact backdrop={siteImages.contactBackdrop} />
       </main>
     </>
   );

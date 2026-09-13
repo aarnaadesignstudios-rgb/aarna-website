@@ -4,7 +4,8 @@ import Navbar from "@/components/layout/Navbar";
 import Contact from "@/components/sections/Contact";
 import PhotoGrid from "@/components/sections/PhotoGrid";
 import { Media, PageContainer, Reveal, SectionHeading } from "@/components/ui";
-import { PHOTOGRAPHY_FRAMES, PHOTOGRAPHY_SCOPE, SITE } from "@/constants";
+import { PHOTOGRAPHY_SCOPE, SITE } from "@/constants";
+import { getPhotoFrames, getSiteImages } from "@/sanity/lib/content";
 
 export const metadata: Metadata = {
   title: "Architectural Photography",
@@ -38,7 +39,17 @@ export const metadata: Metadata = {
  *   · 8–12 photographs with captions (see public/images/README.md)
  *   · whether enquiries route to the studio or direct to the photographer
  */
-export default function PhotographyPage() {
+export default async function PhotographyPage() {
+  /**
+   * In parallel: the grid's frames and the backdrop <Contact /> closes on.
+   * Neither depends on the other, and both fall back to the committed content
+   * when the Studio is empty or unreachable — see sanity/lib/content.ts.
+   */
+  const [frames, siteImages] = await Promise.all([
+    getPhotoFrames(),
+    getSiteImages(),
+  ]);
+
   return (
     <>
       <Navbar />
@@ -56,7 +67,7 @@ export default function PhotographyPage() {
         >
           <div className="absolute inset-0">
             <Media
-              src={PHOTOGRAPHY_FRAMES[0]?.image ?? ""}
+              src={frames[0]?.image ?? ""}
               alt=""
               sizes="100vw"
               priority
@@ -154,14 +165,14 @@ export default function PhotographyPage() {
             <SectionHeading
               eyebrow="Portfolio"
               title="Selected frames"
-              meta={`${PHOTOGRAPHY_FRAMES.length} images`}
+              meta={`${frames.length} ${frames.length === 1 ? "image" : "images"}`}
               className="max-w-full"
             />
-            <PhotoGrid frames={PHOTOGRAPHY_FRAMES} className="mt-14 md:mt-20" />
+            <PhotoGrid frames={frames} className="mt-14 md:mt-20" />
           </PageContainer>
         </section>
 
-        <Contact />
+        <Contact backdrop={siteImages.contactBackdrop} />
       </main>
     </>
   );

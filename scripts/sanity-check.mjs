@@ -91,7 +91,14 @@ console.log(
 if (token) console.log(`  ${PASS}  read token set ${dim("(draft previews available)")}`);
 
 // ── 3. Can we actually reach it? ─────────────────────────────────────────
-const TYPES = ["work", "heroSlide", "service", "photoFrame", "siteImages"];
+const TYPES = [
+  "work",
+  "heroSlide",
+  "service",
+  "testimonial",
+  "photoFrame",
+  "siteImages",
+];
 const query = `{${TYPES.map((t) => `"${t}": count(*[_type == "${t}"])`).join(",")}}`;
 const url =
   `https://${projectId}.apicdn.sanity.io/v${apiVersion}/data/query/${dataset}` +
@@ -141,12 +148,22 @@ try {
   // the Studio shows it, the count below goes up, and the site does not change
   // by a single pixel. That is indistinguishable from a broken configuration
   // unless something says so out loud, which is what `wired` is for.
+  //
+  // Every type is wired as of the testimonials pass — the three that were not
+  // (service, photoFrame, siteImages) had a schema and no reader, which is the
+  // exact failure this column exists to name. It stays because the next type
+  // added will start out unwired, and this is what will say so.
   const TYPES_INFO = {
     work: { label: "Projects", wired: true, where: "Selected Works" },
     heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
-    service: { label: "Services", wired: false, where: "Services" },
-    photoFrame: { label: "Photography page", wired: false, where: "/photography" },
-    siteImages: { label: "Site photographs", wired: false, where: "Practice, Contact" },
+    service: { label: "Services", wired: true, where: "Services" },
+    testimonial: { label: "Testimonials", wired: true, where: "Testimonials" },
+    photoFrame: { label: "Photography page", wired: true, where: "/photography" },
+    siteImages: {
+      label: "Site photographs",
+      wired: true,
+      where: "Founder portrait, Contact backdrop",
+    },
   };
 
   let total = 0;
@@ -194,7 +211,7 @@ try {
           "        them, but nothing on the site queries them yet. Editing them\n" +
           "        changes nothing on screen. Wiring one takes a getter in\n" +
           "        sanity/lib/content.ts and a prop from app/page.tsx — the same\n" +
-          "        shape as getWorks/getHeroSlides.\n"
+          "        shape as getWorks/getHeroSlides, plus a row in this table.\n"
       )
     );
   }

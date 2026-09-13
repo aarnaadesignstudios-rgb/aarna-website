@@ -11,7 +11,7 @@ import {
   SmoothLink,
 } from "@/components/ui";
 import { SITE } from "@/constants";
-import { getWork, getWorkSlugs } from "@/sanity/lib/content";
+import { getSiteImages, getWork, getWorkSlugs } from "@/sanity/lib/content";
 import type { WorkLink } from "@/types";
 
 /**
@@ -182,7 +182,12 @@ export default async function WorkPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const work = await getWork(slug);
+  /**
+   * In parallel, and the backdrop is fetched even for a slug that turns out not
+   * to exist — a wasted read on the 404 path, against a serialised round trip
+   * on every real project page. The 404s are the rare case.
+   */
+  const [work, siteImages] = await Promise.all([getWork(slug), getSiteImages()]);
 
   // A URL that names no project is a 404, never a redirect to a different one —
   // see the note on `getWork`.
@@ -377,7 +382,7 @@ export default async function WorkPage({
         )}
 
         {/* The enquiry form, which is where every path on this site ends. */}
-        <Contact />
+        <Contact backdrop={siteImages.contactBackdrop} />
       </main>
     </>
   );

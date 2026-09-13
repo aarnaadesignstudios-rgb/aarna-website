@@ -177,7 +177,13 @@ export default function InfiniteMovingCards({
               <span className={cn("font-serif text-base", ink.author)}>
                 {item.author}
               </span>
-              <span className={cn("font-label", ink.role)}>{item.role}</span>
+              {/* Optional now that the quotes come from the CMS — a studio can
+                  have a client who would rather their commission was not named.
+                  Rendered conditionally rather than as an empty span, because
+                  the column has a 1.5 gap and an empty line still takes it. */}
+              {item.role && (
+                <span className={cn("font-label", ink.role)}>{item.role}</span>
+              )}
             </span>
             {/* Phoenix as the signature on each quote. */}
             <Mark

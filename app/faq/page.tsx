@@ -5,6 +5,7 @@ import Contact from "@/components/sections/Contact";
 import FaqList from "@/components/sections/FaqList";
 import { PageContainer, SectionHeading } from "@/components/ui";
 import { FAQS, SITE } from "@/constants";
+import { getSiteImages } from "@/sanity/lib/content";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions",
@@ -28,7 +29,11 @@ export const metadata: Metadata = {
  * page ends with it rather than with a separate, thinner footer that would
  * have to be kept in sync.
  */
-export default function FaqPage() {
+export default async function FaqPage() {
+  // Only for the backdrop behind the closing enquiry — this page has no
+  // photography of its own. See sanity/lib/content.ts.
+  const siteImages = await getSiteImages();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -60,7 +65,7 @@ export default function FaqPage() {
           </PageContainer>
         </section>
 
-        <Contact />
+        <Contact backdrop={siteImages.contactBackdrop} />
       </main>
 
       {/* Rendered as a plain script tag, not next/script: this must be in the

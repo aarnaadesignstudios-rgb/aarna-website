@@ -24,7 +24,13 @@ import Practice from "@/components/sections/Practice";
 import Services from "@/components/sections/Services";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
-import { getHeroSlides, getWorks } from "@/sanity/lib/content";
+import {
+  getHeroSlides,
+  getServices,
+  getSiteImages,
+  getTestimonials,
+  getWorks,
+} from "@/sanity/lib/content";
 
 /**
  * Below-the-fold, heavier sections are code-split via dynamic import so their
@@ -60,10 +66,23 @@ const SelectedWorks = dynamic(() => import("@/components/sections/SelectedWorks"
  * byte-for-byte what it was. See sanity/lib/content.ts.
  */
 export default async function HomeDocument() {
-  // In parallel: two independent reads, and awaiting them in sequence would
-  // make the page's TTFB the SUM of two round trips to the Content Lake for no
-  // reason — neither query's input depends on the other's result.
-  const [works, slides] = await Promise.all([getWorks(), getHeroSlides()]);
+  /**
+   * In parallel. Awaiting these in sequence would make the page's TTFB the SUM
+   * of five round trips to the Content Lake for no reason — no query's input
+   * depends on another's result.
+   *
+   * Five and not one combined query, deliberately: each read is tagged with its
+   * own document type, which is what lets the publish webhook drop exactly the
+   * projects when a project changes and leave the hero, the quotes and the
+   * disciplines cached. See app/api/revalidate/route.ts.
+   */
+  const [works, slides, testimonials, services, siteImages] = await Promise.all([
+    getWorks(),
+    getHeroSlides(),
+    getTestimonials(),
+    getServices(),
+    getSiteImages(),
+  ]);
 
   return (
     <>
@@ -104,11 +123,11 @@ export default async function HomeDocument() {
         <Hero slides={slides} />
         <Practice />
         <SelectedWorks works={works} />
-        <Testimonials />
+        <Testimonials items={testimonials} />
         <Process />
         {/* <Founder /> lived here and is on /about now. */}
-        <Services />
-        <Contact />
+        <Services services={services} />
+        <Contact backdrop={siteImages.contactBackdrop} />
       </main>
     </>
   );

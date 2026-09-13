@@ -116,9 +116,17 @@ function BentoTile({
 }) {
   /* Both faces carry this. `backface-visibility: hidden` is what makes a flip
      a flip rather than two stacked panels: without it the front face stays
-     painted, mirrored, through the back. */
+     painted, mirrored, through the back.
+
+     ── `overflow` is NOT here ────────────────────────────────────────────
+     It used to be, as `overflow-hidden`, because both faces are rounded and
+     the front one has a photograph to clip to those corners. The back face
+     needs the opposite now that its copy comes from the CMS — see the note on
+     the grid's row height — and stacking `overflow-y-auto` on top of
+     `overflow-hidden` would leave which one won to the order Tailwind happens
+     to emit two utilities for the same box. Each face states its own. */
   const face =
-    "absolute inset-0 overflow-hidden rounded-2xl [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
+    "absolute inset-0 rounded-2xl [backface-visibility:hidden] [-webkit-backface-visibility:hidden]";
 
   return (
     <div
@@ -184,7 +192,8 @@ function BentoTile({
           <span
             className={cn(
               face,
-              "flex flex-col border border-emerald/10 bg-white transition-colors duration-500 ease-editorial"
+              // Clips the photograph to the tile's rounded corners.
+              "flex flex-col overflow-hidden border border-emerald/10 bg-white transition-colors duration-500 ease-editorial"
             )}
           >
             {/* `min-h-0` is not optional: a flex child defaults to
@@ -264,7 +273,13 @@ function BentoTile({
           <span
             className={cn(
               face,
-              "flex flex-col border border-gold/45 bg-white p-4",
+              /* `overflow-y-auto`, not `overflow-hidden`: the description is
+                 CMS copy now and nothing stops one being published that is
+                 taller than the 17rem row. Scrolling keeps it reachable; the
+                 alternative silently cuts a sentence off a service the studio
+                 sells. It is inert at every length that fits, which is all of
+                 them today — see the note on the grid below. */
+              "flex flex-col overflow-y-auto border border-gold/45 bg-white p-4",
               /* ── Centred, and the linked tile still pins its link down ────
                  The copy is shorter than the face on every tile — 126px of it
                  in 238px on the wide one — so top-aligning left a third of a
@@ -375,7 +390,19 @@ function BentoTile({
   );
 }
 
-export default function Services() {
+/**
+ * `services` comes from the CMS, and defaults to the studio's five.
+ *
+ * Same contract as <Hero />'s `slides` and <Testimonials />'s `items`: the
+ * section is rendered from a server component that reads Sanity (see
+ * <HomeDocument />), and it is also the component a developer reaches for in
+ * isolation. See sanity/lib/content.ts.
+ */
+interface ServicesProps {
+  services?: Service[];
+}
+
+export default function Services({ services = SERVICES }: ServicesProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const pinRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -389,6 +416,17 @@ export default function Services() {
   const [active, setActive] = useState(0);
   /** Which discipline is expanded. Only one at a time. */
   const [openId, setOpenId] = useState<string | null>(null);
+
+  /**
+   * Read into a local before the effect, and listed as its dependency.
+   *
+   * The track's active index is `progress × (count - 1)`, so the count is part
+   * of the timeline's arithmetic rather than something it reads incidentally.
+   * With the list coming from the CMS, a sixth discipline published while the
+   * page is cached would otherwise leave the ScrollTrigger dividing by five and
+   * the header counting to a number the row no longer has.
+   */
+  const count = services.length;
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -418,7 +456,7 @@ export default function Services() {
           if (progressRef.current) {
             progressRef.current.style.transform = `scaleX(${self.progress})`;
           }
-          const idx = Math.round(self.progress * (SERVICES.length - 1));
+          const idx = Math.round(self.progress * (count - 1));
           if (idx !== activeRef.current) {
             activeRef.current = idx;
             setActive(idx);
@@ -433,7 +471,7 @@ export default function Services() {
     });
 
     return () => mm.revert();
-  }, []);
+  }, [count]);
 
   return (
     <section
@@ -489,11 +527,11 @@ export default function Services() {
             meta={
               <>
                 <span className="lg:hidden">
-                  {SERVICES.length} disciplines
+                  {count} {count === 1 ? "discipline" : "disciplines"}
                 </span>
                 <span className="hidden lg:inline">
                   {`${String(active + 1).padStart(2, "0")} / ${String(
-                    SERVICES.length
+                    count
                   ).padStart(2, "0")}`}
                 </span>
               </>
@@ -538,17 +576,23 @@ export default function Services() {
             So the height is picked from the worst case rather than by eye. At
             17rem the five back faces measure 126, 167, 133, 149 and 204px of
             copy in 238px of room, the tightest being Architectural Photography
-            (137 characters plus a link). `SERVICES` is a committed constant,
-            not CMS content, so that measurement is a real guarantee — but it
-            is a guarantee about THIS copy: a materially longer description, or
-            another element added to the face, needs it re-checked. The check
-            is `scrollHeight - clientHeight` on each back face, which is 0 for
-            all five. */}
+            (137 characters plus a link).
+
+            ── That measurement is no longer a guarantee ──────────────────
+            It was, while `SERVICES` was a committed constant: the copy could
+            only change in a commit, so the check could be re-run when it did.
+            The disciplines come from the Studio now, and nothing stops a
+            longer description being published on a Tuesday. The back face
+            therefore SCROLLS rather than clipping — `overflow-y-auto` on it,
+            below — so overflowing copy is reachable instead of cut off. 17rem
+            is still the right height for the copy that exists; it is just a
+            layout decision now rather than a proof. The check, if you change
+            it, is `scrollHeight - clientHeight` on each back face. */}
         <div
           ref={bentoRef}
           className="grid grid-cols-2 auto-rows-[17rem] gap-3 px-6 pb-10 sm:auto-rows-[18rem] sm:gap-4 md:grid-cols-3 md:px-10 lg:hidden"
         >
-          {SERVICES.map((service, i) => (
+          {services.map((service, i) => (
             <BentoTile
               key={service.id}
               service={service}
@@ -605,7 +649,7 @@ export default function Services() {
           ref={trackRef}
           className="relative hidden flex-1 items-stretch will-change-transform lg:flex lg:flex-row lg:gap-8 lg:px-16 lg:pb-10"
         >
-          {SERVICES.map((service) => {
+          {services.map((service) => {
             const open = openId === service.id;
 
             return (

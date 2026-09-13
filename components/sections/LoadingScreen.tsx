@@ -672,12 +672,21 @@ export default function LoadingScreen({ slides = HERO_SLIDES }: LoadingScreenPro
         style={{ clipPath: "inset(50% 50% 50% 50% round 2px)" }}
       >
         <div className="absolute inset-0" style={{ transform: FRAME_OPENING_POSE }}>
+          {/* Every prop here is the hero's, including the phone crop: this is a
+              pixel-identical copy of the frame underneath, and the window opens
+              onto it rather than dissolving away. A slide with a `mobileImage`
+              would otherwise show its landscape original in the loader and its
+              vertical one the instant the curtain lifted — a cut at the exact
+              moment the site is introducing itself, and only on phones, which
+              is where nobody would be looking for it. */}
           <Media
             src={frame?.image ?? ""}
             alt=""
             priority
             sizes={FRAME_SIZES}
             objectPosition={frame?.position}
+            mobileSrc={frame?.mobileImage}
+            mobileObjectPosition={frame?.mobilePosition}
           />
         </div>
 

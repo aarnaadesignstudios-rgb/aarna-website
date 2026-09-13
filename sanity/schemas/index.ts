@@ -3,6 +3,7 @@ import type { SchemaTypeDefinition } from "sanity";
 import { heroSlide } from "./heroSlide";
 import { work } from "./work";
 import { service } from "./service";
+import { testimonial } from "./testimonial";
 import { photoFrame } from "./photoFrame";
 import { siteImages } from "./siteImages";
 
@@ -20,12 +21,15 @@ import { siteImages } from "./siteImages";
  * CMS field for each would invite edits that break the page's grammar without
  * anything failing loudly.
  *
- * What IS here is the photography, which is the thing that actually changes.
+ * What IS here is the photography, which is the thing that actually changes —
+ * and, since the client wall is the one piece of COPY that arrives after a
+ * launch rather than with it, the testimonials.
  */
 export const schemaTypes: SchemaTypeDefinition[] = [
   work,
   heroSlide,
   service,
+  testimonial,
   photoFrame,
   siteImages,
 ];

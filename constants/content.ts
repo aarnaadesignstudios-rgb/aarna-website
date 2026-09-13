@@ -25,6 +25,7 @@ import type {
   Project,
   ProcessStep,
   Service,
+  SiteImages,
   SocialLink,
   Stat,
   Testimonial,
@@ -95,6 +96,38 @@ export const HERO_SLIDES: HeroSlide[] = [
     title: "Sobha Residence",
   },
 ];
+
+/**
+ * The two photographs that belong to no list.
+ *
+ * ── Why these moved out of their components ──────────────────────────────
+ *
+ * Both were written into the JSX — `/images/founder/annapurna.jpg` in
+ * <Founder />, `/images/hero/kapalimall.jpg` in <Contact />. That was fine
+ * while they could only ever be those files. They are editable in the Studio
+ * now (`siteImages`, a singleton), and the rule everywhere else on this site is
+ * that the CMS supplies the picture and this file is what it falls back to —
+ * see sanity/lib/content.ts. A fallback cannot live inside the component that
+ * consumes it, because then there are two sources of truth for the same
+ * photograph and the CMS one wins silently.
+ *
+ * So: one committed default per photograph, in the one place the site keeps
+ * committed defaults.
+ */
+export const SITE_IMAGES: SiteImages = {
+  founderPortrait: {
+    src: "/images/founder/annapurna.jpg",
+    alt: "Ar. Annpurna Kinha, Founder and Principal Architect",
+  },
+  /**
+   * Kapali Mall, from the studio's own photography. It is deliberately a warm,
+   * dense room: the enquiry section lays a flat emerald veil at 94% over it, and
+   * a pale photograph disappears into that entirely rather than reading as a
+   * texture inside the green. Whatever replaces it in the Studio has the same
+   * constraint — see the note in <Contact />.
+   */
+  contactBackdrop: { src: "/images/hero/kapalimall.jpg", alt: "" },
+};
 
 /** Six premium value propositions rendered in the "Why Us" grid. */
 export const FEATURES: Feature[] = [
