@@ -21,6 +21,7 @@ import type {
 
 import { client } from "./client";
 import { resolvePhoto, type Photo } from "./image";
+import type { ContentTag } from "./tags";
 
 /**
  * Reading content, with the constants as the floor.
@@ -45,6 +46,39 @@ import { resolvePhoto, type Photo } from "./image";
  * `server-only` is imported for real, not as a comment: it makes a client
  * component importing this file a BUILD error rather than a runtime surprise.
  */
+
+/**
+ * How long a read stays cached when NOTHING tells the site to drop it.
+ *
+ * ── This is the fallback, not the mechanism ───────────────────────
+ *
+ * Publishing in the Studio fires a webhook at `app/api/revalidate/route.ts`,
+ * which drops the tag for the type that changed — so an edit is live in
+ * SECONDS, and this number has nothing to do with it. What this number decides
+ * is how wrong the site can be when that push does not arrive: the webhook is
+ * not configured yet, a delivery failed, someone edited through the API instead
+ * of the Studio.
+ *
+ * It was an hour, which is a long time to be showing the wrong photograph
+ * because a webhook was misconfigured — and "an hour" is indistinguishable from
+ * "broken" to whoever just published. Ten minutes is short enough that a
+ * missing webhook reads as a delay rather than a failure.
+ *
+ * ── It costs almost nothing, because it is not a timer ──────────────
+ *
+ * Next does not poll. The window only means "the next request after this has
+ * elapsed refetches in the background, and serves the stale copy while it
+ * does". So the number of extra reads is bounded by TRAFFIC, not by the clock:
+ * a quiet hour costs nothing at all, and a busy one costs at most one refetch
+ * per tag per window. Six tags at six windows an hour is a few hundred reads a
+ * day against a free-plan allowance of a million a month.
+ *
+ * The practical floor is that stale-while-revalidate serves ONE visitor the old
+ * content after the window expires — the one whose request triggers the
+ * refetch. Shortening this further buys less than it looks like it does, which
+ * is the other reason the fix for "my edit is not showing" is the webhook.
+ */
+const REVALIDATE_SECONDS = 600;
 
 /** Field-for-field what `Work` needs, so the mapping below stays honest. */
 const WORK_FIELDS = groq`
@@ -101,7 +135,7 @@ export async function getWorks(): Promise<Work[]> {
       {
         // Tagged so the publish webhook can drop exactly this and nothing else
         // — see app/api/revalidate/route.ts.
-        next: { tags: ["work"], revalidate: 3600 },
+        next: { tags: ["work" satisfies ContentTag], revalidate: REVALIDATE_SECONDS },
       }
     );
 
@@ -169,7 +203,7 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
     const docs = await client.fetch<HeroDoc[]>(
       HERO_QUERY,
       {},
-      { next: { tags: ["heroSlide"], revalidate: 3600 } }
+      { next: { tags: ["heroSlide" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
     );
 
     if (!docs?.length) return HERO_SLIDES;
@@ -261,7 +295,7 @@ export async function getWorkSlugs(): Promise<string[]> {
     const ids = await client.fetch<string[]>(
       groq`*[_type == "work"].slug.current`,
       {},
-      { next: { tags: ["work"], revalidate: 3600 } }
+      { next: { tags: ["work" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
     );
     const real = (ids ?? []).filter(Boolean);
     // An unconfigured or empty dataset still has to produce the nine pages the
@@ -304,12 +338,12 @@ export async function getWork(slug: string): Promise<WorkDetail | null> {
       client.fetch<DetailDoc | null>(
         WORK_QUERY,
         { slug },
-        { next: { tags: ["work"], revalidate: 3600 } }
+        { next: { tags: ["work" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
       ),
       client.fetch<{ id: string; title: string; category: string; photo?: Photo }[]>(
         SIBLINGS_QUERY,
         {},
-        { next: { tags: ["work"], revalidate: 3600 } }
+        { next: { tags: ["work" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
       ),
     ]);
 
@@ -396,7 +430,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     const docs = await client.fetch<TestimonialDoc[]>(
       TESTIMONIALS_QUERY,
       {},
-      { next: { tags: ["testimonial"], revalidate: 3600 } }
+      { next: { tags: ["testimonial" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
     );
 
     if (!docs?.length) return TESTIMONIALS;
@@ -467,7 +501,7 @@ export async function getServices(): Promise<Service[]> {
     const docs = await client.fetch<ServiceDoc[]>(
       SERVICES_QUERY,
       {},
-      { next: { tags: ["service"], revalidate: 3600 } }
+      { next: { tags: ["service" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
     );
 
     if (!docs?.length) return SERVICES;
@@ -539,7 +573,7 @@ export async function getSiteImages(): Promise<SiteImages> {
     const doc = await client.fetch<SiteImagesDoc | null>(
       SITE_IMAGES_QUERY,
       {},
-      { next: { tags: ["siteImages"], revalidate: 3600 } }
+      { next: { tags: ["siteImages" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
     );
 
     if (!doc) return SITE_IMAGES;

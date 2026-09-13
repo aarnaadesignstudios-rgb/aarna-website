@@ -45,7 +45,13 @@ import type { WorkLink } from "@/types";
  * and nothing else. See app/api/revalidate/route.ts.
  */
 
-export const revalidate = 3600;
+/**
+ * Ten minutes, matching `REVALIDATE_SECONDS` in sanity/lib/content.ts — and a
+ * literal rather than an import of it, because Next requires this value to be
+ * statically analysable and will not follow a reference. Keep the two in step;
+ * the note on that constant explains what the number is actually for.
+ */
+export const revalidate = 600;
 
 export async function generateStaticParams() {
   const slugs = await getWorkSlugs();

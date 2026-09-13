@@ -2,6 +2,8 @@ import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { parseBody } from "next-sanity/webhook";
 
+import { CONTENT_TAGS } from "@/sanity/lib/tags";
+
 /**
  * What makes "Publish" appear on the live site in seconds.
  *
@@ -44,21 +46,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid signature" }, { status: 401 });
     }
 
-    if (!body?._type) {
-      return NextResponse.json({ message: "Missing _type" }, { status: 400 });
+    /**
+     * ── A payload with no `_type` drops EVERYTHING, rather than nothing ──
+     *
+     * This used to answer 400 and revalidate nothing, which was wrong in the
+     * one case it was most likely to meet: a DELETE. The projection asks for
+     * `_type`, and on a delete the document it would be read from no longer
+     * exists — so depending on how the webhook is written, that field can
+     * arrive null. The 400 then looked like a rejected malformed request, while
+     * what had actually happened was that a deleted project stayed on the site
+     * until the revalidate window expired.
+     *
+     * Dropping every tag is the conservative answer and it is CHEAP, because
+     * getting here at all means the signature verified: this request is from
+     * Sanity, something really did change, and we do not know what. The cost is
+     * one cold read per tag on the next request; the cost of the old behaviour
+     * was serving content that had been deleted.
+     *
+     * It cannot be abused. An attacker without the secret never reaches this
+     * line — see the signature check above.
+     */
+    const type = body?._type;
+
+    if (!type) {
+      for (const tag of CONTENT_TAGS) revalidateTag(tag);
+      return NextResponse.json({
+        revalidated: true,
+        tags: CONTENT_TAGS,
+        reason: "no _type in payload — revalidated everything",
+      });
     }
 
     /**
-     * Only the type that changed.
+     * The normal path: only the type that changed.
      *
      * The reads tag themselves by document type, so replacing a project photo
      * drops the projects and leaves the hero, the services and the quotes
-     * cached. Revalidating everything would be simpler and would throw
-     * away a page's worth of warm cache for one edited photograph.
+     * cached. Revalidating everything every time would be simpler and would
+     * throw away a page's worth of warm cache for one edited photograph.
+     *
+     * An unrecognised `_type` is a harmless no-op — `revalidateTag` on a tag
+     * nothing uses does nothing — so a webhook filter that is broader than the
+     * schema costs nothing either.
      */
-    revalidateTag(body._type);
+    revalidateTag(type);
 
-    return NextResponse.json({ revalidated: true, tag: body._type });
+    return NextResponse.json({ revalidated: true, tag: type });
   } catch (err) {
     return NextResponse.json(
       { message: err instanceof Error ? err.message : "Unknown error" },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import HomeDocument from "@/components/sections/HomeDocument";
 import { SITE } from "@/constants";
@@ -17,22 +18,41 @@ import { SECTION_ROUTE_SEGMENTS, type SectionId } from "@/lib/sections";
  * linked, shared, bookmarked, put in a sitemap and ranked, none of which a
  * fragment can do. See lib/sections.ts for the full argument.
  *
- * ── `dynamicParams = false` is the whole safety story ─────────────────────
+ * ── The greedy-route problem, and why `dynamicParams` does not solve it ──
  *
- * A one-segment dynamic route is greedy: without this, `/asdf`, `/pricing` and
+ * A one-segment dynamic route is greedy: left alone, `/asdf`, `/pricing` and
  * every typo and stale inbound link would render a perfectly good copy of the
- * home page under a URL that means nothing — no 404, and five hundred
- * duplicate pages for a crawler to find. Closing the route to the generated
- * list makes anything not in `SECTION_ROUTE_SEGMENTS` a real 404.
+ * home page under a URL that means nothing — no 404, and any number of
+ * duplicate pages for a crawler to find.
+ *
+ * `export const dynamicParams = false` was the guard, and it had to go. It
+ * closes the route to the prerendered list, which is correct until one of those
+ * pages is REVALIDATED: the entry goes stale, the path is no longer satisfied
+ * by a prerender, and `dynamicParams: false` then refuses to generate it —
+ * `NoFallbackError`, served as a 404.
+ *
+ * That is not theoretical and it is not rare. It is what happens the first time
+ * anyone hits Publish in the Studio: one `revalidateTag("work")` and all five
+ * chapter URLs return 404 until the next deploy. Measured, on a production
+ * build — 200 before the webhook, 404 after, while `/` stayed up.
+ *
+ * So the guard is in the component instead, where it says the same thing
+ * (anything not in `SECTION_ROUTE_SEGMENTS` is a real 404) without telling the
+ * router that a stale page is an unknown one. The prerendered pages are still
+ * prerendered; `generateStaticParams` below is unchanged.
  *
  * Static segments win over dynamic ones in the App Router, so `/about` and
  * `/faq` keep their own pages and never reach this file.
  */
 
-export const dynamicParams = false;
-
-/** The chapters get the home page's revalidation, since it is the same data. */
-export const revalidate = 3600;
+/**
+ * The chapters get the home page's revalidation, since it is the same data.
+ *
+ * A literal, and it has to be: Next requires this to be statically analysable,
+ * so it cannot import `REVALIDATE_SECONDS` from sanity/lib/content.ts. Keep
+ * them in step — that constant's note explains what the window is for.
+ */
+export const revalidate = 600;
 
 export function generateStaticParams() {
   return SECTION_ROUTE_SEGMENTS.map((section) => ({ section }));
@@ -90,6 +110,21 @@ export async function generateMetadata({
   };
 }
 
-export default function SectionPage() {
+export default async function SectionPage({
+  params,
+}: {
+  params: Promise<{ section: string }>;
+}) {
+  const { section } = await params;
+
+  /**
+   * The guard that `dynamicParams = false` used to be — see the note above.
+   *
+   * Every real chapter is prerendered, so this only runs for a segment nobody
+   * generated: a typo, a stale inbound link, a crawler guessing. `notFound()`
+   * is the same answer the router gave before, reached a different way.
+   */
+  if (!SECTION_ROUTE_SEGMENTS.includes(section)) notFound();
+
   return <HomeDocument />;
 }
