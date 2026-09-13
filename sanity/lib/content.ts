@@ -4,7 +4,6 @@ import { groq } from "next-sanity";
 
 import {
   HERO_SLIDES,
-  PHOTOGRAPHY_FRAMES,
   SERVICES,
   SITE_IMAGES,
   TESTIMONIALS,
@@ -12,7 +11,6 @@ import {
 } from "@/constants";
 import type {
   HeroSlide,
-  PhotoFrame,
   Service,
   SiteImages,
   Testimonial,
@@ -499,72 +497,6 @@ export async function getServices(): Promise<Service[]> {
     return services.length ? services : SERVICES;
   } catch {
     return SERVICES;
-  }
-}
-
-/* ────────────────────────────────────────────────────────────────────────
-   The photography grid
-   ──────────────────────────────────────────────────────────────────────── */
-
-const PHOTO_FRAMES_QUERY = groq`*[_type == "photoFrame"] | order(order asc, _createdAt asc) {
-  "id": coalesce(slug.current, _id),
-  photo,
-  caption,
-  span,
-  aspect
-}`;
-
-type PhotoFrameDoc = {
-  id: string;
-  photo?: Photo;
-  caption?: string;
-  span?: string;
-  aspect?: string;
-};
-
-/**
- * /photography's irregular grid.
- *
- * `span` and `aspect` are Tailwind classes arriving from the CMS, which is the
- * one place in this file where that is true. It is safe for exactly one reason:
- * the schema constrains both to a radio list of four values, so the studio
- * picks "Wide" and "Portrait" and never types a class name at all — see
- * sanity/schemas/photoFrame.ts. The defaults below cover a document created
- * before those fields existed, not a free-text mistake.
- *
- * A frame with no photograph is dropped. Unlike a service, a frame IS its
- * photograph — there is nothing else on it but an optional caption — so an
- * empty one is a hole in the grid.
- */
-export async function getPhotoFrames(): Promise<PhotoFrame[]> {
-  if (!client) return PHOTOGRAPHY_FRAMES;
-
-  try {
-    const docs = await client.fetch<PhotoFrameDoc[]>(
-      PHOTO_FRAMES_QUERY,
-      {},
-      { next: { tags: ["photoFrame"], revalidate: 3600 } }
-    );
-
-    if (!docs?.length) return PHOTOGRAPHY_FRAMES;
-
-    const frames = docs.flatMap((doc) => {
-      const photo = resolvePhoto(doc.photo, doc.caption ?? "");
-      if (!photo) return [];
-      return [
-        {
-          id: doc.id,
-          image: photo.src,
-          span: doc.span?.trim() || "md:col-span-6",
-          aspect: doc.aspect?.trim() || "aspect-4/3",
-          caption: doc.caption?.trim() || "",
-        },
-      ];
-    });
-
-    return frames.length ? frames : PHOTOGRAPHY_FRAMES;
-  } catch {
-    return PHOTOGRAPHY_FRAMES;
   }
 }
 

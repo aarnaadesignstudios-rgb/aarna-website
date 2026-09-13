@@ -19,7 +19,6 @@ import { FaInstagram, FaLinkedinIn, FaBehance, FaPinterestP } from "react-icons/
 import type {
   Faq,
   Feature,
-  PhotoFrame,
   HeroSlide,
   NavLink,
   Project,
@@ -244,14 +243,20 @@ export const SERVICES: Service[] = [
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     image:
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
-    /* ── The href to replace ────────────────────────────────────────────
-       This is the site's own photography portfolio, and it is the placeholder:
-       swap the `href` for the Postcard of Life address when you have it. It is
-       deliberately not left empty, because /photography is reachable from
-       NOWHERE else on the site — this card was its only entrance — and an empty
-       string here would orphan the whole page. The label is worth changing with
-       it if the destination stops being ours. */
-    link: { label: "See the photography", href: "/photography" },
+    /* ── The Postcard of Life portfolio ──────────────────────────────────
+       This was `/photography`, a page on this site standing in until the real
+       address existed. It exists, so the placeholder is gone and the page with
+       it — the discipline is led by Ar. Divyank Sirohi under his own practice,
+       and a second portfolio of ours competing with his was always going to be
+       the weaker of the two.
+
+       It is EXTERNAL now, which changes how it renders: <SmoothLink /> hands
+       an off-site href to a plain anchor rather than the router, and the
+       Services cards open it in a new tab (see `linkOut` in that file). */
+    link: {
+      label: "See the photography",
+      href: "https://postcardoflife.myportfolio.com/personal-1",
+    },
   },
 ];
 
@@ -540,54 +545,3 @@ export const SOCIAL_LINKS: SocialLink[] = [
   { label: "Pinterest", href: "https://pinterest.com", icon: FaPinterestP },
 ];
 
-/**
- * Architectural Photography — the portfolio shown on /photography.
- *
- * The discipline and its lead (Ar. Divyank Sirohi | Postcard of Life) are the
- * studio's own copy. The FRAMES below are placeholders: aspect ratios and grid
- * spans are real design decisions and should be kept, but every `image` is a
- * stock stand-in.
- *
- * TODO (needs the studio): 8–12 photographs, plus a caption and the project
- *       each belongs to. See public/images/README.md for where to put them.
- */
-export const PHOTOGRAPHY_FRAMES: PhotoFrame[] = [
-  { id: "p1", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80", span: "md:col-span-7", aspect: "aspect-4/3", caption: "" },
-  { id: "p2", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1200&q=80", span: "md:col-span-5", aspect: "aspect-3/4", caption: "" },
-  { id: "p3", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80", span: "md:col-span-5", aspect: "aspect-3/4", caption: "" },
-  { id: "p4", image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80", span: "md:col-span-7", aspect: "aspect-4/3", caption: "" },
-  { id: "p5", image: "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=1800&q=80", span: "md:col-span-12", aspect: "aspect-21/9", caption: "" },
-  { id: "p6", image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&q=80", span: "md:col-span-6", aspect: "aspect-4/5", caption: "" },
-  { id: "p7", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80", span: "md:col-span-6", aspect: "aspect-4/5", caption: "" },
-];
-
-/**
- * What the photography discipline actually delivers. Written from the studio's
- * own one-line description of the service; not invented credentials.
- */
-export const PHOTOGRAPHY_SCOPE = [
-  {
-    id: "light",
-    index: "01",
-    title: "Light",
-    body: "Each space is shot at the hour it was designed for, not the hour the shoot was booked. Where that means returning, we return.",
-  },
-  {
-    id: "composition",
-    index: "02",
-    title: "Composition",
-    body: "Frames are built on the building's own geometry — its lines, thresholds and sight-lines — rather than imposed on it.",
-  },
-  {
-    id: "materiality",
-    index: "03",
-    title: "Materiality",
-    body: "Stone, timber, lime and metal photographed so their texture survives the screen, which is where most of them are seen.",
-  },
-  {
-    id: "storytelling",
-    index: "04",
-    title: "Storytelling",
-    body: "A set that reads in sequence: approach, threshold, room, detail. A building explained, not merely recorded.",
-  },
-];

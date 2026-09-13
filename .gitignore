@@ -28,8 +28,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files
+#
+# `.env` is COMMITTED and is the file Next actually loads — it holds the public
+# Sanity settings and nothing secret. `.env.local` is not, and holds the two
+# values that are. See the header of `.env`.
 .env*
-!.env.example
+!.env
 
 # typescript
 *.tsbuildinfo

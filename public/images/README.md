@@ -78,28 +78,13 @@ One representative image each. Portrait 4:5 works best in this track.
 | 04 | Vastu | `/public/images/services/vastu.jpg` |
 | 05 | Architectural Photography | `/public/images/services/photography.jpg` |
 
----
-
-## 4. Architectural Photography page — 8–12 frames
-
-The portfolio grid on `/photography`, with a lightbox. Mixed orientations are
-wanted: the grid is deliberately irregular (portrait pairs, one full-width
-panorama), which is what makes it read as a picture edit rather than a
-contact sheet.
-
-```
-/public/images/photography/01.jpg … 12.jpg
-```
-
-Captions are optional; if supplied they appear under each frame.
-
-**Still needed for this page:** a short biography for Ar. Divyank Sirohi.
-There is currently none, and nothing has been invented in its place — no
-awards, no client list, no years of experience.
+Card 05 is the only one that links out: it goes to the Postcard of Life
+portfolio rather than to a page here, so its image is the discipline's face on
+the track and nothing more.
 
 ---
 
-## 5. Founder portrait
+## 4. Founder portrait
 
 Already in place at `/public/images/founder/annapurna.jpg`. Replace only if
 there is a newer frame.

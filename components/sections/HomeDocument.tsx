@@ -93,7 +93,7 @@ export default async function HomeDocument() {
       {/* The drawing-sheet margin that runs the length of the page. It is what
           makes the sections read as one document rather than eight blocks — see
           the note in components/layout/Spine.tsx. Home only: it reports on
-          numbered sheets, and /faq and /photography have none. */}
+          numbered sheets, and /faq and /about have none. */}
       <Spine />
 
       {/* ── Six chapters, and they are numbered 01–06 ─────────────────

@@ -502,7 +502,7 @@ async function cmdIntro() {
 }
 
 async function cmdSmoke() {
-  const routes = ["/", "/faq", "/photography"];
+  const routes = ["/", "/faq", "/about"];
   let ok = true;
   for (const r of routes) {
     console.log(`\n── ${r} ${"─".repeat(40)}`);

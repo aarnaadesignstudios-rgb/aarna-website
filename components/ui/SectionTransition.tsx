@@ -125,8 +125,8 @@ const MEDIA_WAIT_CAP_MS = 520;
  *
  * ── Raised from 1400ms, because a project page is not a section ───────────
  *
- * 1400 was measured against /faq and /photography, both of which are static
- * and prerendered and commit almost immediately. A commission's page is a
+ * 1400 was measured against the site's static pages — prerendered, and
+ * committing almost immediately. A commission's page is a
  * different shape: it is a dynamic route whose content comes from the CMS, its
  * gallery is a column of large photographs, and it was reliably losing the race
  * — the cap expired, the card lifted, and the visitor watched the page assemble

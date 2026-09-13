@@ -28,7 +28,7 @@ import { parseBody } from "next-sanity/webhook";
  *     URL       https://<your-domain>/api/revalidate
  *     Dataset   production
  *     Trigger   Create, Update, Delete
- *     Filter    _type in ["work","heroSlide","service","testimonial","photoFrame","siteImages"]
+ *     Filter    _type in ["work","heroSlide","service","testimonial","siteImages"]
  *     Projection  {"_type": _type}
  *     Secret    the same value as SANITY_REVALIDATE_SECRET
  */
@@ -52,8 +52,8 @@ export async function POST(req: NextRequest) {
      * Only the type that changed.
      *
      * The reads tag themselves by document type, so replacing a project photo
-     * drops the projects and leaves the hero, the services and the photography
-     * page cached. Revalidating everything would be simpler and would throw
+     * drops the projects and leaves the hero, the services and the quotes
+     * cached. Revalidating everything would be simpler and would throw
      * away a page's worth of warm cache for one edited photograph.
      */
     revalidateTag(body._type);

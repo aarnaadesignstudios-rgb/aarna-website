@@ -25,8 +25,8 @@ import { SECTION_ROUTE_SEGMENTS, type SectionId } from "@/lib/sections";
  * duplicate pages for a crawler to find. Closing the route to the generated
  * list makes anything not in `SECTION_ROUTE_SEGMENTS` a real 404.
  *
- * Static segments win over dynamic ones in the App Router, so `/about`,
- * `/faq` and `/photography` keep their own pages and never reach this file.
+ * Static segments win over dynamic ones in the App Router, so `/about` and
+ * `/faq` keep their own pages and never reach this file.
  */
 
 export const dynamicParams = false;

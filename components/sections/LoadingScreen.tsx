@@ -218,7 +218,7 @@ const REVEAL_WAIT_CAP_S = INTRO.revealWaitCapMs / 1000;
  *
  * This component is mounted by app/page.tsx, so it used to replay in full every
  * time someone came back to `/` — clicking the wordmark from /faq, or "About"
- * from /photography. That is 2.9 seconds of brand screen, with the page frozen
+ * from /about. That is 2.9 seconds of brand screen, with the page frozen
  * behind it, in the middle of a session, as the answer to a navigation.
  *
  * It became visible when navigation started being carried by a chapter card

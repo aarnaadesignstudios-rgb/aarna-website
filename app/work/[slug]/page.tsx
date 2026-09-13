@@ -209,7 +209,7 @@ export default async function WorkPage({
 
       <main>
         {/* ── The cover ───────────────────────────────────────────────────
-            Full-bleed, the way the /photography page opens, and for the same
+            Full-bleed, the way the home page's hero opens, and for the same
             reason: the work should be the first thing that speaks. The title
             sits ON the photograph rather than under it so the page starts with
             one image instead of an image and a header competing. */}

@@ -87,7 +87,7 @@ const MARKER_TRAVEL = ((100 - MARKER_PCT) / MARKER_PCT) * 100;
  * a parser where a constant will do.
  *
  * A sheet whose `id` is not on the current route is skipped, so this is safe on
- * /faq and /photography (where it resolves to nothing and renders nothing).
+ * /faq and /about (where it resolves to nothing and renders nothing).
  */
 const SHEETS = [
   { id: "practice", index: "01", label: "The Practice" },

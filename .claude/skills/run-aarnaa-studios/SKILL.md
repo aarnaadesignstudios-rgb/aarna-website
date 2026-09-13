@@ -6,7 +6,8 @@ description: Run, build, start, screenshot, smoke-test and drive the Aarnaa Stud
 # Run Aarnaa Studios
 
 Next.js 15 (App Router) + React 19 + Tailwind v4, with Lenis smooth scroll, GSAP
-ScrollTrigger pinning and framer-motion. Routes: `/`, `/faq`, `/photography`.
+ScrollTrigger pinning and framer-motion. Routes: `/`, `/about`, `/faq`, plus
+`/work/[slug]` and the five chapter routes that re-render the home document.
 
 The site is driven by **`.claude/skills/run-aarnaa-studios/driver.mjs`** —
 puppeteer-core against the locally installed Chrome. There is no `chromium-cli`
@@ -39,7 +40,7 @@ npm run dev                  # port 3000
 node .claude/skills/run-aarnaa-studios/driver.mjs smoke
 ```
 
-`smoke` checks and screenshots all three routes and exits non-zero on any
+`smoke` checks and screenshots `/`, `/faq` and `/about` and exits non-zero on any
 console error, 4xx/5xx response, or unresolved font token. Verified output ends
 `SMOKE PASS`.
 
@@ -52,7 +53,7 @@ node .claude/skills/run-aarnaa-studios/driver.mjs check faq --port 3100
 
 # screenshot after the intro clears
 node .claude/skills/run-aarnaa-studios/driver.mjs shot /
-node .claude/skills/run-aarnaa-studios/driver.mjs shot photography --vw 390 --vh 844
+node .claude/skills/run-aarnaa-studios/driver.mjs shot about --vw 390 --vh 844
 
 # scroll (absolute px, or a selector — Lenis-safe, pin-aware)
 node .claude/skills/run-aarnaa-studios/driver.mjs scroll / --to 2400
@@ -84,7 +85,7 @@ below produces a plausible-looking file.
 ```bash
 npm run typecheck            # tsc --noEmit — clean
 npm run lint                 # clean (warns that `next lint` dies in Next 16)
-npm run build                # 33s, all 7 pages static-prerendered
+npm run build                # ~50s, all 19 pages prerendered
 npm run start                # serves the build on 3000
 ```
 
@@ -157,8 +158,9 @@ negative** — the metric reads zero and looks like broken code.
   Use `scroll --to <anchor>` and viewport-sized shots instead.
 - **The home page has no `<h1>`.** The hero is a full-bleed photograph with an
   eyebrow + project name; the first heading is an `<h2>`. Probing `h1` alone
-  reports "(none)" on a page rendering perfectly. Only `/photography` has an
-  `<h1>`.
+  reports "(none)" on a page rendering perfectly. `/faq` is the same shape —
+  its first heading is an `<h2>` too. `/about` is the one route with a real
+  `<h1>` ("Designing conscious luxury").
 - **The intro runs to 2.95s, not ~1.9s.** `constants/site.ts`: `CUE.dissolve`
   2.05s + `DISSOLVE_DURATION` 0.9s, plus `INTRO.revealWaitCapMs` 800ms while the
   hero photograph is still loading — 3.75s worst case. The driver waits 4000ms.

@@ -324,7 +324,7 @@ export default function Contact({
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   {/* This block is the site's footer in all but name, and it
-                      renders on /faq and /photography too — so these are the
+                      renders on /faq and /about too — so these are the
                       same route-aware links the masthead uses, not bare
                       anchors that would have pointed at ids those pages do not
                       contain. */}

@@ -48,10 +48,12 @@ export interface Service {
    *
    * ── This replaced `href`, which made the whole card a link ──────────────
    *
-   * Architectural Photography used to carry `href: "/photography"`, and the
-   * card read that as "this discipline is a page": the photograph and the name
-   * became one big anchor, the `+` became an arrow, and the body was printed at
-   * rest instead of on a click, because there was no click to wait for.
+   * Architectural Photography used to carry `href: "/photography"` — a page on
+   * this site — and the card read that as "this discipline is a page": the
+   * photograph and the name became one big anchor, the `+` became an arrow, and
+   * the body was printed at rest instead of on a click, because there was no
+   * click to wait for. (The destination is Postcard of Life's own portfolio now
+   * and the page is gone; the shape of the field is what this note is about.)
    *
    * One of five cards behaving differently from the other four is a difference
    * a visitor has to notice and then work out, and it cost the row its rhythm:
@@ -206,24 +208,6 @@ export interface HeroSlide {
   mobilePosition?: string;
 }
 
-/**
- * One photograph in the /photography portfolio grid.
- *
- * `span` and `aspect` are Tailwind classes rather than numbers on purpose: the
- * grid is deliberately irregular — a full-bleed panorama between two portrait
- * pairs, and so on — and that rhythm is a design decision per frame, not
- * something worth deriving from image dimensions.
- */
-export interface PhotoFrame {
-  id: string;
-  image: string;
-  /** Column span at md+, e.g. "md:col-span-7". */
-  span: string;
-  /** Aspect-ratio utility, e.g. "aspect-4/3". */
-  aspect: string;
-  /** Optional caption. Empty until the studio supplies them. */
-  caption?: string;
-}
 
 /** A question and answer on the FAQ page. */
 export interface Faq {

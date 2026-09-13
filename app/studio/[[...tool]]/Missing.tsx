@@ -21,7 +21,8 @@ export default function Missing() {
         {[
           "Create a free project at sanity.io — sign in with Google or GitHub, no card needed.",
           "Open Settings → API and copy the Project ID.",
-          "Copy .env.example to .env.local and paste it into NEXT_PUBLIC_SANITY_PROJECT_ID.",
+          "Paste it into NEXT_PUBLIC_SANITY_PROJECT_ID in .env — the committed file in the project root. Secrets go in .env.local; this one is not a secret.",
+          "Deployed on Vercel? NEXT_PUBLIC_ values are baked in at build time, so set it there too and redeploy — a running deployment will not pick it up on its own.",
           "Restart the dev server, or redeploy, and reload this page.",
         ].map((step, i) => (
           <li key={step} className="flex gap-4">

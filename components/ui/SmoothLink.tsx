@@ -19,7 +19,7 @@
  * the smoothing engine for a frame — the one place on a site built around
  * weighted scrolling where the scrolling was not weighted at all.
  *
- * (2) was outright broken. The masthead renders on /faq and /photography, and
+ * (2) was outright broken. The masthead renders on /faq and /about, and
  * on those pages "About" pointed at `#practice` — an id that exists only on the
  * home page. The browser found nothing, so the link silently did nothing at
  * all: five of the seven nav items were dead on two of the three pages. The fix
@@ -147,8 +147,8 @@ const SmoothLink = forwardRef<HTMLAnchorElement, SmoothLinkProps>(
     // middle-click, a crawler and a copied link all get somewhere real — and
     // the provider finishes the scroll after the route change.
     //
-    // The handler still runs first, and that matters: /faq and /photography
-    // both END with <Contact />, so on those pages "Contact" and "Enquire"
+    // The handler still runs first, and that matters: /faq and /about both
+    // END with <Contact />, so on those pages "Contact" and "Enquire"
     // point at a section that is right there. Testing for the element rather
     // than trusting the pathname means they scroll to it instead of taking a
     // round trip to the home page to reach the same block.

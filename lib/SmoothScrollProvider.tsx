@@ -192,7 +192,7 @@ export function scrollToHash(
 /**
  * Finish a navigation that ARRIVED with a hash — `/#contact` typed in, shared
  * as a link, or produced by <SmoothLink /> when a masthead link is clicked
- * from /faq or /photography.
+ * from /faq or /about.
  *
  * This cannot simply scroll on the next frame, for three reasons that each
  * break it in a different way:

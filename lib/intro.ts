@@ -4,7 +4,7 @@
  * intro — has the opening screen already played in this page load?
  *
  * <LoadingScreen /> is mounted by the home page, so it used to replay in full
- * every time a visitor came BACK to `/` from /faq or /photography: 2.9 seconds
+ * every time a visitor came BACK to `/` from /faq or /about: 2.9 seconds
  * of brand panel, with the page frozen behind it, as the answer to clicking a
  * nav link. Now it plays once per load and steps aside afterwards.
  *

@@ -84,7 +84,7 @@ const CARD_THRESHOLD = 0.6;
 export interface SectionCard {
   /**
    * A route to navigate to while covered, if this is a page change rather than
-   * a move within the current page (`/faq`, `/photography`, `/#practice` from
+   * a move within the current page (`/faq`, `/about`, `/#practice` from
    * either of them).
    */
   route: string | null;
@@ -139,8 +139,8 @@ export function onSectionCard(fn: Listener) {
  * The nav's own numbering, so the card agrees with the index in the mobile
  * menu — a visitor who has seen "06 FAQ" there should not be told "04 FAQ"
  * here. Destinations that are not nav entries are named rather than numbered:
- * /photography is reached from a Services card, and the wordmark's #hero is the
- * studio rather than a section.
+ * /about is reached from the masthead's own entry, a commission is reached from
+ * the ring, and the wordmark's #hero is the studio rather than a section.
  */
 function describe(href: string): {
   index: string | null;
@@ -158,7 +158,7 @@ function describe(href: string): {
      consulted. Clicking the masthead's logo on the home page therefore fell
      past the wordmark branch, found no path segment to title-case either, and
      put up a chapter card with an EMPTY name on it — the mark and two gold
-     rules and nothing between them. From /faq or /photography the same click
+     rules and nothing between them. From /faq or /about the same click
      took a different route through here (`/#hero`, which does have a path) and
      was named, which is why this only ever looked broken on one page. */
   const [rawPath = "/", hash] = href.split("#");
@@ -195,8 +195,8 @@ function describe(href: string): {
     return { index: null, label: SITE.name, wordmark: true };
   }
 
-  // A route with no nav entry — /photography, reached from a Services card.
-  // Title-case its last segment.
+  // A route with no nav entry — a commission under /work, say. Title-case its
+  // last segment, unless the caller passed a better name (see `cardLabel`).
   const segment = path.split("/").filter(Boolean).pop();
   if (segment) {
     return {
@@ -264,7 +264,7 @@ export function navigateToSection(hash: string, travel: Travel = "auto"): boolea
 }
 
 /**
- * Go to another PAGE — /faq, /photography, or a section of the home page from
+ * Go to another PAGE — /faq, /about, or a section of the home page from
  * one of them — behind the same chapter card.
  *
  * ── Why a route change gets the card too ──────────────────────────────────
@@ -356,7 +356,8 @@ export function navigateToRoute(href: string, label?: string): boolean {
     ...describe(href),
     /* ── A caller that knows the destination's real name wins ──────────
        `describe` names an unlisted route by title-casing its last path
-       segment, which is right for /photography and wrong for a CMS route. A
+       segment, which is right for a hand-authored route and wrong for a CMS
+       one. A
        project's slug is whatever the studio typed into Sanity — today those
        are "33424", "545", "ads" and "223" — so clicking a commission put up a
        card that said "33424" and held it there for as long as the page took to

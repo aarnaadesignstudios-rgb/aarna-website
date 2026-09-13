@@ -85,8 +85,8 @@ const TONE: Record<
     role: "text-charcoal/50",
     rule: "border-emerald/10",
   },
-  // Kept for any band that sits over photography (the /photography hero, say);
-  // nothing on the home page uses it any more. <Testimonials /> was its one
+  // Kept for any band that sits over photography (something built on the hero's
+  // own treatment, say); nothing on the site uses it any more. <Testimonials /> was its one
   // caller and that section is light now — see the note at the top of it.
   dark: {
     // The card has to lift off a dark ground without becoming a grey box on it.

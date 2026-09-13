@@ -46,23 +46,48 @@ function readEnv(file) {
 
 console.log(bold("\n  Sanity configuration\n"));
 
-// ── 1. The file Next actually reads ──────────────────────────────────────
-const localPath = resolve(ROOT, ".env.local");
-const env = readEnv(localPath);
+/**
+ * ── 1. The files Next actually reads ───────────────────────
+ *
+ * Two of them, in Next's own order of precedence: `.env` is committed and
+ * carries the public Sanity settings, `.env.local` is git-ignored, optional,
+ * and carries only the secrets. `.env.local` wins where they overlap, which is
+ * the rule this merge reproduces.
+ *
+ * A missing `.env.local` is NOT a failure any more. It used to be the only env
+ * file in the project, so its absence meant nothing was configured at all; now
+ * it means nobody has set the revalidate secret yet, which costs instant
+ * publishing and nothing else. Exiting 1 on that would fail CI over an
+ * optimisation.
+ */
+const base = readEnv(resolve(ROOT, ".env"));
+const local = readEnv(resolve(ROOT, ".env.local"));
 
-if (!env) {
-  console.log(`  ${FAIL}  .env.local not found`);
+if (!base && !local) {
+  console.log(`  ${FAIL}  no .env file found`);
   console.log(
     dim(
-      "\n        Next only loads .env.local, .env, .env.development and\n" +
-        "        .env.production — from the PROJECT ROOT. `.env.example` is a\n" +
-        "        committed template and is never read.\n\n" +
-        "          cp .env.example .env.local\n"
+      "\n        Next loads .env, .env.local, .env.development and\n" +
+        "        .env.production — from the PROJECT ROOT, and nothing else.\n" +
+        "        `.env` is committed, so this should not happen in a clean\n" +
+        "        checkout: `git checkout .env` will bring it back.\n"
     )
   );
   process.exit(1);
 }
-console.log(`  ${PASS}  .env.local found`);
+
+const env = { ...(base ?? {}), ...(local ?? {}) };
+
+console.log(
+  base
+    ? `  ${PASS}  .env found ${dim("(committed — public settings)")}`
+    : `  ${WARN}  .env missing ${dim("(it is committed; git checkout .env)")}`
+);
+console.log(
+  local
+    ? `  ${PASS}  .env.local found ${dim("(git-ignored — secrets)")}`
+    : `  ${WARN}  .env.local missing ${dim("(no secrets set locally)")}`
+);
 
 // ── 2. What is in it ─────────────────────────────────────────────────────
 const projectId = env.NEXT_PUBLIC_SANITY_PROJECT_ID || "";
@@ -88,6 +113,18 @@ console.log(
     ? `  ${PASS}  SANITY_REVALIDATE_SECRET set ${dim("(publishing updates the live site)")}`
     : `  ${WARN}  SANITY_REVALIDATE_SECRET empty ${dim("(edits appear within the hour, not instantly)")}`
 );
+// Local only. The deployed site reads its own copy from Vercel and this script
+// cannot see that — see the note in `.env`.
+if (!secret) {
+  console.log(
+    dim(
+      "\n        Set it in .env.local AND in Vercel -> Settings -> Environment\n" +
+        "        Variables, with the same string in the Sanity webhook's Secret\n" +
+        "        field. Generate one with:\n" +
+        "          node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"\n"
+    )
+  );
+}
 if (token) console.log(`  ${PASS}  read token set ${dim("(draft previews available)")}`);
 
 // ── 3. Can we actually reach it? ─────────────────────────────────────────
@@ -96,7 +133,6 @@ const TYPES = [
   "heroSlide",
   "service",
   "testimonial",
-  "photoFrame",
   "siteImages",
 ];
 const query = `{${TYPES.map((t) => `"${t}": count(*[_type == "${t}"])`).join(",")}}`;
@@ -158,7 +194,6 @@ try {
     heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
     service: { label: "Services", wired: true, where: "Services" },
     testimonial: { label: "Testimonials", wired: true, where: "Testimonials" },
-    photoFrame: { label: "Photography page", wired: true, where: "/photography" },
     siteImages: {
       label: "Site photographs",
       wired: true,

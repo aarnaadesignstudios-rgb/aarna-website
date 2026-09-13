@@ -102,6 +102,29 @@ import { cn } from "@/utils/cn";
  * visually, and a real anchor is laid over that spot as a flat sibling of the
  * button. See `link` below.
  */
+/**
+ * A destination that is not ours opens in a new tab.
+ *
+ * <SmoothLink /> already routes an off-site href to a plain anchor rather than
+ * the router, so the link WORKS without this — but it would take a visitor off
+ * the studio's site from inside a card they opened to read about a service, and
+ * back is then the only way home. Architectural Photography is led under its
+ * own practice (Postcard of Life) and is the only discipline this applies to;
+ * the test is the href rather than a flag on the field, so a second one needs
+ * no code.
+ *
+ * `noopener noreferrer` for the usual reason, and the same pair <Contact />
+ * puts on the socials.
+ */
+const linkOut = (href: string) =>
+  /^https?:\/\//.test(href)
+    ? ({ target: "_blank", rel: "noopener noreferrer" } as const)
+    : {};
+
+/** "(opens in a new tab)", but only when it does. */
+const outLabel = (href: string) =>
+  /^https?:\/\//.test(href) ? " (opens in a new tab)" : "";
+
 function BentoTile({
   service,
   wide,
@@ -376,6 +399,7 @@ function BentoTile({
            is not sent to a page whose name is currently face-down. */
         <SmoothLink
           href={service.link.href}
+          {...linkOut(service.link.href)}
           tabIndex={open ? undefined : -1}
           aria-hidden={!open}
           className={cn(
@@ -383,7 +407,10 @@ function BentoTile({
             open ? "pointer-events-auto" : "pointer-events-none"
           )}
         >
-          <span className="sr-only">{service.link.label}</span>
+          <span className="sr-only">
+            {service.link.label}
+            {outLabel(service.link.href)}
+          </span>
         </SmoothLink>
       )}
     </div>
@@ -785,6 +812,7 @@ export default function Services({ services = SERVICES }: ServicesProps) {
                         {service.link && (
                           <SmoothLink
                             href={service.link.href}
+                            {...linkOut(service.link.href)}
                             tabIndex={open ? undefined : -1}
                             /* `pt-1.5` on top of the existing `pb-1`: the link
                                is 12px label type, which is a 21px-tall target
@@ -793,7 +821,18 @@ export default function Services({ services = SERVICES }: ServicesProps) {
                                without moving the rule. */
                             className="group/link mt-4 inline-flex items-center gap-2 border-b border-gold/50 pt-1.5 pb-1 font-label text-gold-ink transition-colors duration-500 hover:text-emerald"
                           >
-                            {service.link.label}
+                            {/* The label and its "(opens in a new tab)" are ONE
+                                flex item. `sr-only` is `position: absolute` at
+                                1px, but an absolutely-positioned child is still
+                                a flex item — as a sibling it would earn its own
+                                `gap-2` and push the arrow ~9px off the word it
+                                belongs to. */}
+                            <span>
+                              {service.link.label}
+                              <span className="sr-only">
+                                {outLabel(service.link.href)}
+                              </span>
+                            </span>
                             <FiArrowUpRight
                               size={13}
                               aria-hidden

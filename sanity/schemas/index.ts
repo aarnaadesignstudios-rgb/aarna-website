@@ -4,7 +4,6 @@ import { heroSlide } from "./heroSlide";
 import { work } from "./work";
 import { service } from "./service";
 import { testimonial } from "./testimonial";
-import { photoFrame } from "./photoFrame";
 import { siteImages } from "./siteImages";
 
 /**
@@ -30,6 +29,5 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   heroSlide,
   service,
   testimonial,
-  photoFrame,
   siteImages,
 ];

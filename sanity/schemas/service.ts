@@ -36,7 +36,7 @@ export const service = defineType({
       title: "Opens a page",
       type: "string",
       description:
-        'Only set where the discipline has a page of its own — currently just "/photography". Leave blank and the card expands in place instead.',
+        'Only set where the discipline has somewhere of its own to send people — today that is Architectural Photography, which links out to the Postcard of Life portfolio. A full address (https://…) opens in a new tab; a path on this site (/about) does not. Leave blank and the card expands in place instead.',
     }),
     /**
      * The link's WORDING, because the link is a line of copy at the foot of the

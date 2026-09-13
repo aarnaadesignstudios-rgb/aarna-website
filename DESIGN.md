@@ -22,7 +22,7 @@ website ink always matches the mark exactly.
 | `--color-gold-ink` | `#8b6609` | `text-gold-ink` | **Gold that is legible as TYPE on a light ground** — the same hue and saturation as `--color-gold` at 40% lightness. `--color-gold` is ~2:1 against paper: correct for hairlines, marks and glows, unreadable as small or running type. Use this for any gold *text* (the Contact heading, labels, the spine, the mobile index numerals). |
 | `--color-charcoal` | `#17201c` | `text-charcoal` | Ink — default body text. Cooled onto the grounds' hue; a *warm* near-black on a cool ground reads faintly brown on every paragraph. |
 | `--color-paper` | `#f8fbf9` | `bg-paper` | Brightest ground — chapter 01. |
-| `--color-mist` | `#f1f6f3` | `bg-mist` | **The default ground** — `<body>`, /faq, /photography. |
+| `--color-mist` | `#f1f6f3` | `bg-mist` | **The default ground** — `<body>`, /faq, /about. |
 | `--color-sage` | `#e4ece8` | `bg-sage` | Plinth — chapter 03, the mobile index, the intro screen. |
 | `--color-sage-deep` | `#d2e0da` | `bg-sage-deep` | Chapter 04. |
 | `--color-moss` | `#235c47` | `bg-moss` | **Mid brand green** — chapter 05. Carries cream type at 6.8:1. Where the green stops being a tint. |
@@ -223,7 +223,7 @@ others rather than inline at one call site:
 Every link on the site goes through [`components/ui/SmoothLink.tsx`](components/ui/SmoothLink.tsx),
 which is the one place that knows the difference between an in-page anchor, that
 same anchor requested from another page, an internal route and an external URL.
-Don't reach for a bare `<a href="#…">` — on /faq and /photography it points at
+Don't reach for a bare `<a href="#…">` — on /faq and /about it points at
 ids that do not exist there.
 
 **How the site travels between sections.** Not by scrolling there. The decision
@@ -233,7 +233,7 @@ lives in [`lib/sectionNavigation.ts`](lib/sectionNavigation.ts):
 |---|---|
 | A section > 0.6 viewport heights away | **Chapter card** — a sage panel wipes in from the direction of travel, names the destination (`02 · Why Us`) in the site's own section grammar, and lifts away with it already in place. The scroll happens instantly, unseen. |
 | A section ≤ 0.6 viewport heights away | Smoothed Lenis scroll — it is already on screen, so there is no journey to hide. |
-| Another PAGE (`/faq`, `/photography`, or a home section from either) | The same chapter card, with the route change happening while covered. FAQ sits in the masthead between Process and Contact and nothing marks it as a page rather than a section; it should not be the one link that behaves differently. |
+| Another PAGE (`/faq`, `/about`, or a home section from either) | The same chapter card, with the route change happening while covered. FAQ sits in the masthead between Process and Contact and nothing marks it as a page rather than a section; it should not be the one link that behaves differently. |
 | The hero's scroll cue | Always the glide. It says "scroll", so it scrolls. |
 | Arriving deep link, or `prefers-reduced-motion` | Instant, undressed. |
 

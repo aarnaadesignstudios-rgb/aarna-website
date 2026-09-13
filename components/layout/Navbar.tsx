@@ -35,9 +35,10 @@
  * Dark bands declare themselves with `data-chrome="dark"`; light is the
  * default, so most sections say nothing. There used to be five declarations —
  * hero, the figures strip, Testimonials, Founder and Contact — and the site is
- * light throughout now, so the list is down to the two places where the backdrop
- * is a full-bleed PHOTOGRAPH: the home hero and the /photography hero. Nothing
- * else on either page needs cream chrome.
+ * light throughout now, so the list is down to the one place where the backdrop
+ * is a full-bleed PHOTOGRAPH: the home hero. (It was two — /photography opened
+ * the same way — until that page came off the site.) Nothing else on any page
+ * needs cream chrome.
  *
  * The mechanism stays exactly as it was, and is worth keeping at two callers
  * rather than being replaced with something simpler, because those two are
@@ -485,7 +486,7 @@ export default function Navbar() {
    * ── And it must never be able to stay hidden ─────────────────────────
    *
    * <LoadingScreen /> is rendered from `app/page.tsx` alone, so on `/faq`, on
-   * `/photography`, and on any direct load of a route without one there is no
+   * `/about`, and on any direct load of a route without one there is no
    * intro to wait behind at all. Three ways out, because this is the site's
    * name and it failing open is not acceptable:
    *

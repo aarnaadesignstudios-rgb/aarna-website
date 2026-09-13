@@ -11,9 +11,9 @@ import { getWorkSlugs } from "@/sanity/lib/content";
  *
  * It is the other half of taking the fragments out of the URLs. `/#services`
  * and `/` are the same URL to a crawler, so before this the studio's entire
- * site was four addresses: `/`, `/about`, `/faq`, `/photography`, plus the
- * commissions. The five chapters had no address to submit and no way to rank
- * for what they are actually about.
+ * site was three addresses: `/`, `/about`, `/faq`, plus the commissions. The
+ * five chapters had no address to submit and no way to rank for what they are
+ * actually about.
  *
  * Now they do, and this is what tells Google they exist rather than waiting for
  * it to find them by following the masthead.
@@ -40,7 +40,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Pages of their own.
     { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/photography`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/faq`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
   ];
 

@@ -34,7 +34,7 @@ import { schemaTypes } from "./sanity/schemas";
 /**
  * ── Two shapes of content, shown as two shapes of navigation ─────────────
  *
- * The lists (projects, hero images, services, photography) are collections and
+ * The lists (projects, hero images, services, testimonials) are collections and
  * behave like collections. "Site photographs" is a SINGLETON — there is exactly
  * one founder and one contact backdrop, forever — so it is pinned open as a
  * single editable page.
@@ -51,7 +51,6 @@ const structure: StructureResolver = (S) =>
       S.documentTypeListItem("heroSlide").title("Hero images"),
       S.documentTypeListItem("service").title("Services"),
       S.documentTypeListItem("testimonial").title("Testimonials"),
-      S.documentTypeListItem("photoFrame").title("Photography page"),
       S.divider(),
       S.listItem()
         .title("Site photographs")
