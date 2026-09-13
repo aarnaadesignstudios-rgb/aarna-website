@@ -579,14 +579,22 @@ export const FAQS: Faq[] = [
  * brand's homepage is worse than no mark: it looks like a profile that has been
  * taken down. They are out until there is something to point them at.
  *
- * ── The Instagram address is the plain one ───────────────────────────────
+ * ── The Instagram address is the studio's, verbatim ──────────────────────
  *
- * As supplied it carried `?stkn=…&utm_source=qr`, which is what Instagram
- * appends when you copy the link out of your own profile's QR sheet. Neither
- * belongs on the studio's own website: `stkn` is a share token that can expire,
- * and `utm_source=qr` would label every visitor who arrived from the website as
- * having scanned a QR code, which quietly ruins the one number the tag exists
- * to report. The profile is the same either way.
+ * It carries `?stkn=…&utm_source=qr` — what Instagram appends when you copy the
+ * link out of your own profile's QR sheet — and it is kept at the studio's
+ * explicit instruction, asked for twice. Do not "tidy" it without checking
+ * first; the two things it costs are worth knowing about but were not reasons
+ * enough to overrule the request:
+ *
+ *   · `stkn` is a share token rather than part of the address. If Instagram
+ *     ever retires it the profile still resolves, so the failure mode is mild.
+ *   · `utm_source=qr` labels every visitor who arrives from THIS website as
+ *     having scanned a QR code, so the studio's own analytics cannot separate
+ *     website traffic from the printed code.
+ *
+ * The bare `https://www.instagram.com/aarnaadesignstudios/` reaches the same
+ * profile if either ever becomes a problem.
  *
  * ── Gmail is a link, not a logo ──────────────────────────────────────────
  *
@@ -602,7 +610,7 @@ export const FAQS: Faq[] = [
 export const SOCIAL_LINKS: SocialLink[] = [
   {
     label: "Instagram",
-    href: "https://www.instagram.com/aarnaadesignstudios/",
+    href: "https://www.instagram.com/aarnaadesignstudios?stkn=MW8xN3ViYmV3b3cxbA%3D%3D&utm_source=qr",
     icon: FaInstagram,
   },
   {

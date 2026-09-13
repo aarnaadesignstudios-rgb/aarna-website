@@ -210,6 +210,25 @@ function wrapInto(deg: number, period: number) {
 }
 
 /**
+ * A ring position folded back into `[0, n)` — the same idea as `wrapInto`, on
+ * face indices rather than degrees.
+ *
+ * The rail below `lg` is a LOOP (see the pages it renders), so the position it
+ * reads runs from -1 to `count`: one page before the first project and one
+ * past the last. Those two are clones, and this is what turns the position on
+ * them back into a real one.
+ *
+ * It costs the ring nothing, which is the reason the loop is only a few lines.
+ * `SPAN` is `count * step` exactly, so `wrapInto((i - t) * step, SPAN)` gives
+ * the identical angle for `t` and `t ± count` — the pose at -1 IS the pose at
+ * `count - 1`. Handing `apply` a wrapped position is therefore not an
+ * approximation of the right frame; it is the same frame.
+ */
+function wrapPos(t: number, n: number) {
+  return n > 0 ? ((t % n) + n) % n : 0;
+}
+
+/**
  * ── Where the ring rests ───────────────────────────────────────────────────
  *
  * Mapping scroll progress straight onto ring position means the ring spends as
@@ -306,6 +325,37 @@ export default function SelectedWorks({
    * studio with two projects, not a case to pad out.
    */
   const SPAN = count * step;
+
+  /**
+   * ── The rail loops, and these two numbers are the whole of it ───────────
+   *
+   * Below `lg` the ring is turned by a horizontal snap scroller with one page
+   * per project. A scroller has ends; a ring does not. So the rail renders two
+   * extra pages — a copy of the LAST project before the first, and a copy of
+   * the FIRST after the last — and hands off to the real one when it comes to
+   * rest on either (see `settleRail`).
+   *
+   * That is the standard way to loop a native scroller, and it is cheap here
+   * for a reason particular to this section: the pages are transparent. They
+   * are a gesture surface over the 3D stage, not the cards themselves, so a
+   * "clone" is an empty div and a link — not a second copy of a photograph.
+   * Nothing is fetched twice and nothing is painted twice.
+   *
+   * `railLead` is how many pages sit before the first project, and it is the
+   * offset every position calculation carries. One project has nothing to loop
+   * through, so it gets neither clone and an offset of zero.
+   */
+  const railFirst = works[0];
+  const railLast = works[count - 1];
+  /* The two lookups are in the condition rather than asserted away with `!`.
+     `count > 1` already guarantees both exist at runtime, but the compiler
+     cannot see that — and writing it this way means the offset and the pages
+     are decided by the SAME expression, so they cannot disagree about whether
+     the clones are there. */
+  const railLoop = count > 1 && !!railFirst && !!railLast;
+  const railLead = railLoop ? 1 : 0;
+  const railPages =
+    railLoop && railFirst && railLast ? [railLast, ...works, railFirst] : works;
   const CUT = Math.min(CUT_AT, SPAN / 2);
   /** The haze ramp, held at the proportion `FADE_FROM` sets against `CUT_AT`. */
   const FADE = CUT * (FADE_FROM / CUT_AT);
@@ -355,6 +405,10 @@ export default function SelectedWorks({
    */
   const railRef = useRef<HTMLDivElement>(null);
   const railFrameRef = useRef(0);
+  /** Pending "has it come to rest?" check, for the loop's hand-off. */
+  const railSettleRef = useRef(0);
+  /** Has the rail been placed on its first REAL page yet? See the seed effect. */
+  const railSeededRef = useRef(false);
   const mobileRingRef = useRef<HTMLDivElement>(null);
   const mobileFacesRef = useRef<(HTMLElement | null)[]>([]);
 
@@ -476,7 +530,16 @@ export default function SelectedWorks({
       progressRef.current.style.width = `${Math.max(0, Math.min(1, shown)) * 100}%`;
     }
 
-    const idx = Math.round(t);
+    /* ── Wrapped, because the rail can sit between the last and the first ──
+       `Math.round` alone was safe while the position was clamped to
+       [0, count-1]. The looping rail hands over positions up to `count`, and
+       anything past `count - 0.5` rounds to `count` — off the end of `works`.
+       The old `idx < count` guard then rejected it and the caption kept naming
+       the previous project while the ring turned to a different one.
+
+       Rounding first and wrapping second, so the halfway point resolves the
+       same way it does everywhere else on the ring. */
+    const idx = count > 0 ? wrapPos(Math.round(t), count) : 0;
     if (idx !== activeRef.current && idx >= 0 && idx < count) {
       activeRef.current = idx;
       setActive(idx);
@@ -510,22 +573,74 @@ export default function SelectedWorks({
     if (!rail || !rail.clientWidth) return;
 
     const page = rail.clientWidth;
-    const t = Math.max(0, Math.min(count - 1, rail.scrollLeft / page));
+    /* `- railLead` takes the leading clone off the front, so 0 is the first
+       real project. What comes out runs -1 … count across the whole rail, and
+       `wrapPos` folds the two clone pages onto the projects they duplicate.
+
+       This CLAMPED before — `Math.max(0, Math.min(count - 1, …))` — which is
+       what made the rail stop dead at the last project: past it the position
+       could not grow, so the ring simply stopped turning while the scroller
+       rubber-banded. */
+    const t = wrapPos(rail.scrollLeft / page - railLead, count);
 
     apply(t, undefined, {
       ring: mobileRingRef.current,
       faces: mobileFacesRef.current,
     });
-  }, [apply, count]);
+  }, [apply, count, railLead]);
+
+  /**
+   * The hand-off: when the rail comes to rest on a CLONE, put it on the real
+   * page that clone duplicates.
+   *
+   * ── Why this is invisible ────────────────────────────────────────────────
+   *
+   * The clone at the front shows the last project and the one at the back
+   * shows the first, so the ring is already in the pose it will be in after
+   * the move — `wrapPos` above saw to that. Only `scrollLeft` changes, and it
+   * changes by exactly `count` pages, so the sub-pixel offset within the page
+   * is preserved and nothing on screen moves by so much as a pixel.
+   *
+   * ── Why it waits for rest ────────────────────────────────────────────────
+   *
+   * Moving `scrollLeft` mid-fling fights the momentum the browser is still
+   * applying: the gesture carries on from the new position and overshoots by
+   * however much was left. So the caller debounces this behind the last scroll
+   * event (see `onRailScroll`) and it only acts once the page has settled
+   * nearer a clone than a real page.
+   *
+   * A single project has nothing to loop through, hence `railLoop`.
+   */
+  const settleRail = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail || !rail.clientWidth || !railLoop) return;
+
+    const page = rail.clientWidth;
+    const raw = rail.scrollLeft / page;
+
+    if (raw < 0.5) rail.scrollLeft = (raw + count) * page;
+    else if (raw > count + 0.5) rail.scrollLeft = (raw - count) * page;
+  }, [count, railLoop]);
 
   /** rAF-throttled, because `scroll` on a touch rail fires faster than paint. */
   const onRailScroll = useCallback(() => {
-    if (railFrameRef.current) return;
-    railFrameRef.current = requestAnimationFrame(() => {
-      railFrameRef.current = 0;
-      readRail();
-    });
-  }, [readRail]);
+    if (!railFrameRef.current) {
+      railFrameRef.current = requestAnimationFrame(() => {
+        railFrameRef.current = 0;
+        readRail();
+      });
+    }
+
+    /* ── "Has it stopped?" by silence ───────────────────────────────────
+       There is a `scrollend` event for this and it is not reachable here:
+       Safari only shipped it in 18, and this is the one layout that exists
+       specifically for phones. A momentum fling emits `scroll` continuously
+       and then stops, so the absence of an event for 160ms is the same signal
+       and it works everywhere. Re-armed on every event, so the check only ever
+       runs once per gesture — at the end of it. */
+    window.clearTimeout(railSettleRef.current);
+    railSettleRef.current = window.setTimeout(settleRail, 160);
+  }, [readRail, settleRail]);
 
   /**
    * Turn the mobile ring to project `i`. Returns false when there is no rail
@@ -535,12 +650,20 @@ export default function SelectedWorks({
    * drives the document. `behavior: "smooth"` is the browser's own, which the
    * UA already flattens under `prefers-reduced-motion`.
    */
-  const scrollRailTo = useCallback((i: number) => {
-    const rail = railRef.current;
-    if (!rail || !rail.clientWidth) return false;
-    rail.scrollTo({ left: i * rail.clientWidth, behavior: "smooth" });
-    return true;
-  }, []);
+  const scrollRailTo = useCallback(
+    (i: number) => {
+      const rail = railRef.current;
+      if (!rail || !rail.clientWidth) return false;
+      // `+ railLead` because page 0 is the clone of the last project, not the
+      // first. The index row at the foot of the section calls this.
+      rail.scrollTo({
+        left: (i + railLead) * rail.clientWidth,
+        behavior: "smooth",
+      });
+      return true;
+    },
+    [railLead]
+  );
 
   /**
    * Bring project `i` to the front of the ring.
@@ -598,6 +721,25 @@ export default function SelectedWorks({
     const rail = railRef.current;
     if (!rail) return;
 
+    /* ── Start on the first project, not on the clone in front of it ───────
+       `scrollLeft: 0` is page 0, which the loop made a copy of the LAST
+       project — so without this the section opens on project 09 and the
+       counter reads 09 / 09.
+
+       Guarded on `scrollLeft === 0` rather than run unconditionally: a browser
+       restoring the scroll position on a back-navigation has already put the
+       rail where the visitor left it, and this must not drag it back to the
+       start. Guarded on the ref as well, because this effect re-runs and the
+       ResizeObserver fires on every width change, and a visitor who has
+       scrolled to project 01 legitimately sits at `scrollLeft` 0 + lead.
+
+       Layout effect, so it lands before paint — there is no frame in which the
+       wrong project is on screen. */
+    if (!railSeededRef.current && railLead && rail.clientWidth) {
+      railSeededRef.current = true;
+      if (rail.scrollLeft === 0) rail.scrollLeft = railLead * rail.clientWidth;
+    }
+
     readRail();
     const ro = new ResizeObserver(() => readRail());
     ro.observe(rail);
@@ -608,8 +750,9 @@ export default function SelectedWorks({
         cancelAnimationFrame(railFrameRef.current);
         railFrameRef.current = 0;
       }
+      window.clearTimeout(railSettleRef.current);
     };
-  }, [readRail]);
+  }, [readRail, railLead]);
 
   useIsomorphicLayoutEffect(() => {
     const section = sectionRef.current;
@@ -1496,9 +1639,24 @@ export default function SelectedWorks({
             data-lenis-prevent-horizontal
             className="no-scrollbar absolute inset-0 z-10 flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
           >
-            {works.map((work) => (
+            {/* ── The pages, with a clone at each end ────────────────────────
+                `[last, ...works, first]`, so a swipe past the last project
+                lands on a page showing the first rather than on the scroller's
+                end — and `settleRail` moves the rail onto the real page once
+                the gesture stops. The ring never stops turning and never
+                rubber-bands.
+
+                A clone is CHEAP here in a way it would not be in an ordinary
+                carousel: these pages are transparent. Everything a visitor
+                sees is the 3D stage underneath, and a page is an empty box
+                with a hit target in it — so this duplicates a <div> and an
+                <a>, not a photograph. Nothing is fetched or painted twice.
+
+                The key is the POSITION, not the id, because two pages now
+                carry the same project and `key={work.id}` would collide. */}
+            {railPages.map((work, page) => (
               <div
-                key={work.id}
+                key={`rail-${page}-${work.id}`}
                 /* One page per project, each exactly the scroller's width —
                    that identity is what makes the scroll position a face
                    index with no arithmetic. `snap-center` rather than
