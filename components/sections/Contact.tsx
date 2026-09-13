@@ -286,16 +286,55 @@ export default function Contact({
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-label text-cream/50">
-                    Telephone
-                  </dt>
-                  <dd className="mt-1.5 ml-0">
-                    <a
-                      href={`tel:${SITE.phoneHref}`}
-                      className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
-                    >
-                      {SITE.phone}
-                    </a>
+                  <dt className="font-label text-cream/50">Telephone</dt>
+                  {/* ── The pair sits on one line, at every width ──────────
+                      Two numbers under one label, separated by a hairline,
+                      because they are one entry: "Telephone" is plural here
+                      and a second <dt>/<dd> row would say the studio has two
+                      different kinds of telephone.
+
+                      ── It genuinely fits, and that was measured ───────────
+                      The first draft hid the divider below `lg` on the
+                      assumption that the pair would wrap on a phone. It does
+                      not. Measured across the real column at ten widths from
+                      320 to 1920: the two numbers need 236px at `text-xl` and
+                      283px at `md:text-2xl`, against a column that is never
+                      narrower than 272px — one line, zero overflow, all the
+                      way down. So the divider is shown always; gating it by
+                      breakpoint removed the separator at exactly the sizes
+                      where the two numbers sit closest together, which is
+                      where it was doing the most work.
+
+                      `flex-wrap` stays as a floor, not a plan: it costs
+                      nothing and means a longer number, or a large
+                      text-zoom setting, degrades to two lines instead of
+                      overflowing the column.
+
+                      `items-baseline`, so the rule sits on the numerals'
+                      baseline rather than in the middle of the line box. */}
+                  <dd className="mt-1.5 ml-0 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                    {[
+                      { label: SITE.phone, href: SITE.phoneHref },
+                      { label: SITE.phoneAlt, href: SITE.phoneAltHref },
+                    ].map((line, i) => (
+                      <span
+                        key={line.href}
+                        className="inline-flex items-baseline gap-x-3"
+                      >
+                        {i > 0 && (
+                          <span
+                            aria-hidden
+                            className="inline-block h-[0.85em] w-px bg-cream/25"
+                          />
+                        )}
+                        <a
+                          href={`tel:${line.href}`}
+                          className="font-serif text-xl text-cream transition-colors duration-500 hover:text-gold md:text-2xl"
+                        >
+                          {line.label}
+                        </a>
+                      </span>
+                    ))}
                   </dd>
                 </div>
                 <div>

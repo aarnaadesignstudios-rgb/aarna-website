@@ -5,6 +5,7 @@
   "description": "Aarnaa Studios — premium architecture studio website (Phase 1 skeleton)",
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

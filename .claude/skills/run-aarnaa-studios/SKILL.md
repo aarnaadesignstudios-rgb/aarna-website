@@ -44,6 +44,7 @@ Start the dev server, then drive it. Screenshots land in `.screenshots/`
 
 ```bash
 npm run dev                  # port 3000
+npm run dev:clean            # same, but clears .next first — see the gotcha below
 node .claude/skills/run-aarnaa-studios/driver.mjs smoke
 ```
 
@@ -187,11 +188,16 @@ negative** — the metric reads zero and looks like broken code.
   `multipart/form-data` (deliberately — see the note on the fetch in
   `components/sections/Contact.tsx`), so there is no preflight to answer; a mock
   that reverts the app to JSON has to answer the `OPTIONS` too.
-- **Removing a Sanity module leaves `.next` poisoned.** Deleting
-  `sanity/schemas/service.ts` left the running dev server requiring a vendor
-  chunk that no longer existed — `Cannot find module './vendor-chunks/@sanity.js'`,
-  every route 500, and hot reload could not recover. Kill the listeners,
-  `rm -rf .next`, restart.
+- **Editing the Sanity import graph leaves `.next` poisoned.** Hit three times
+  this session. The dev server keeps requiring a vendor chunk that no longer
+  exists — `Cannot find module './vendor-chunks/sanity.js'` (or `@sanity.js`) —
+  and hot reload cannot recover. It does NOT always take the whole site down:
+  the second time, only `/studio` 500'd while every other route served fine,
+  and in the browser that surfaces as `Console TypeError: network error` from
+  the Studio rather than as anything naming a chunk. So a "network error" on
+  /studio is this until proven otherwise — check the dev server's own log for
+  MODULE_NOT_FOUND before chasing CORS. Fix: `npm run dev:clean`, which clears
+  `.next` before starting. Kill stray listeners first (see EADDRINUSE below).
 - **If you measure screenshots with sharp, materialise the crop.**
   `.extract().stats()` silently ignores the crop and returns whole-image stats —
   it reported an identical stdev of 80.6 for 14 different bands. Chain

@@ -18,7 +18,7 @@ import type {
 } from "@/types";
 
 import { client } from "./client";
-import { resolvePhoto, type Photo } from "./image";
+import { aspectFromRef, resolvePhoto, type Photo } from "./image";
 import type { ContentTag } from "./tags";
 
 /**
@@ -261,6 +261,7 @@ const DETAIL_FIELDS = groq`
   year,
   photo,
   body,
+  plans,
   gallery,
   order
 `;
@@ -282,6 +283,9 @@ type GalleryDoc = Photo & { caption?: string; wide?: boolean };
 
 type DetailDoc = WorkDoc & {
   body?: unknown[];
+  /* Same shape as a gallery entry on the wire — an image with a caption and a
+     width flag. What differs is how the page renders it; see `WorkPlan`. */
+  plans?: GalleryDoc[];
   gallery?: GalleryDoc[];
   order?: number;
 };
@@ -369,6 +373,30 @@ export async function getWork(slug: string): Promise<WorkDetail | null> {
       objectPosition: cover?.objectPosition,
       width: WIDTHS[0],
       body: doc.body,
+      /* ── The drawings ────────────────────────────────────────────────
+         `resolvePhoto` is doing one job here rather than two: it produces the
+         CDN url. The `objectPosition` it also computes is dropped, because
+         these are rendered `object-contain` and there is no crop to steer —
+         see `WorkPlan` in types/index.ts. Passing it through would put a
+         meaningless value on the element.
+
+         `flatMap` over `map` for the same reason the gallery uses it: an
+         image the studio added and then removed the asset from resolves to
+         null, and a card with no src is worse than no card. */
+      plans: (doc.plans ?? []).flatMap((g, n) => {
+        const p = resolvePhoto(g, doc.title);
+        if (!p) return [];
+        return [{
+          id: `${doc.id}-plan-${n}`,
+          src: p.src,
+          alt: p.alt,
+          caption: g.caption,
+          wide: g.wide === true,
+          // The drawing's real shape, so its plate can be cut to fit it. Read
+          // off the asset id rather than joined for — see `aspectFromRef`.
+          aspect: aspectFromRef(g),
+        }];
+      }),
       gallery: (doc.gallery ?? []).flatMap((g, n) => {
         const p = resolvePhoto(g, doc.title);
         if (!p) return [];

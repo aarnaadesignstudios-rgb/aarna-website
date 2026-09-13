@@ -166,6 +166,19 @@ export const SITE = {
   /** Dial string for tel: links — digits only. */
   phoneHref: "+919990347716",
   /**
+   * A second line, shown beside the first in the enquiry block.
+   *
+   * A pair rather than a list: two is what the studio gave, and two is what
+   * the Telephone row is built for (see <Contact />). A third would want a
+   * different shape — an array and a loop — rather than `phoneAlt2`.
+   *
+   * Grouped as `99903 47716` / `93151 59693`, the way an Indian mobile is
+   * written and the way the first one already was, so the two read as a pair
+   * and not as two differently-formatted numbers.
+   */
+  phoneAlt: "+91 93151 59693",
+  phoneAltHref: "+919315159693",
+  /**
    * The same line in the form wa.me wants: country code and digits, no `+`,
    * no spaces. Written out rather than derived from `phone` at the call site
    * so there is still one number on the site and one place to change it —

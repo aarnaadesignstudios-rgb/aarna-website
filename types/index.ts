@@ -162,6 +162,41 @@ export interface WorkPhoto {
 }
 
 /**
+ * One drawing in a project's Layout section — a floor plan, a site plan, a
+ * section, an elevation.
+ *
+ * ── Not a WorkPhoto, and the difference is `objectPosition` ──────────────
+ *
+ * The two carry almost the same fields, and sharing the type would be the
+ * obvious move. The field that is missing here is the reason not to: a
+ * photograph is rendered `object-cover` and hotspot-cropped to its frame, and
+ * `objectPosition` is how the studio says which part survives that crop. A
+ * drawing is rendered `object-contain` — cropping a floor plan does not lose
+ * an unimportant edge, it loses ROOMS — so there is no crop to steer, and a
+ * field for steering one would be a field that does nothing.
+ *
+ * `caption` is doing more work here than it does on a photograph. Plans come
+ * in sets and are indistinguishable without one: "Ground floor", "First
+ * floor", "Site plan". The Studio's description says so.
+ */
+export interface WorkPlan {
+  id: string;
+  src: string;
+  alt: string;
+  caption?: string;
+  /** Give this drawing the whole measure instead of a half. */
+  wide?: boolean;
+  /**
+   * The drawing's own proportions, `width / height`, so its plate can be cut to
+   * fit it rather than the other way round.
+   *
+   * Read out of the Sanity asset id — see `aspectFromRef`. Undefined where the
+   * id cannot be parsed, and the page falls back to a 4:3 plate.
+   */
+  aspect?: number;
+}
+
+/**
  * A project, plus everything that only its own page needs.
  *
  * Separate from `Work` on purpose. The ring asks for all nine projects at once
@@ -176,6 +211,8 @@ export interface WorkPhoto {
  */
 export interface WorkDetail extends Work {
   body?: unknown[];
+  /** The drawings, under the Layout heading. See `WorkPlan`. */
+  plans?: WorkPlan[];
   gallery?: WorkPhoto[];
   /** The next and previous commissions, for the footer's continue-reading pair. */
   siblings?: { prev?: WorkLink; next?: WorkLink };

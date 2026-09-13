@@ -1,4 +1,8 @@
-import createImageUrlBuilder from "@sanity/image-url";
+/* The NAMED export. The default one is deprecated in @sanity/image-url 2.x and
+   warns on every call — which on a page that resolves a photograph per card is
+   the same line repeated dozens of times in the dev server's output, drowning
+   anything else it has to say. Same function, same signature. */
+import { createImageUrlBuilder } from "@sanity/image-url";
 import type { Image as SanityImage } from "sanity";
 
 import { dataset, projectId, sanityEnabled } from "../env";
@@ -72,6 +76,42 @@ export function resolvePhoto(
       : `${(h.x * 100).toFixed(1)}% ${(h.y * 100).toFixed(1)}%`,
     alt: photo.alt?.trim() || fallbackAlt,
   };
+}
+
+/**
+ * An image's own proportions, as `width / height`.
+ *
+ * ── Read out of the asset REF, not fetched ───────────────────────────────
+ *
+ * A Sanity asset id carries its dimensions in the id itself —
+ * `image-a1b2c3…-2400x1600-jpg` — so the shape of a picture is knowable
+ * without asking for it. The alternative is projecting
+ * `asset->metadata.dimensions` in the query, which is a JOIN per image on a
+ * fact already sitting in the string.
+ *
+ * ── What it is for ───────────────────────────────────────────────────────
+ *
+ * Photographs do not need it: they are `object-cover` inside a frame the
+ * layout chose, and the hotspot decides what survives the crop. DRAWINGS do.
+ * A floor plan cannot be cropped, so its plate has to be the shape of the
+ * drawing — otherwise the plate is letterboxed and the plan is rendered
+ * smaller than the space allows, which for something a visitor is trying to
+ * READ is the whole ballgame. See the Layout section on a project page.
+ *
+ * Returns undefined for a local file, a malformed ref, or a zero dimension, so
+ * the caller can fall back to a frame of its own choosing.
+ */
+export function aspectFromRef(photo: Photo | null | undefined) {
+  const ref = photo?.asset && "_ref" in photo.asset ? photo.asset._ref : undefined;
+  if (typeof ref !== "string") return undefined;
+
+  // `-<digits>x<digits>-` followed by the extension, at the end of the id.
+  const m = /-(\d+)x(\d+)-[a-z]+$/i.exec(ref);
+  if (!m) return undefined;
+
+  const w = Number(m[1]);
+  const h = Number(m[2]);
+  return w > 0 && h > 0 ? w / h : undefined;
 }
 
 /**

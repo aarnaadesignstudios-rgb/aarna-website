@@ -108,6 +108,58 @@ export const work = defineType({
       ],
     }),
 
+    /**
+     * The drawings.
+     *
+     * A separate field from `gallery` rather than a flag on it, because the
+     * page treats the two differently in a way an editor should not have to
+     * think about: photographs are cropped to their frame and drawings are
+     * never cropped (a plan loses rooms, not edges). Two fields means the
+     * studio drops a plan into the box marked Layout and the page does the
+     * right thing, instead of uploading it to Photographs and having to
+     * remember which toggle stops it being cut in half.
+     */
+    defineField({
+      name: "plans",
+      title: "Layout",
+      type: "array",
+      description:
+        "Floor plans, site plans, sections and elevations. Shown two to a row under a “Layout” heading, above the photographs. Add as many as you like — one on its own takes the full width, and drawings are never cropped.",
+      of: [
+        {
+          type: "image",
+          // No hotspot: the page contains these rather than cropping them, so
+          // there is no crop for a hotspot to steer. Offering the control
+          // would invite an editor to set something that changes nothing.
+          fields: [
+            defineField({
+              name: "alt",
+              title: "Alt text",
+              type: "string",
+              description:
+                "What the drawing shows, for screen readers — “Ground floor plan, three bedrooms around a central court”.",
+            }),
+            defineField({
+              name: "caption",
+              title: "Caption",
+              type: "string",
+              description:
+                "Worth filling in here: a set of plans is unreadable without one. “Ground floor”, “First floor”, “Site plan”.",
+            }),
+            defineField({
+              name: "wide",
+              title: "Full width",
+              type: "boolean",
+              description:
+                "Give this drawing the whole width instead of a half. Use it for a long section or a site plan that is unreadable at half size.",
+              initialValue: false,
+            }),
+          ],
+        },
+      ],
+      options: { layout: "grid" },
+    }),
+
     defineField({
       name: "gallery",
       title: "Photographs",

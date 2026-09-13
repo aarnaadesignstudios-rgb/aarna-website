@@ -111,6 +111,84 @@ function Spec({ items }: { items: [string, string][] }) {
 }
 
 /**
+ * The heading over Layout and over Gallery.
+ *
+ * One component rather than the same six lines twice, because the whole point
+ * of the pair is that they are the same object: two labels on two grids that
+ * a visitor has to be able to tell apart at a glance. If one drifts — a
+ * different size, a rule of a different width — they stop reading as a set and
+ * start reading as one section that was styled and one that was not.
+ *
+ * The hairline is the site's recurring gesture, the same rule <Services /> and
+ * <Contact /> open with, so a heading appearing on a page that otherwise has
+ * none still reads as part of the same drawing.
+ */
+function SectionMark({ children }: { children: string }) {
+  return (
+    <Reveal>
+      <span aria-hidden className="mb-5 block h-px w-16 bg-gold" />
+      <h2 className="font-serif text-[2rem] leading-[1.1] text-emerald md:text-[2.4rem]">
+        {children}
+      </h2>
+    </Reveal>
+  );
+}
+
+/**
+ * A drawing's plate, as a CSS `aspect-ratio`.
+ *
+ * ── Why the plate takes the DRAWING's shape ──────────────────────────────
+ *
+ * Photographs get a frame the layout chose and are cropped into it. A plan
+ * cannot be cropped — what a crop takes off a floor plan is rooms — so the
+ * only other way to fit one into a fixed frame is to letterbox it, and a
+ * letterboxed plan is rendered smaller than the space allows. Measured on a
+ * 1440 screen with a 4:3 plate: a 472×175 drawing painted at 618×229 inside a
+ * 644×483 box, so 47% of the plate was blank and the plan was drawn at about
+ * half the size the column could have given it. For something a visitor is
+ * trying to READ, that is the whole point lost.
+ *
+ * So the plate is cut to the drawing. `object-contain` stays on the image as a
+ * safety net — with a matching plate it has nothing to do, and if the ratio is
+ * ever wrong it letterboxes rather than cropping.
+ *
+ * ── The clamp, and why it is not symmetrical ─────────────────────────────
+ *
+ * An unclamped ratio lets one uploaded file decide how tall the page is. The
+ * bounds are the shapes architectural drawings actually come in, with room
+ * either side:
+ *
+ *   · 2.6 wide. A long building section or a street elevation is legitimately
+ *     2:1 or wider. Past this a half-column plate is a ~250px-tall sliver, and
+ *     a drawing that long is better given `wide` and the full measure anyway.
+ *   · 0.75 tall. Plans are landscape or square far more often than portrait,
+ *     so the tall bound is tighter: at 0.75 a half-width plate on a phone is
+ *     already ~455px, and anything squarer than that pushes a single drawing
+ *     past the viewport.
+ *
+ * A file outside the bounds is not rejected — it is fitted into the nearest
+ * allowed plate and letterboxed by `object-contain`, which is exactly the
+ * behaviour the fixed plate used to give everything.
+ *
+ * ── The rows are not forced level, and that is the trade ─────────────────
+ *
+ * Two drawings of different proportions side by side end at different heights,
+ * and the shorter one has its caption followed by white space. The alternative
+ * is a plate every drawing is fitted INTO, which levels the row by letterboxing
+ * — i.e. by drawing every plan smaller than the column allows, permanently, to
+ * tidy a case that mostly does not arise: a set of plans for one project comes
+ * off the same sheet size, so in practice the ratios match and the rows come
+ * out level on their own. Paying readability for symmetry is the wrong way
+ * round when the thing on the plate is meant to be read.
+ */
+const PLATE_MIN = 0.75;
+const PLATE_MAX = 2.6;
+const plate = (aspect?: number) =>
+  aspect && Number.isFinite(aspect)
+    ? Math.min(PLATE_MAX, Math.max(PLATE_MIN, aspect))
+    : 4 / 3;
+
+/**
  * The next / previous pair at the foot of the page.
  *
  * ── It was a second gallery, and it should be a signpost ──────────────────
@@ -206,6 +284,7 @@ export default async function WorkPage({
     ...(work.year ? ([["Year", work.year]] as [string, string][]) : []),
   ];
   const gallery = work.gallery ?? [];
+  const plans = work.plans ?? [];
   const hasBody = Array.isArray(work.body) && work.body.length > 0;
   const { prev, next } = work.siblings ?? {};
 
@@ -311,14 +390,133 @@ export default async function WorkPage({
           </PageContainer>
         </section>
 
+        {/* ── The layout ──────────────────────────────────────────────────
+            The drawings: floor plans, site plans, sections. Placed between the
+            write-up and the photographs, which is the order someone reads a
+            project in — what it is, how it is arranged, what it looks like.
+
+            ── Layout and Gallery are a PAIR of headings ───────────────────
+            The cover names the project and the write-up is obviously the
+            write-up, so neither is labelled. These two are, and the reason is
+            that they are the only two things on the page that look alike from
+            across the room: at half-page size a floor plan and an abstract
+            line-work photograph are both pale rectangles with marks on them.
+            A visitor who does not know they are looking at a plan does not
+            read it as one.
+
+            One heading would have been worse than none. Labelling only the
+            drawings implies the unlabelled grid below is more of the same,
+            which is exactly the confusion the label existed to prevent — so
+            the photographs carry "Gallery" for the same reason these carry
+            "Layout". See <SectionMark /> above, which is both of them.
+
+            Drawings come FIRST: how the building is arranged, then what it
+            looks like. That is the order an architect presents a project in
+            and the order the write-up above has just finished describing. */}
+        {plans.length > 0 && (
+          <section className="bg-paper relative pb-20 md:pb-24">
+            <PageContainer>
+              <SectionMark>Layout</SectionMark>
+
+              {/* ── Two up, and it adapts three ways ────────────────────────
+                    · WIDTH. One column below `md`, where a half-page plan on a
+                      390px screen is ~170px wide and the room labels are
+                      unreadable at any zoom the page allows.
+                    · COUNT. A single drawing takes the full measure. Half a
+                      row of plan and half a row of nothing reads as a missing
+                      second plan, and a lone plan is usually the whole layout
+                      anyway. An odd count simply ends on a half, as the
+                      photographs do.
+                    · THE DRAWING. `wide` is the studio's per-plan call, for a
+                      long section or a site plan that is illegible at half
+                      size — the same control the photographs have. */}
+              {/* `items-start`, because the plates are no longer a uniform
+                  height. A grid item defaults to `stretch`, which would pull
+                  the shorter of two side-by-side drawings down to the taller
+                  one's height — and since the plate's height is now set by its
+                  `aspect-ratio`, stretching it would either be ignored or
+                  reintroduce the letterboxing this replaced. */}
+              <div className="mt-8 grid grid-cols-1 items-start gap-5 md:mt-10 md:grid-cols-2 md:gap-6">
+                {plans.map((plan) => (
+                  <Reveal
+                    key={plan.id}
+                    className={
+                      plan.wide || plans.length === 1
+                        ? "md:col-span-2"
+                        : undefined
+                    }
+                  >
+                    <figure>
+                      {/* ── A sheet, not a photographic plate ───────────────
+                          `bg-white` with a hairline, where the photographs sit
+                          on `bg-mist` with none. A drawing is ink on paper and
+                          it arrives as a PNG with a white ground: on the
+                          section's `bg-paper` — a warm off-white — an
+                          uncontained white image has no edge at all and the
+                          plan appears to float in the page. The rule draws the
+                          sheet.
+
+                          `object-contain`, and this is the whole reason
+                          <Media /> has a `fit` prop. `object-cover` would crop
+                          the drawing to 4:3, and what a crop takes off a floor
+                          plan is rooms. Contained, the plate letterboxes
+                          whatever the drawing's real proportions are — which
+                          for plans vary far more than for photographs — and
+                          every one arrives whole.
+
+                          `p-3` so the drawing does not run into its own rule,
+                          the way a plan is trimmed inside a sheet. */}
+                      <div
+                        className="relative w-full overflow-hidden rounded-xl border border-emerald/12 bg-white p-3"
+                        style={{ aspectRatio: plate(plan.aspect) }}
+                      >
+                        <div className="relative size-full">
+                          <Media
+                            src={plan.src}
+                            alt={plan.alt}
+                            fit="contain"
+                            sizes={
+                              plan.wide || plans.length === 1
+                                ? "(max-width: 768px) 100vw, 90vw"
+                                : "(max-width: 768px) 100vw, 45vw"
+                            }
+                          />
+                        </div>
+                      </div>
+                      {/* Not optional in practice — a set of plans is
+                          unreadable without "Ground floor" under each one —
+                          but still guarded, because a single site plan on its
+                          own needs no label and an empty caption line under it
+                          would be a gap. */}
+                      {plan.caption && (
+                        <figcaption className="mt-3 font-label text-charcoal/50">
+                          {plan.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  </Reveal>
+                ))}
+              </div>
+            </PageContainer>
+          </section>
+        )}
+
         {/* ── The photographs ─────────────────────────────────────────────
             Two up, with any picture the studio marked `wide` taking the full
             measure. The grid adapts to whatever number arrives: one photograph
-            is one full-width plate, an odd count simply ends on a half. */}
+            is one full-width plate, an odd count simply ends on a half.
+
+            Headed "Gallery", against "Layout" above it — see the note there
+            for why both carry a label rather than neither. Unlike the
+            drawings, these keep a FIXED plate and are cropped into it: a
+            photograph loses an unimportant edge to a crop, and a tidy grid is
+            worth that. A plan loses rooms, which is why the section above
+            does the opposite. */}
         {gallery.length > 0 && (
           <section className="bg-paper relative pb-24 md:pb-32">
             <PageContainer>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6">
+              <SectionMark>Gallery</SectionMark>
+              <div className="mt-8 grid grid-cols-1 gap-5 md:mt-10 md:grid-cols-2 md:gap-6">
                 {gallery.map((shot) => (
                   <Reveal
                     key={shot.id}

@@ -113,6 +113,28 @@ interface MediaProps {
   mobileSrc?: string;
   /** `object-position` for `mobileSrc`. Independent of `objectPosition`. */
   mobileObjectPosition?: string;
+  /**
+   * How the image sits in its frame.
+   *
+   * `cover` — the default, and what every photograph on this site wants: fill
+   * the box, crop whatever does not fit, and let the hotspot decide what
+   * survives (see `objectPosition`).
+   *
+   * `contain` — fit the whole image inside the box and letterbox the
+   * remainder. For images where a crop is not a compromise but a LOSS of
+   * information: the floor plans in a project's Layout section, where cropping
+   * to a 4:3 frame cuts rooms off the drawing. `objectPosition` is meaningless
+   * alongside it — nothing is being cropped, so there is no crop to steer.
+   *
+   * ── Why this is a prop and not a class the caller passes ────────────────
+   *
+   * `cn` is a plain joiner, not `tailwind-merge` (see utils/cn.ts), so
+   * `className="object-contain"` would emit `object-cover object-contain` and
+   * leave the winner to whichever Tailwind happens to write later in the
+   * stylesheet. That is a coin toss dressed up as an override. Deciding it
+   * here means there is only ever one `object-fit` class on the element.
+   */
+  fit?: "cover" | "contain";
 }
 
 export default function Media({
@@ -125,7 +147,9 @@ export default function Media({
   objectPosition,
   mobileSrc,
   mobileObjectPosition,
+  fit = "cover",
 }: MediaProps) {
+  const objectFit = fit === "contain" ? "object-contain" : "object-cover";
   // Everything both sources share, so the two can only differ in the ways they
   // are meant to.
   const common = {
@@ -156,7 +180,7 @@ export default function Media({
         src={src}
         // See the note above. Local files keep Next's own pipeline.
         loader={isSanityUrl(src) ? sanityLoader : undefined}
-        className={cn("object-cover", className)}
+        className={cn(objectFit, className)}
         // Merged last by next/image, so this wins over its own fill styles.
         style={objectPosition ? { objectPosition } : undefined}
       />
@@ -248,7 +272,7 @@ export default function Media({
           {...desktopProps}
           alt={alt}
           className={cn(
-            "object-cover",
+            objectFit,
             /* The crop follows the file. Two custom properties rather than two
                elements, because a <picture> has exactly one <img> and therefore
                exactly one `style` — and the flip has to happen at the same width
