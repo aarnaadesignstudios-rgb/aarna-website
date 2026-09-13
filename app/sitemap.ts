@@ -40,6 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Pages of their own.
     { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    /* The Vastu discipline, and the specialist who leads it. Same priority as
+       /about: both are a person, and both are the destination of a link the
+       site puts in front of a visitor rather than a page only a crawler
+       finds. */
+    { url: `${base}/vastu`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/faq`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
   ];
 

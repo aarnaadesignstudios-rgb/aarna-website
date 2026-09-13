@@ -231,6 +231,12 @@ export const SERVICES: Service[] = [
     image:
       "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=80",
   },
+  /* ── The second card that names a person ───────────────────────────────
+     Like Architectural Photography, this one credits someone by name, and a
+     name on a card raises a question the card has no room to answer. That one
+     sends you off-site to Ar. Divyank Sirohi's own practice; this one has a
+     page here — see app/(site)/vastu/page.tsx. The link is INTERNAL, so
+     <SmoothLink /> routes it and `linkOut` leaves it in the same tab. */
   {
     id: "vastu",
     index: "04",
@@ -238,6 +244,12 @@ export const SERVICES: Service[] = [
     body: "Vastu-guided planning led by Dr. Vimmi Kinha, PhD, bringing experience and insight into the orientation, balance and harmony of spaces.",
     image:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80",
+    link: {
+      /* Parallel with "See the photography" on the card two along: a verb and
+         the thing it acts on, not a generic "Read more". */
+      label: "Meet Dr. Vimmi Kinha",
+      href: "/vastu",
+    },
   },
   /* ── Sold by the session, not by the project ───────────────────────────
      The other five disciplines are engagements: a brief, a site, a fee that

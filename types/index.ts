@@ -291,8 +291,19 @@ export interface Photograph {
   objectPosition?: string;
 }
 
-/** The two one-off photographs, together. See `Photograph` above. */
+/** The one-off photographs, together. See `Photograph` above. */
 export interface SiteImages {
   founderPortrait: Photograph;
   contactBackdrop: Photograph;
+  /**
+   * Dr. Vimmi Kinha, on /vastu.
+   *
+   * OPTIONAL where the other two are required, and that is the difference
+   * between "not uploaded yet" and "missing". There is a committed photograph
+   * behind each of those, so they always resolve to something; there is no
+   * committed portrait for this one, and <Profile /> draws a designed
+   * placeholder when it is absent rather than a broken frame. The day a
+   * sitting happens it is an upload in the Studio, not a commit.
+   */
+  vastuPortrait?: Photograph;
 }

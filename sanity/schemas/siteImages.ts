@@ -1,10 +1,10 @@
 import { defineField, defineType } from "sanity";
 
 /**
- * The two photographs that are not part of a list.
+ * The photographs that are not part of a list.
  *
- * The founder's portrait and the backdrop behind the enquiry are one-of-a-kind
- * — there is exactly one of each, forever. Modelling them as documents the
+ * The founder's portrait, the backdrop behind the enquiry and the Vastu
+ * portrait are one-of-a-kind — there is exactly one of each, forever. Modelling them as documents the
  * studio can create more of would produce a list with one item in it and an
  * inviting "+" that does nothing useful, so they live together in a singleton
  * instead. The Studio's structure pins it open as a single editable page rather
@@ -22,6 +22,17 @@ export const siteImages = defineType({
       options: { hotspot: true },
       description:
         "Chapter 05. Shown in a tall 4:5 frame, so set the hotspot on her face — a wide crop will otherwise centre on the middle of the picture.",
+      fields: [
+        defineField({ name: "alt", title: "Alt text", type: "string" }),
+      ],
+    }),
+    defineField({
+      name: "vastuPortrait",
+      title: "Vastu portrait",
+      type: "image",
+      options: { hotspot: true },
+      description:
+        "Dr. Vimmi Kinha, on the /vastu page. Shown in the same tall 4:5 frame as the founder's, so set the hotspot on her face. Leave empty and the page draws a “Portrait to follow” frame of the right size — nothing on it moves when the photograph arrives.",
       fields: [
         defineField({ name: "alt", title: "Alt text", type: "string" }),
       ],

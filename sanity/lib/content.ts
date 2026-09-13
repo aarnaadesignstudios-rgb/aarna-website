@@ -480,12 +480,14 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 
 const SITE_IMAGES_QUERY = groq`*[_id == "siteImages"][0] {
   founderPortrait,
-  contactBackdrop
+  contactBackdrop,
+  vastuPortrait
 }`;
 
 type SiteImagesDoc = {
   founderPortrait?: Photo;
   contactBackdrop?: Photo;
+  vastuPortrait?: Photo;
 };
 
 /**
@@ -530,6 +532,11 @@ export async function getSiteImages(): Promise<SiteImages> {
     return {
       founderPortrait: portrait ?? SITE_IMAGES.founderPortrait,
       contactBackdrop: backdrop ?? SITE_IMAGES.contactBackdrop,
+      /* No `??` fallback, unlike the two above, because there is nothing to
+         fall back TO — see the note on the field in types/index.ts. Undefined
+         is the real answer until someone uploads one, and <Profile /> is built
+         to render that. */
+      vastuPortrait: resolvePhoto(doc.vastuPortrait, "Dr. Vimmi Kinha") ?? undefined,
     };
   } catch {
     return SITE_IMAGES;
