@@ -280,8 +280,12 @@ export const SERVICES: Service[] = [
     index: "04",
     title: "Vastu",
     body: "Vastu-guided planning led by Dr. Vimmi Kinha, PhD, bringing experience and insight into the orientation, balance and harmony of spaces.",
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80",
+    /* The Vastu Purusha Mandala, and the one card whose image is a drawing
+       rather than a place — see `illustration` in types/index.ts for what that
+       changes and why. PNG, not JPEG: the circle is on a transparent ground and
+       JPEG has no alpha to keep it on. */
+    image: "/images/services/vastu.png",
+    illustration: true,
     link: {
       /* Parallel with "See the photography" on the card two along: a verb and
          the thing it acts on, not a generic "Read more". */
@@ -308,8 +312,9 @@ export const SERVICES: Service[] = [
     title: "Design Consultation",
     body: "A focused 60-minute online session with an architect — review a floor plan, work through space planning, or get your design questions answered.",
     price: "₹6,999 per session",
-    image:
-      "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&q=80",
+    /* The studio's own. It replaced a stock frame of an architect at a drawing
+       board — which was the right subject and somebody else's desk. */
+    image: "/images/services/design-consultation.jpg",
     link: {
       label: "Book your consultation",
       href: whatsappLink(
@@ -322,8 +327,11 @@ export const SERVICES: Service[] = [
     index: "06",
     title: "Architectural Photography",
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
-    image:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=80",
+    /* The studio's own, and the one card where the photograph is the service
+       rather than an illustration of it. A tall 2067x3674 frame, so the desktop
+       card — which is itself tall — shows nearly all of it, and the bento tile
+       crops to the corner of the building, which is the subject either way. */
+    image: "/images/services/architectural-photography.jpg",
     /* ── The Postcard of Life portfolio ──────────────────────────────────
        This was `/photography`, a page on this site standing in until the real
        address existed. It exists, so the placeholder is gone and the page with

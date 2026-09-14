@@ -234,21 +234,54 @@ function BentoTile({
                 `bg-stone` is a ground, not decoration — these images are lazy
                 and a tile can be on screen before its photograph arrives.
                 Without it the tile reads as a hole in the grid. */}
-            <span className="relative block min-h-0 flex-1 overflow-hidden bg-stone">
+            <span
+              className={cn(
+                "relative block min-h-0 flex-1 overflow-hidden",
+                /* Cream and padded for a drawing, stone for a photograph — see
+                   `illustration` in types/index.ts. The ground is doing a
+                   different job in each case: under a photograph it is what the
+                   tile shows while the file is still arriving, and under the
+                   mandala it is the paper the circle is printed on, visible
+                   through its transparent corners for as long as the card
+                   exists. */
+                service.illustration ? "bg-cream" : "bg-stone"
+              )}
+            >
               <Media
                 src={service.image}
                 alt=""
+                fit={service.illustration ? "contain" : "cover"}
                 /* A narrow tile is ~46vw and the wide one ~94vw; claiming the
                    desktop's 90vw for both made every phone fetch roughly twice
                    the pixels a small tile paints. */
                 sizes={wide ? "(max-width: 1024px) 94vw, 30vw" : "(max-width: 1024px) 48vw, 30vw"}
                 className={cn(
                   "transition-transform duration-1400 ease-editorial",
+                  /* ── The drawing's margin is padding on the IMAGE ─────────
+                     Not on the span around it. `object-fit` fits the image to
+                     its own CONTENT box, so padding here insets the circle —
+                     while padding on the parent would not, because an
+                     absolutely-positioned child's containing block is its
+                     ancestor's padding box and <Media />'s `inset-0` spans it.
+
+                     The obvious fix was an extra in-flow wrapper to pad. It
+                     works on the desktop card and it did NOT work here: this
+                     tile is inside a `transform-style: preserve-3d` face with
+                     `backface-visibility: hidden`, and the additional nested
+                     box left the image with correct geometry — measured 139x165,
+                     loaded, opacity 1 — and nothing painted. Padding the image
+                     keeps the DOM identical to the five photographs, which have
+                     never had that problem. */
+                  service.illustration && "p-3",
                   // The desktop's `group-hover:scale-105`, moved onto the
                   // gesture a touch screen actually has. The image settles
                   // back as the card turns face-down, so the movement is only
                   // ever seen on the way in.
-                  "group-active:scale-[1.06]"
+                  //
+                  // Not on the drawing: a photograph pushing very slightly into
+                  // its frame reads as depth, and a diagram doing it reads as
+                  // the page failing to hold still.
+                  !service.illustration && "group-active:scale-[1.06]"
                 )}
               />
             </span>
@@ -822,27 +855,50 @@ export default function Services() {
                     tabIndex={-1}
                     aria-hidden
                     onClick={() => setOpenId(open ? null : service.id)}
-                    className="relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden bg-stone lg:aspect-auto lg:min-h-0 lg:flex-1"
+                    className={cn(
+                      "relative block aspect-4/5 w-full shrink-0 cursor-pointer overflow-hidden lg:aspect-auto lg:min-h-0 lg:flex-1",
+                      // See the note on the same pair in the bento tile above.
+                      service.illustration ? "bg-cream" : "bg-stone"
+                    )}
                   >
                     <Media
                       src={service.image}
                       alt=""
+                      fit={service.illustration ? "contain" : "cover"}
                       sizes="(max-width: 1024px) 90vw, 30vw"
-                      className="transition-transform duration-1400 ease-editorial group-hover:scale-105"
+                      className={cn(
+                        "transition-transform duration-1400 ease-editorial",
+                        // Padding on the image, not the panel — see the note on
+                        // the bento tile's copy of this.
+                        service.illustration && "p-8 xl:p-10",
+                        !service.illustration && "group-hover:scale-105"
+                      )}
                     />
-                    {/* A short scrim under the index, and it is load-bearing
-                        now in a way it was not on the dark band. Cream type on
-                        a photograph only reads where the photograph is dark,
-                        and four of these five are bright interiors — on green
-                        the numeral at least had the card's own edge behind it,
-                        and inside a white panel it had nothing and read as a
-                        smudge on the picture. Emerald rather than black: a
-                        neutral scrim on these warm interiors goes grey. */}
+
+                    {/* ── The index, and the ground decides its ink ──────────
+                        Over a PHOTOGRAPH: cream type on a short emerald scrim.
+                        The scrim is load-bearing — cream only reads where the
+                        picture is dark, and most of these are bright interiors,
+                        so inside a white panel the numeral read as a smudge on
+                        the image. Emerald rather than black, because a neutral
+                        scrim over warm interiors goes grey.
+
+                        Over the DRAWING: no scrim and gold ink. The ground is
+                        cream, so there is nothing for a cream numeral to sit
+                        on — and a green wash across the top of a cream card
+                        would be a shadow with nothing casting it. */}
+                    {!service.illustration && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-emerald/45 to-transparent"
+                      />
+                    )}
                     <span
-                      aria-hidden
-                      className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-emerald/45 to-transparent"
-                    />
-                    <span className="absolute top-5 left-5 font-label text-cream/90">
+                      className={cn(
+                        "absolute top-5 left-5 font-label",
+                        service.illustration ? "text-gold-ink" : "text-cream/90"
+                      )}
+                    >
                       {service.index}
                     </span>
                   </button>

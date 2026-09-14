@@ -44,6 +44,25 @@ export interface Service {
   body: string;
   image: string;
   /**
+   * This card's image is ARTWORK, not a photograph of a place.
+   *
+   * Five of the six disciplines are things you can point a camera at, and their
+   * cards are photographs that fill the frame edge to edge. Vastu is not: the
+   * studio's image for it is a Vastu Purusha Mandala — a circle, on a
+   * transparent background, that means nothing once it has been cropped. Filled
+   * to the card's frame it would lose about a fifth of the gold ring off each
+   * side and show the card's backing through its corners.
+   *
+   * So the flag turns three presentational decisions over at once, because they
+   * are one decision: the image is CONTAINED rather than cropped, it sits on
+   * cream rather than the stone ground a loading photograph needs, and it is
+   * given padding so the circle does not touch the edges. See <Services />.
+   *
+   * It is a property of the picture, not a style — which is why it lives here
+   * beside `image` rather than as a class name at the call site.
+   */
+  illustration?: boolean;
+  /**
    * An optional figure, set above the body's link.
    *
    * A whole string rather than a number, and formatted by whoever writes it —

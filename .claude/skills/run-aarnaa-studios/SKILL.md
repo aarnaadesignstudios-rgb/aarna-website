@@ -188,6 +188,15 @@ negative** — the metric reads zero and looks like broken code.
   `multipart/form-data` (deliberately — see the note on the fetch in
   `components/sections/Contact.tsx`), so there is no preflight to answer; a mock
   that reverts the app to JSON has to answer the `OPTIONS` too.
+- **A viewport screenshot can MISS content inside a `preserve-3d` tile.** The
+  Services bento tiles are `transform-style: preserve-3d` faces with
+  `backface-visibility: hidden`, which Chrome composites on its own layer.
+  `page.screenshot()` repeatedly captured the Vastu tile as an empty coloured
+  rectangle while the image was demonstrably fine — loaded, `complete`, correct
+  box, `opacity: 1` — and an ELEMENT screenshot of the same tile
+  (`elementHandle.screenshot()`) showed it rendering perfectly. Cost several
+  cycles of "fixing" code that was never broken. When a tile in that section
+  looks blank in a full-viewport shot, re-shoot the element before believing it.
 - **`ChunkLoadError` on a route in dev = the same poisoned `.next`.** Symptom:
   `Loading chunk app/(site)/<route>/page failed`. Confirm it rather than
   guessing — `ls '.next/static/chunks/app/(site)/<route>/'` shows the directory
