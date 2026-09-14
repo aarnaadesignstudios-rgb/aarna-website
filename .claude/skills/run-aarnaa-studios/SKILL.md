@@ -188,6 +188,16 @@ negative** — the metric reads zero and looks like broken code.
   `multipart/form-data` (deliberately — see the note on the fetch in
   `components/sections/Contact.tsx`), so there is no preflight to answer; a mock
   that reverts the app to JSON has to answer the `OPTIONS` too.
+- **`ChunkLoadError` on a route in dev = the same poisoned `.next`.** Symptom:
+  `Loading chunk app/(site)/<route>/page failed`. Confirm it rather than
+  guessing — `ls '.next/static/chunks/app/(site)/<route>/'` shows the directory
+  present and EMPTY while every sibling route has its `page.js`, and the dev
+  server's log carries
+  `[webpack.cache.PackFileCacheStrategy] Caching failed for pack: ENOENT …
+  rename '0.pack.gz_' -> '0.pack.gz'` — webpack's persistent cache failed to
+  write, so the client chunk was never emitted. The code is usually fine: check
+  by running `NEXT_DIST_DIR=.next-prod npm run build`, which will compile the
+  same route without complaint. Fix is `npm run dev:clean`.
 - **Editing the Sanity import graph leaves `.next` poisoned.** Hit three times
   this session. The dev server keeps requiring a vendor chunk that no longer
   exists — `Cannot find module './vendor-chunks/sanity.js'` (or `@sanity.js`) —

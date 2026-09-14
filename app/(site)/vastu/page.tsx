@@ -3,63 +3,54 @@ import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Contact from "@/components/sections/Contact";
 import Profile from "@/components/sections/Profile";
-import {
-  Ornament,
-  PageContainer,
-  Reveal,
-  SheetTexture,
-  SmoothLink,
-} from "@/components/ui";
-import { SITE } from "@/constants";
+import { PageContainer, SheetTexture, SmoothLink } from "@/components/ui";
+import { SITE, SITE_IMAGES } from "@/constants";
 import { getSiteImages } from "@/sanity/lib/content";
 
 export const metadata: Metadata = {
-  title: "Vastu",
-  description: `Vastu-guided planning at ${SITE.name}, led by Dr. Vimmi Kinha — orientation, balance and harmony settled at concept stage rather than corrected afterwards.`,
+  title: "Dr. Vimmi Kinha — Vastu & Colour Therapy",
+  description: `Dr. Vimmi Kinha, Director — Vastu & Colour Therapy at ${SITE.name}. 25+ years in Vastu Shastra and Astrology, integrating Vastu principles with contemporary architecture and interior design.`,
 };
 
 /**
- * /vastu — the discipline, through the person who leads it.
+ * /vastu — Dr. Vimmi Kinha.
  *
- * ── Why Vastu gets a page and the other disciplines do not ───────────────
+ * ── Why this page exists ─────────────────────────────────────────────────
  *
  * Four of the six services on the home page's track are things the studio
- * DOES, and a card plus a paragraph is the right size for each of them. Two
- * are led by a named person, and a name on a card raises a question a card
- * cannot answer: Architectural Photography sends you to Postcard of Life,
- * which is Ar. Divyank Sirohi's own practice, and this is the other one. The
- * Vastu card names Dr. Vimmi Kinha and had nowhere to send anyone.
+ * DOES, and a card plus a paragraph is the right size for each. Two are led by
+ * a named person, and a name on a card raises a question a card cannot answer:
+ * Architectural Photography sends you to Postcard of Life, which is Ar.
+ * Divyank Sirohi's own practice, and this is the other one. The Vastu card
+ * names Dr. Vimmi Kinha and had nowhere to send anyone.
  *
- * It is also the discipline a visitor is most likely to arrive at cold — Vastu
- * is either something they already believe in or something they have heard of
- * and are unsure about — so it is the one that benefits most from more than
- * three lines.
+ * ── Every word here is the studio's ──────────────────────────────────────
  *
- * ── It is deliberately the SAME shape as /about ──────────────────────────
+ * This page briefly opened with an introduction to the discipline that I had
+ * drafted — an h1 and two paragraphs about how Vastu is practised here. It is
+ * gone at the studio's instruction, and the reason is worth keeping: the copy
+ * below arrived afterwards, written by them, and a page about a real person
+ * should not carry invented framing in front of it. The only heading on the
+ * page is now her name, and it is the h1 (see `nameAs`).
  *
- * An opening, then <Profile />, then <Contact />. The founder's page is the
- * site's other introduction to a person, and the two share a component rather
- * than a resemblance — see components/sections/Profile.tsx for why that is
- * enforced in code instead of maintained by eye.
+ * The one line that is not verbatim is the standfirst, "Bridging traditional
+ * Vastu wisdom with contemporary design" — their own final paragraph reshaped
+ * into a phrase because a display line reading "Her philosophy is to…" does
+ * not work at that size. The full sentence is still in the biography, so
+ * nothing they wrote is lost or paraphrased away.
+ *
+ * There is no pull quote. <Profile /> takes one and this page does not pass
+ * it: a quotation is either something she said or it is words put in her
+ * mouth, and none has been supplied.
+ *
+ * ── The shape is /about's, deliberately ──────────────────────────────────
+ *
+ * <Profile /> is the same component the founder's introduction uses, so the
+ * two cannot drift apart — see components/sections/Profile.tsx.
  *
  * What it does NOT take from /about is <StatsStrip />. Those figures are the
  * practice's — years, projects, area — and reprinting them under a specialist
  * who leads one discipline would read as a claim about her work.
- *
- * ── The copy here is DRAFTED, and the line between the two kinds matters ──
- *
- * One sentence in the biography is the studio's own, carried over verbatim
- * from the Vastu card in constants/content.ts: that Dr. Vimmi Kinha leads
- * Vastu-guided planning and brings experience and insight into the
- * orientation, balance and harmony of spaces. It is also the ONLY thing the
- * studio has supplied about her.
- *
- * Everything around it is written copy about the discipline and how the
- * practice approaches it. No credential, qualification, institution, figure or
- * date has been invented to fill the page out, and there is no pull quote —
- * <Profile /> takes one and this page does not pass it, because a quotation is
- * either something she said or it is words put in her mouth. All of it should
- * go past her before launch.
  */
 export default async function VastuPage() {
   const siteImages = await getSiteImages();
@@ -69,115 +60,91 @@ export default async function VastuPage() {
       <Navbar />
 
       <main>
-        {/* ── The opening ─────────────────────────────────────────────────
-            `pt-36`/`md:pt-44` clears the fixed masthead — this page has no hero
-            for the bar to sit over, the same measurement /about and /faq make.
+        {/* ── The way back ────────────────────────────────────────────────
+            A band whose only job is the link and the masthead clearance —
+            `pt-36`/`md:pt-44`, the same measurement /about and /faq make for a
+            page with no hero for the bar to sit over.
 
-            One column, no plate. /about carries a photograph beside its
-            opening because its heading is held to an 18-character measure and
-            left most of a 1440 screen empty. This heading is shorter and the
-            copy below it runs wider, so the column fills its own space; a
-            decorative interior shot here would also be the second image on a
-            page whose first real one is a portrait that has not been taken
-            yet. */}
-        <section className="relative overflow-hidden bg-paper pt-36 pb-16 text-charcoal md:pt-44 md:pb-20">
+            It carries no heading. With the drafted opening gone, the first
+            thing on this page is her, and a second title above her name would
+            put the page's subject in the wrong place. <Profile /> below takes
+            `padTop` so it sits directly under this rather than adding the gap
+            it would need after a real section. */}
+        <section className="relative bg-paper pt-36 text-charcoal md:pt-44">
           <SheetTexture />
-          <Ornament placement="bottom-right" size="sm" className="opacity-50" />
-
           <PageContainer className="relative z-10">
-            <Reveal>
-              {/* Back to the track this page is reached from. The same gesture
-                  and the same target size as the project pages' "← Selected
-                  Works" — `-my-1.5 py-1.5` grows a 12px label's hit area to
-                  26px without moving the label. */}
-              <SmoothLink
-                href="/services"
-                className="-my-1.5 inline-block py-1.5 font-label text-gold-ink transition-colors duration-300 hover:text-emerald"
-              >
-                {"← What we do"}
-              </SmoothLink>
-
-              <span className="mt-7 block font-label text-gold-ink">
-                04 &mdash; Vastu
-              </span>
-              {/* The page's h1, hand-set rather than from <SectionHeading />,
-                  which hard-codes `as="h2"` because it is built for sections of
-                  a page that already has an h1. <Profile /> below keeps its h2,
-                  so the outline reads "Vastu → Dr. Vimmi Kinha". */}
-              <h1 className="mt-5 max-w-[15ch] font-serif text-[2.6rem] leading-[1.04] tracking-tight text-emerald md:text-[3.6rem] lg:text-[4.25rem]">
-                Vastu, from the first line
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.1}>
-              <div className="mt-8 grid max-w-[62ch] gap-5 text-charcoal/75">
-                <p className="text-[1.0625rem] leading-[1.6]">
-                  Vastu here is planning, not correction. It belongs to the
-                  first conversation about a site &mdash; where the sun arrives,
-                  which way the ground falls, where an entrance wants to be
-                  &mdash; so that orientation and proportion are settled while
-                  they are still lines on paper and cost nothing to move.
-                </p>
-                <p>
-                  It is led by{" "}
-                  <strong className="font-normal text-emerald">
-                    Dr. Vimmi Kinha
-                  </strong>
-                  , who works alongside the architects rather than after them,
-                  so that a plan can answer to the site and to the people who
-                  will live in it at the same time.
-                </p>
-              </div>
-            </Reveal>
+            {/* `-my-1.5 py-1.5` grows a 12px label's hit area to 26px without
+                moving the label — the same gesture the project pages use for
+                "← Selected Works". */}
+            <SmoothLink
+              href="/services"
+              className="-my-1.5 inline-block py-1.5 font-label text-gold-ink transition-colors duration-300 hover:text-emerald"
+            >
+              {"← What we do"}
+            </SmoothLink>
           </PageContainer>
         </section>
 
-        {/* The same introduction the founder gets, because it is the same kind
-            of thing — see the note at the top of this file. No `quote`: see
-            the note there too. */}
         <Profile
           id="vastu-lead"
+          /* The page's only heading, so it is its h1. */
+          nameAs="h1"
+          /* Sits under the band above rather than after a section, so it takes
+             the rhythm's spacing rather than the rhythm's separation. */
+          padTop="pt-10 md:pt-12"
           eyebrow="Vastu"
           name="Dr. Vimmi Kinha"
-          role={<>PhD &middot; Vastu Consultant, {SITE.name}</>}
-          standfirst="Orientation, balance and harmony — decided while they are still drawings."
-          portrait={siteImages.vastuPortrait}
-          caption={{ left: `${SITE.name}, Gurugram`, right: "Vastu" }}
+          role={<>Director &mdash; Vastu &amp; Colour Therapy, {SITE.name}</>}
+          standfirst="Bridging traditional Vastu wisdom with contemporary design."
+          portrait={siteImages.vastuPortrait ?? SITE_IMAGES.vastuPortrait}
+          caption={{ left: `${SITE.name}, Gurugram`, right: "Vastu & Colour Therapy" }}
         >
-          {/* The studio's own sentence, verbatim from the Vastu card. */}
+          {/* ── The studio's copy, verbatim ─────────────────────────────────
+              The emphasis is presentational and follows the founder's page,
+              where credentials are picked out of the running text in the brand
+              ink. No word is changed, added or dropped. */}
           <p>
+            With{" "}
             <strong className="font-normal text-emerald">
-              Dr. Vimmi Kinha
+              25+ years of experience
             </strong>{" "}
-            leads Vastu-guided planning at {SITE.name}, bringing experience and
-            insight into the orientation, balance and harmony of spaces.
+            in Vastu Shastra and Astrology, she brings a holistic understanding
+            of how spatial planning, orientation, colours, and the energy of a
+            space can influence the experience of its occupants.
           </p>
           <p>
-            Her work begins with the site rather than with the plan: its aspect
-            and slope, the direction light and weather arrive from, and what is
-            already standing around it. Those readings reach the design team as
-            constraints at concept stage &mdash; the point at which they can
-            still shape a building rather than comment on one that is already
-            drawn.
+            A{" "}
+            <strong className="font-normal text-emerald">
+              Gold Medalist from Bharati Vidyapeeth, Delhi
+            </strong>
+            , her expertise focuses on integrating Vastu principles with
+            contemporary architecture and interior design, ensuring that
+            traditional wisdom complements modern functionality and aesthetics.
           </p>
           <p>
-            From there it is read against how a household actually runs. Where
-            the day begins, which rooms carry the routine of a family, how rest
-            and work should sit in relation to one another. A plan arrived at
-            this way satisfies Vastu without announcing it, because the
-            decisions were made early enough to be structural rather than
-            applied.
+            Her approach also incorporates{" "}
+            <strong className="font-normal text-emerald">Colour Therapy</strong>{" "}
+            as a considered element of design. Colours are thoughtfully selected
+            based on the character and purpose of a space, with attention to
+            their psychological and energetic associations. This helps create
+            environments that feel balanced, positive, calming, vibrant, or
+            focused, depending on the intended use of the space.
           </p>
           <p>
-            The same reading holds for a workplace or a hospitality floor plate
-            as for a residence &mdash; the questions change, the method does
-            not. It is the conviction the rest of the practice works by:{" "}
+            Over the years, she has provided Vastu and design guidance across
+            residential, commercial, hospitality, and institutional projects,
+            with inputs covering orientation, zoning, entrances, spatial
+            planning, circulation, placement of key functions, and colour
+            selection.
+          </p>
+          <p>
+            Her philosophy is to{" "}
             <strong className="font-normal text-gold-ink">
-              a decision made early, for a reason, is worth more than a
-              correction made late.
-            </strong>{" "}
-            Approached this way Vastu is not a constraint on the architecture.
-            It is part of how the architecture is arrived at.
+              seamlessly bridge traditional Vastu wisdom with contemporary
+              design
+            </strong>
+            , making the principles an integral part of the architectural and
+            interior planning process rather than an afterthought.
           </p>
         </Profile>
 

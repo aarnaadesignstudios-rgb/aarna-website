@@ -70,6 +70,19 @@ interface SectionHeadingProps {
    */
   titleClassName?: string;
   /**
+   * The title's heading level.
+   *
+   * `h2` by default, because this is built for SECTIONS of a page that already
+   * has an h1 above them — which is every caller but one. /vastu is the
+   * exception: it opens directly on the person it is about, so her name is the
+   * page's only heading and has to be its h1 or the page has none at all.
+   *
+   * Deliberately narrow. A free `as` would invite h3s and h4s and let the
+   * document outline be decided per call site; the two values here are "this
+   * page's subject" and "a section of it", which is the whole distinction.
+   */
+  titleAs?: "h1" | "h2";
+  /**
    * Override the eyebrow's ink.
    *
    * Same contract as `titleClassName` above, and for the same reason: `cn()` is
@@ -137,6 +150,7 @@ export default function SectionHeading({
   align = "left",
   tone = "light",
   titleClassName,
+  titleAs = "h2",
   eyebrowClassName,
 }: SectionHeadingProps) {
   const dark = tone === "dark";
@@ -280,7 +294,7 @@ export default function SectionHeading({
 
       {title && (
         <TextReveal
-          as="h2"
+          as={titleAs}
           text={title}
           className={cn(
             // No weight: every heading on the site is 400, set once in the base

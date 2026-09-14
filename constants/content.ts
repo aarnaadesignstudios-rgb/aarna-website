@@ -100,12 +100,12 @@ export const HERO_SLIDES: HeroSlide[] = [
 ];
 
 /**
- * The two photographs that belong to no list.
+ * The photographs that belong to no list.
  *
  * ── Why these moved out of their components ──────────────────────────────
  *
- * Both were written into the JSX — `/images/founder/annapurna.jpg` in
- * <Founder />, `/images/hero/kapalimall.jpg` in <Contact />. That was fine
+ * Both were written into the JSX — the founder's portrait in <Founder />,
+ * `/images/hero/kapalimall.jpg` in <Contact />. That was fine
  * while they could only ever be those files. They are editable in the Studio
  * now (`siteImages`, a singleton), and the rule everywhere else on this site is
  * that the CMS supplies the picture and this file is what it falls back to —
@@ -118,8 +118,46 @@ export const HERO_SLIDES: HeroSlide[] = [
  */
 export const SITE_IMAGES: SiteImages = {
   founderPortrait: {
-    src: "/images/founder/annapurna.jpg",
+    src: "/images/people/annpurna-kinha.png",
     alt: "Ar. Annpurna Kinha, Founder and Principal Architect",
+  },
+  /**
+   * Dr. Vimmi Kinha, on /vastu.
+   *
+   * A committed file like the founder's, and the Studio's `vastuPortrait`
+   * overrides it — the same arrangement every photograph on this site has. The
+   * placeholder <Profile /> draws when there is NO portrait at all is still
+   * there and still correct; it simply is not reached any more.
+   */
+  vastuPortrait: {
+    src: "/images/people/vimmi-kinha.png",
+    alt: "Dr. Vimmi Kinha, Director — Vastu & Colour Therapy",
+    /**
+     * ── The crop is pulled UP, and the zoom could not do it ──────────────
+     *
+     * This frame is 4:5 (0.80) and this photograph is 1086x1448 (0.75) — taller
+     * in proportion than the box — so `object-cover` matches the width and
+     * spills roughly 6% of the image's height, half off each end. Centred, that
+     * put the top cut at her hairline: measured 5.1% lost from the top against
+     * hair beginning about 5% down the file.
+     *
+     * Reducing the wrapper's scale (see <Profile />) fixed the part of the crop
+     * the ZOOM was causing and could not touch this part, because the spill is
+     * a property of the two aspect ratios rather than of the zoom. Moving the
+     * crop window up is the only thing that answers it, and it costs nothing
+     * that matters: what leaves the bottom of the frame is the lower edge of a
+     * blazer.
+     *
+     * 15%, not 0. Top-aligned would put her hair against the frame edge with no
+     * headroom, which reads as a photograph that has been pushed up rather than
+     * one that is framed.
+     *
+     * Ar. Annpurna Kinha's portrait needs none of this: at 1145x1374 (0.83) it
+     * is WIDER in proportion than the frame, so `object-cover` matches the
+     * height and spills sideways instead — there is no vertical crop for an
+     * object-position to steer.
+     */
+    objectPosition: "50% 15%",
   },
   /**
    * Kapali Mall, from the studio's own photography. It is deliberately a warm,

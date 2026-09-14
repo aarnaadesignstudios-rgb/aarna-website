@@ -33,6 +33,25 @@ import type { Photograph } from "@/types";
 interface ProfileProps {
   /** The section's DOM id — `founder`, `vastu-lead`. */
   id: string;
+  /**
+   * The heading level the person's name is set at.
+   *
+   * `h2` on /about, where the page's h1 is its own opening. `h1` on /vastu,
+   * which opens directly on her — see the note in components/ui/SectionHeading.tsx.
+   */
+  nameAs?: "h1" | "h2";
+  /**
+   * Top padding, when the default is wrong.
+   *
+   * The default assumes something precedes this on the page. On /vastu nothing
+   * does: it is the first block under the masthead, so it carries the clearance
+   * the bar needs instead of the rhythm that separates it from a section above.
+   *
+   * A class string rather than a boolean because that is what it sets, and
+   * `cn` is a plain joiner — so this REPLACES the default rather than joining
+   * it, which is why the top and bottom are written separately below.
+   */
+  padTop?: string;
   eyebrow: string;
   /** The person. Rendered as the section's h2 by <SectionHeading />. */
   name: string;
@@ -66,6 +85,8 @@ interface ProfileProps {
 
 export default function Profile({
   id,
+  nameAs = "h2",
+  padTop = "pt-20 md:pt-24 lg:pt-28",
   eyebrow,
   name,
   role,
@@ -75,12 +96,26 @@ export default function Profile({
   caption,
   quote,
 }: ProfileProps) {
-  const portraitRef = useParallax<HTMLDivElement>({ from: -7, to: 7 });
+  /**
+   * ── The drift, and why it is small ─────────────────────────────────────
+   *
+   * `from`/`to` are `yPercent` — a percentage of the element's OWN height, not
+   * pixels (see hooks/useParallax.ts). So the drift and the overhang that hides
+   * it are the same unit, and they have to be read together: a `scale-[1.06]`
+   * wrapper hangs 3% of its height past the frame at each edge, which is
+   * exactly what a +/-3% drift can travel before it exposes one.
+   *
+   * It was +/-7 against a `scale-110` (5% overhang) — over its own budget, and
+   * only invisible because the extremes of the scrub happen when the section is
+   * most of the way off screen. The pair below is within budget at every scroll
+   * position rather than by luck.
+   */
+  const portraitRef = useParallax<HTMLDivElement>({ from: -3, to: 3 });
 
   return (
     <section
       id={id}
-      className="overflow-hidden bg-paper py-20 text-charcoal md:py-24 lg:py-28"
+      className={`overflow-hidden bg-paper pb-20 text-charcoal md:pb-24 lg:pb-28 ${padTop}`}
     >
       <PageContainer>
         <div className="grid grid-cols-1 items-start gap-14 lg:grid-cols-12 lg:gap-20">
@@ -90,7 +125,23 @@ export default function Profile({
               <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-stone">
                 {portrait ? (
                   <>
-                    <div ref={portraitRef} className="absolute inset-0 scale-110">
+                    {/* ── The zoom is the crop, so it is as small as it can be ──
+                        Everything this scale hides is portrait that the visitor
+                        does not get to see: at `scale-110` the wrapper hung 5%
+                        of its height past the frame at top and bottom, and
+                        measured on the real page that took 7.4% off the top of
+                        Dr. Vimmi Kinha's photograph — her hairline.
+
+                        It exists only to give the parallax somewhere to travel
+                        without showing an edge, so it is sized to the drift
+                        rather than chosen: 6% of scale is 3% of overhang each
+                        side, which is exactly the +/-3% the drift above uses.
+
+                        Tailwind v4 emits this as the standalone `scale`
+                        property, NOT `transform: scale()`, which is what lets
+                        it coexist with the inline transform GSAP writes for the
+                        drift instead of one clobbering the other. */}
+                    <div ref={portraitRef} className="absolute inset-0 scale-[1.06]">
                       <Media
                         src={portrait.src}
                         alt={portrait.alt}
@@ -159,7 +210,7 @@ export default function Profile({
 
           {/* Biography + signed line */}
           <div className="lg:col-span-7">
-            <SectionHeading eyebrow={eyebrow} title={name} />
+            <SectionHeading eyebrow={eyebrow} title={name} titleAs={nameAs} />
 
             <Reveal delay={0.1}>
               {/* The role, in the deep gold. `--color-gold` itself is a hairline

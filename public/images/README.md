@@ -84,10 +84,27 @@ the track and nothing more.
 
 ---
 
-## 4. Founder portrait
+## 4. Portraits
 
-Already in place at `/public/images/founder/annapurna.jpg`. Replace only if
-there is a newer frame.
+Two, both in place at `/public/images/people/`:
+
+| File | Who | Where |
+|---|---|---|
+| `annpurna-kinha.png` | Ar. Annpurna Kinha | `/about` |
+| `vimmi-kinha.png` | Dr. Vimmi Kinha | `/vastu` |
+
+Both are shown in a tall **4:5** frame that is scaled a further 110% by a
+counter-parallax, so roughly the outer 5% of each edge is cropped. Frame the
+subject with room around them; a portrait cropped tight to the shoulders before
+upload loses them here.
+
+Either can be replaced from the Studio instead of in a commit — **Site
+photographs → Founder portrait / Vastu portrait** — which is the better route,
+because the hotspot set there steers the crop. See `sanity/schemas/siteImages.ts`.
+
+The previous founder frame (`/images/founder/annapurna.jpg`, black and white)
+was replaced in September 2026 and removed. It is in git history if it is ever
+wanted back.
 
 ---
 
