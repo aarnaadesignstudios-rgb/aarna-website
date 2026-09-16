@@ -44,22 +44,32 @@ export interface Service {
   body: string;
   image: string;
   /**
-   * This card's image is ARTWORK, not a photograph of a place.
+   * This card's image is ARTWORK ON A TRANSPARENT GROUND, not a photograph.
    *
-   * Five of the six disciplines are things you can point a camera at, and their
-   * cards are photographs that fill the frame edge to edge. Vastu is not: the
-   * studio's image for it is a Vastu Purusha Mandala — a circle, on a
-   * transparent background, that means nothing once it has been cropped. Filled
-   * to the card's frame it would lose about a fifth of the gold ring off each
-   * side and show the card's backing through its corners.
+   * The flag turns four presentational decisions over at once, because they are
+   * one decision: the image is CONTAINED rather than cropped, it sits on cream
+   * rather than the stone ground a loading photograph needs, it is given
+   * padding so the artwork does not touch the edges, and it does not take the
+   * hover zoom — a photograph pushing very slightly into its frame reads as
+   * depth, and a diagram doing it reads as the page failing to hold still.
    *
-   * So the flag turns three presentational decisions over at once, because they
-   * are one decision: the image is CONTAINED rather than cropped, it sits on
-   * cream rather than the stone ground a loading photograph needs, and it is
-   * given padding so the circle does not touch the edges. See <Services />.
+   * ── NOTHING SETS THIS TODAY, and that is worth reading before you do ─────
    *
-   * It is a property of the picture, not a style — which is why it lives here
-   * beside `image` rather than as a class name at the call site.
+   * It was built for one card: Vastu, whose image was a Vastu Purusha Mandala —
+   * a circle on a transparent background that meant nothing once cropped. That
+   * file has been replaced by a composed plate which carries its OWN cream
+   * ground and margin, and every part of this treatment worked against it (the
+   * note on that entry in constants/content.ts has the measurements).
+   *
+   * So the test is not "is it a drawing". It is: does the image END at its
+   * subject, with no ground of its own? A logo, a diagram exported on alpha, a
+   * mark — yes. A plate with its own paper, however illustrated — no, that is a
+   * picture and it wants the picture treatment.
+   *
+   * Kept rather than deleted because that first kind of image is a real
+   * category the studio may well supply again, and this is the tested way to
+   * render one. It is a property of the picture, not a style — which is why it
+   * lives here beside `image` rather than as a class name at the call site.
    */
   illustration?: boolean;
   /**
@@ -308,6 +318,47 @@ export interface Photograph {
   alt: string;
   /** CSS `object-position`, from the photograph's hotspot when it came from the CMS. */
   objectPosition?: string;
+}
+
+/**
+ * A bookable session with a named specialist, priced and sold on its own.
+ *
+ * ── Why this is not a `Service` ──────────────────────────────────────────
+ *
+ * `Service` already carries a `price` and a `link`, and Design Consultation
+ * uses both — so the shape looks reusable. It is not, because a `Service` is a
+ * CARD on the home page's discipline track: it needs an `index` ("01") that
+ * the track's progress readout counts against, an `image` the card is mostly
+ * made of, and a `body` that only appears once the card is opened. None of
+ * those exist here. These are rows in a rate list under a portrait — a name, a
+ * figure, and a way to book it.
+ *
+ * Putting them in SERVICES would also put them on the home page track, which
+ * is the opposite of what they are: consultations with one specialist, offered
+ * on her page, to someone who has just read who she is.
+ */
+export interface Consultation {
+  id: string;
+  /** The session, named as the rate list names it. */
+  title: string;
+  /**
+   * The fee, formatted by whoever writes it — "₹6,999", "from ₹11,999".
+   *
+   * A whole string for the same reason `Service["price"]` is one: "from" is
+   * part of the figure's meaning, not a flag, and a number could not carry it.
+   */
+  price: string;
+  /**
+   * The qualification the figure needs, when it needs one.
+   *
+   * Vastu is quoted by the size of the home, so the fee is a floor rather than
+   * a price and saying so is the studio's instruction, not a nicety. Astrology
+   * is a fixed session and carries none — which is why this is optional rather
+   * than an empty string on the row that does not need it.
+   */
+  note?: string;
+  /** Where "book" goes. WhatsApp, via `whatsappLink` in constants/site.ts. */
+  href: string;
 }
 
 /** The one-off photographs, together. See `Photograph` above. */

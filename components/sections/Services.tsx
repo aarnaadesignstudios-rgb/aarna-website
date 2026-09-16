@@ -875,32 +875,11 @@ export default function Services() {
                       )}
                     />
 
-                    {/* ── The index, and the ground decides its ink ──────────
-                        Over a PHOTOGRAPH: cream type on a short emerald scrim.
-                        The scrim is load-bearing — cream only reads where the
-                        picture is dark, and most of these are bright interiors,
-                        so inside a white panel the numeral read as a smudge on
-                        the image. Emerald rather than black, because a neutral
-                        scrim over warm interiors goes grey.
-
-                        Over the DRAWING: no scrim and gold ink. The ground is
-                        cream, so there is nothing for a cream numeral to sit
-                        on — and a green wash across the top of a cream card
-                        would be a shadow with nothing casting it. */}
-                    {!service.illustration && (
-                      <span
-                        aria-hidden
-                        className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-emerald/45 to-transparent"
-                      />
-                    )}
-                    <span
-                      className={cn(
-                        "absolute top-5 left-5 font-label",
-                        service.illustration ? "text-gold-ink" : "text-cream/90"
-                      )}
-                    >
-                      {service.index}
-                    </span>
+                    {/* The folio used to sit HERE, over the photograph, on a
+                        short emerald scrim — and the scrim was load-bearing,
+                        because cream only reads where the picture is dark and
+                        these are bright interiors. It is in the band below now.
+                        See the note there. */}
                   </button>
 
                   <div className="shrink-0 border-t border-emerald/10 p-5 xl:p-6">
@@ -911,12 +890,32 @@ export default function Services() {
                       aria-controls={`service-${service.id}`}
                       className="flex w-full cursor-pointer items-start justify-between gap-4 text-left"
                     >
-                      <span className="font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
-                        {service.title}
+                      {/* ── The folio, off the photograph ────────────────────
+                          It was drawn over the image on an emerald scrim. The
+                          scrim had to be dense enough to carry cream type over
+                          a bright interior, which meant a green wash across the
+                          top of every photograph the studio chose — and it made
+                          these cards read as a different component from the
+                          bento tiles below `lg`, which had already moved their
+                          folio into the white strip for exactly this reason.
+
+                          On white the ink is `gold-ink` (5.04:1) rather than
+                          `gold` (2.18:1), same as the `+` beside it. And one
+                          ink now serves both grounds, so the photograph/drawing
+                          conditional this numeral used to carry is gone. */}
+                      <span className="block">
+                        <span className="block font-label text-gold-ink">
+                          {service.index}
+                        </span>
+                        <span className="mt-1.5 block font-serif text-[1.7rem] leading-[1.1] text-emerald xl:text-3xl">
+                          {service.title}
+                        </span>
                       </span>
                       <FiPlus
                         className={cn(
-                          "mt-2 shrink-0 text-gold-ink transition-transform duration-500 ease-editorial",
+                          // Sits on the folio's line rather than the title's:
+                          // the block it marks now starts one line higher.
+                          "mt-0.5 shrink-0 text-gold-ink transition-transform duration-500 ease-editorial",
                           open && "rotate-45"
                         )}
                         size={18}

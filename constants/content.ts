@@ -2,9 +2,13 @@
  * Site content.
  *
  * Project names, service copy, figures and FAQ text below are the studio's
- * real content, supplied in the client review. IMAGERY is still placeholder —
- * every photograph is a stock stand-in, and the per-project location / area /
- * year are marked TODO rather than invented. See the note on WORKS.
+ * real content, supplied in the client review.
+ *
+ * IMAGERY is now mixed, and the split is worth knowing before reaching for a
+ * stock URL: HERO_SLIDES and all six SERVICES are the studio's own files under
+ * `/images/`. What is still a stand-in is PROJECTS and WORKS — six Unsplash
+ * frames — along with the per-project location / area / year, which are marked
+ * TODO rather than invented. See the note on WORKS.
  */
 import {
   FiCompass,
@@ -20,6 +24,7 @@ import { SiGmail } from "react-icons/si";
 import { SITE, whatsappLink } from "./site";
 
 import type {
+  Consultation,
   Faq,
   Feature,
   HeroSlide,
@@ -131,7 +136,7 @@ export const SITE_IMAGES: SiteImages = {
    */
   vastuPortrait: {
     src: "/images/people/vimmi-kinha.png",
-    alt: "Dr. Vimmi Kinha, Director — Vastu & Colour Therapy",
+    alt: "Dr. Vimmi Kinha, Director — Astrology, Vastu & Colour Therapy",
     /**
      * ── The crop is pulled UP, and the zoom could not do it ──────────────
      *
@@ -250,24 +255,26 @@ export const SERVICES: Service[] = [
     index: "01",
     title: "Architecture",
     body: "Residential & commercial architecture shaped around site, purpose and context — from concept and planning to design development and execution support.",
-    image:
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80",
+    /* ── The studio's own, replacing Unsplash ───────────────────────────────
+       The first three disciplines ran on stock frames while the studio's own
+       set was being prepared. It arrived, and all three are now theirs — which
+       matters beyond provenance: a stock interior and a studio interior next to
+       each other on one track read as two different practices. */
+    image: "/images/services/architecture.jpg",
   },
   {
     id: "commercial-interiors",
     index: "02",
     title: "Commercial Interiors",
     body: "Workspaces, restaurants, cafés, food courts, hotels, resorts, retail and hospitality spaces designed around people, brand, function and experience.",
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1600&q=80",
+    image: "/images/services/commercial-interiors.jpg",
   },
   {
     id: "boutique-interiors",
     index: "03",
     title: "Boutique Interiors",
     body: "Bespoke interiors for villas, bungalows, residences and resorts, crafted with character, materiality and attention to detail.",
-    image:
-      "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1600&q=80",
+    image: "/images/services/boutique-interiors.jpg",
   },
   /* ── The second card that names a person ───────────────────────────────
      Like Architectural Photography, this one credits someone by name, and a
@@ -280,12 +287,29 @@ export const SERVICES: Service[] = [
     index: "04",
     title: "Vastu",
     body: "Vastu-guided planning led by Dr. Vimmi Kinha, PhD, bringing experience and insight into the orientation, balance and harmony of spaces.",
-    /* The Vastu Purusha Mandala, and the one card whose image is a drawing
-       rather than a place — see `illustration` in types/index.ts for what that
-       changes and why. PNG, not JPEG: the circle is on a transparent ground and
-       JPEG has no alpha to keep it on. */
+    /* The Vastu Purusha Mandala laid over a real floor plan.
+
+       PNG, not JPEG: it is line art over flat washes, which is what PNG is good
+       at and what JPEG rings around. Palette-quantised (864KB against 2.7MB
+       truecolour, no visible banding in the washes at 1:1).
+
+       ── `illustration` came OFF with this file ──────────────────────────
+       The previous image was a mandala on a TRANSPARENT ground, and the flag
+       existed for it: contained rather than cropped, on cream, with padding,
+       and no hover zoom — see `illustration` in types/index.ts.
+
+       This plate is a different kind of object. It carries its own cream ground
+       and its own decorative margin, so every part of that treatment worked
+       against it: contained in a tall card it floated as a small square with
+       106px of dead ground, and because the plate's ground is warmer than
+       `--color-cream` the padding drew a visible rectangle where the two met.
+
+       Cropping costs less than it looks like it should. `cover` loses 11.1% off
+       each side — the "W" and "E" labels, though their arrows survive — and
+       keeps the mandala, the plan, N/S and all four diagonals. Those two labels
+       set about 5px tall at the card's width, so contain was not preserving
+       anything legible; it was only making everything else smaller. */
     image: "/images/services/vastu.png",
-    illustration: true,
     link: {
       /* Parallel with "See the photography" on the card two along: a verb and
          the thing it acts on, not a generic "Read more". */
@@ -328,9 +352,13 @@ export const SERVICES: Service[] = [
     title: "Architectural Photography",
     body: "Led by Ar. Divyank Sirohi | Postcard of Life, capturing architecture through light, composition, materiality and architectural storytelling.",
     /* The studio's own, and the one card where the photograph is the service
-       rather than an illustration of it. A tall 2067x3674 frame, so the desktop
-       card — which is itself tall — shows nearly all of it, and the bento tile
-       crops to the corner of the building, which is the subject either way. */
+       rather than an illustration of it — a twilight exterior carrying the
+       camera's own framing marks, which is the discipline describing itself.
+
+       1536x1024, so LANDSCAPE in a card that is tall: `cover` crops to the
+       middle third and what survives is the lit facade and the pool, which is
+       the subject. (It replaced a 2067x3674 frame that filled the desktop card
+       almost entirely — the note here used to say so, and no longer applies.) */
     image: "/images/services/architectural-photography.jpg",
     /* ── The Postcard of Life portfolio ──────────────────────────────────
        This was `/photography`, a page on this site standing in until the real
@@ -346,6 +374,47 @@ export const SERVICES: Service[] = [
       label: "See the photography",
       href: "https://postcardoflife.myportfolio.com/personal-1",
     },
+  },
+];
+
+/**
+ * Dr. Vimmi Kinha's bookable sessions, as the rate list under her portrait on
+ * /vastu. See `Consultation` in types/index.ts for why these are not SERVICES.
+ *
+ * ── Two figures, quoted two different ways ───────────────────────────────
+ *
+ * Astrology is a fixed session, so it is a price. Vastu is quoted against the
+ * size of the home, so ₹11,999 is a FLOOR — and the difference is the whole
+ * reason `note` exists: a bare "₹11,999" beside a Vastu consultation is a
+ * number the studio would then have to walk back on the call. "From", plus the
+ * band it applies to, is what the studio asked to be said and it is also the
+ * honest form of the figure.
+ *
+ * ── The messages ─────────────────────────────────────────────────────────
+ *
+ * Each names the session and its fee, so the first thing in the composer
+ * already answers "which one, and did you see the price". Same pattern and
+ * same reasoning as Design Consultation's on the track above — see the note on
+ * `whatsappLink` in constants/site.ts for why the copy is written out here
+ * rather than assembled at the call site.
+ */
+export const VASTU_CONSULTATIONS: Consultation[] = [
+  {
+    id: "astrology",
+    title: "Astrology Consultation",
+    price: "₹6,999",
+    href: whatsappLink(
+      "Hi Aarnaa Design Studios — I’d like to book an Astrology consultation with Dr. Vimmi Kinha (₹6,999). Could you share the next available slots?"
+    ),
+  },
+  {
+    id: "vastu",
+    title: "Vastu Consultation",
+    price: "from ₹11,999",
+    note: "Vastu consultation charges start from ₹11,999 for flats up to 4 BHK.",
+    href: whatsappLink(
+      "Hi Aarnaa Design Studios — I’d like to book a Vastu consultation with Dr. Vimmi Kinha (from ₹11,999). Could you share the next available slots?"
+    ),
   },
 ];
 

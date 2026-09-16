@@ -72,6 +72,25 @@ interface ProfileProps {
   /** The pair either side of the hairline under the portrait. */
   caption?: { left: string; right: string };
   /**
+   * Anything that belongs to the PERSON rather than to the biography — /vastu
+   * hangs Dr. Vimmi Kinha's bookable sessions here.
+   *
+   * ── Under the portrait at `lg`, after the biography below it ────────────
+   *
+   * The left column is `lg:sticky`, so on a wide screen a call to action placed
+   * there stays beside the reader for the whole biography. Below `lg` there are
+   * no columns to be beside — the grid collapses to one — and the same position
+   * would drop it between the portrait and the person's name. It is therefore
+   * drawn in both places and hidden at the width where it is wrong; the note at
+   * the mobile copy explains why CSS alone cannot move it.
+   *
+   * A slot rather than a `consultations` prop: <Profile /> is shared with
+   * /about, and teaching a biography component what a rate card is would put
+   * booking logic in the founder's page that it will never use. It takes a
+   * ReactNode and stays a biography component.
+   */
+  underPortrait?: ReactNode;
+  /**
    * A line in their own words.
    *
    * Optional for a reason worth stating: it is the one element here that
@@ -94,6 +113,7 @@ export default function Profile({
   children,
   portrait,
   caption,
+  underPortrait,
   quote,
 }: ProfileProps) {
   /**
@@ -206,6 +226,16 @@ export default function Profile({
                 </figcaption>
               )}
             </figure>
+
+            {/* Outside the <figure>, because it is not part of the picture —
+                a figure's content is the thing it illustrates plus its
+                caption, and a booking control is neither.
+
+                `hidden lg:block` — this is the DESKTOP position. See the note
+                on the mobile one at the foot of the biography. */}
+            {underPortrait && (
+              <div className="hidden lg:block">{underPortrait}</div>
+            )}
           </Reveal>
 
           {/* Biography + signed line */}
@@ -243,6 +273,30 @@ export default function Profile({
                   </footer>
                 </blockquote>
               </Reveal>
+            )}
+
+            {/* ── The mobile position for `underPortrait` ──────────────────
+                Below `lg` the grid is one column, so the left column and the
+                right column are simply two stacked rows — and the desktop copy
+                above, which sits inside the left one, therefore lands between
+                the portrait and the person's NAME. On /vastu that put "Book a
+                consultation" and two fees in front of a visitor who had not yet
+                been told whose page they were on.
+
+                So it is rendered twice and each copy is hidden at the width
+                where it is wrong. That is duplicate markup, which is worth
+                being explicit about: CSS cannot move this one, because `order`
+                reorders grid ITEMS and both copies would have to live inside
+                the same item to be reordered against each other. Explicit
+                grid placement was tried and is worse — a right column that
+                spans two rows grows the first row to balance them, which opens
+                a gap between the portrait and the block underneath it.
+
+                `hidden` is `display: none`, so exactly one copy is ever in the
+                accessibility tree and a screen reader never meets these links
+                twice. */}
+            {underPortrait && (
+              <div className="lg:hidden">{underPortrait}</div>
             )}
           </div>
         </div>
