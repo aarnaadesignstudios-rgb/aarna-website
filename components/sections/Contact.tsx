@@ -73,12 +73,81 @@ import {
 import { NAV_LINKS, SITE, SITE_IMAGES, SOCIAL_LINKS } from "@/constants";
 import type { Photograph } from "@/types";
 
+/**
+ * The country code is fixed, not a picker.
+ *
+ * The studio works out of Gurugram and every enquiry it has taken is domestic,
+ * so a full international selector would be a 240-entry dropdown in front of
+ * every visitor to serve a case that has not happened yet. A fixed prefix is
+ * also what makes a 10-digit rule meaningful: "10 digits" is only true once the
+ * country is decided.
+ *
+ * It is drawn beside the field rather than typed into it — see `prefix` below
+ * — so there is nothing for a visitor to delete by accident, and it is
+ * prepended again in `handleSubmit` so the studio receives a number it can dial
+ * rather than ten bare digits. If a second country is ever wanted, this is the
+ * constant that becomes a `<select>`.
+ */
+const PHONE_PREFIX = "+91";
+
+/** How many digits a number is expected to be, after `PHONE_PREFIX`. */
+const PHONE_DIGITS = 10;
+
+interface Field {
+  name: string;
+  label: string;
+  type: "text" | "email" | "tel";
+  /**
+   * Drawn inside the field's rule, before the input. Not a value — it is never
+   * in the input, so it cannot be edited, selected into, or sent on its own.
+   */
+  prefix?: string;
+  /**
+   * Every other field is `required`. This one marks the exceptions, and it says
+   * OPTIONAL rather than REQUIRED so that the default for a field added later
+   * is the one the rest of the form already uses.
+   */
+  optional?: boolean;
+  /** `inputMode`, when the on-screen keyboard should not be the alphabet. */
+  inputMode?: "numeric";
+  /**
+   * Native constraint validation. Authoritative — `maxLength` shapes typing but
+   * does not survive a paste, and the strip below cannot judge length.
+   */
+  pattern?: string;
+  maxLength?: number;
+  /** `title`, which is what a browser prints when `pattern` fails. */
+  hint?: string;
+  /**
+   * Strip everything that is not a digit, as it is typed.
+   *
+   * It deliberately does NOT truncate. Cutting a paste to length is the one
+   * behaviour that can be silently WRONG: "+91 99903 47716" strips to twelve
+   * digits, and a slice to ten would hand the studio "9199034771" — a real
+   * number, plausibly formatted, belonging to nobody. Left at twelve it simply
+   * fails `pattern` and the visitor is told.
+   */
+  digitsOnly?: boolean;
+}
+
 // Field definitions kept declarative so the form stays DRY.
-const FIELDS = [
+const FIELDS: Field[] = [
   { name: "name", label: "Your name", type: "text" },
   { name: "email", label: "Email", type: "email" },
+  {
+    name: "phone",
+    label: "Mobile number",
+    type: "tel",
+    prefix: PHONE_PREFIX,
+    optional: true,
+    inputMode: "numeric",
+    pattern: `[0-9]{${PHONE_DIGITS}}`,
+    maxLength: PHONE_DIGITS,
+    hint: `Enter a ${PHONE_DIGITS}-digit mobile number, without the ${PHONE_PREFIX}.`,
+    digitsOnly: true,
+  },
   { name: "project", label: "Project type", type: "text" },
-] as const;
+];
 
 /**
  * Web3Forms' access key, which identifies the inbox to deliver to.
@@ -150,6 +219,19 @@ export default function Contact({
       setStatus("error");
       return;
     }
+
+    /* ── The number goes out dialable, or not at all ──────────────────────
+       The input holds ten bare digits (see `PHONE_PREFIX`), which is the right
+       thing to TYPE and the wrong thing to receive: "9990347716" in an inbox
+       is a number the studio has to reconstruct before it can ring it.
+
+       Deleted rather than blanked when empty — the field is optional, and
+       Web3Forms prints every key it is given, so an empty one arrives as a
+       "Phone" heading with nothing under it, which reads as a number that
+       failed to send rather than one that was never offered. */
+    const phone = String(data.get("phone") ?? "").trim();
+    if (phone) data.set("phone", `${PHONE_PREFIX} ${phone}`);
+    else data.delete("phone");
 
     /* The subject line the studio sees in Gmail. The project type is in it
        because these arrive in a personal inbox alongside everything else —
@@ -428,18 +510,71 @@ export default function Contact({
                   <label key={field.name} className="flex flex-col gap-2">
                     <span className="font-label text-cream/60">
                       {field.label}
+                      {field.optional && (
+                        /* Marked rather than left to be guessed. An unmarked
+                           field among four required ones reads as required, and
+                           the visitor who has no number to give does not find
+                           out otherwise until the browser refuses to submit —
+                           except it will submit, so what they actually do is
+                           invent one. */
+                        <span className="ml-1.5 text-cream/40">(optional)</span>
+                      )}
                     </span>
-                    <input
-                      type={field.type}
-                      name={field.name}
-                      required
-                      // Form-filler / temp-mail browser extensions inject style
-                      // + data-* attributes onto inputs (esp. email) before
-                      // React hydrates. Suppress the resulting benign attribute
-                      // mismatch on the field itself.
-                      suppressHydrationWarning
-                      className="border-b border-cream/30 bg-transparent pb-3 text-lg text-cream outline-none transition-colors focus:border-gold"
-                    />
+
+                    {/* ── The rule belongs to the ROW, not the input ────────
+                        It used to be `border-b` on the input itself, which is
+                        the same thing while a field is only ever an input. A
+                        prefix makes it two elements sharing one line, and a
+                        border on the input alone would underline the digits and
+                        stop short of the "+91" sitting beside them.
+
+                        `focus-within:` rather than `focus:` for the same
+                        reason: the element that takes focus is now inside the
+                        element that draws the state. */}
+                    <span className="flex items-center gap-2 border-b border-cream/30 pb-3 transition-colors focus-within:border-gold">
+                      {field.prefix && (
+                        /* Inside the <label>, so a screen reader announces
+                           "Mobile number (optional) +91" and the country code
+                           is part of what the field is asking for. It is not
+                           `aria-hidden`: a visitor who cannot see the prefix
+                           still needs to know the field does not want it typed. */
+                        <span className="shrink-0 text-lg text-cream/55">
+                          {field.prefix}
+                        </span>
+                      )}
+                      <input
+                        type={field.type}
+                        name={field.name}
+                        required={!field.optional}
+                        inputMode={field.inputMode}
+                        pattern={field.pattern}
+                        maxLength={field.maxLength}
+                        title={field.hint}
+                        onInput={
+                          field.digitsOnly
+                            ? (e) => {
+                                // Uncontrolled on purpose — the rest of this
+                                // form is, and one controlled field would mean
+                                // state that exists only to be written back
+                                // unchanged. See `digitsOnly`.
+                                const el = e.currentTarget;
+                                const digits = el.value.replace(/\D/g, "");
+                                if (el.value !== digits) el.value = digits;
+                              }
+                            : undefined
+                        }
+                        // Form-filler / temp-mail browser extensions inject style
+                        // + data-* attributes onto inputs (esp. email) before
+                        // React hydrates. Suppress the resulting benign attribute
+                        // mismatch on the field itself.
+                        suppressHydrationWarning
+                        // `min-w-0` because a flex item defaults to
+                        // `min-width: auto` and will not shrink below its
+                        // content — without it a long value pushes the prefix
+                        // off the row instead of scrolling inside the input.
+                        className="min-w-0 flex-1 bg-transparent text-lg text-cream outline-none"
+                      />
+                    </span>
                   </label>
                 ))}
 
