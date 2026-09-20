@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 
 import { SITE } from "@/constants";
+import { DISCIPLINE_IDS } from "@/lib/disciplines";
 import { SECTION_ROUTE_SEGMENTS } from "@/lib/sections";
-import { getWorkSlugs } from "@/sanity/lib/content";
+import { getDisciplineProjectParams, getWorkSlugs } from "@/sanity/lib/content";
 
 /**
  * /sitemap.xml
@@ -38,6 +39,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     })),
 
+    /* The three discipline pages. Higher than a project and lower than a
+       chapter: each one is a real destination a visitor is sent to from the
+       Services track, and each is also the natural landing page for "boutique
+       interior designer Gurugram" — which the ring, being one URL for all the
+       work, could never rank for. Generated from the same list the routes are
+       prerendered from, so the sitemap cannot name a discipline with no page. */
+    ...DISCIPLINE_IDS.map((id) => ({
+      url: `${base}/services/${id}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    })),
+
     // Pages of their own.
     { url: `${base}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     /* The Vastu discipline, and the specialist who leads it. Same priority as
@@ -48,10 +62,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/faq`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
   ];
 
-  /* The commissions. Read from the CMS so a project published in the Studio
-     appears here without anyone editing this file — the same list
-     `generateStaticParams` builds the pages from, so the sitemap cannot name a
-     project that has no page or miss one that does. */
+  /* The commissions, from BOTH collections. Each is read from the CMS with
+     the same call its route's `generateStaticParams` uses, so the sitemap
+     cannot name a project that has no page or miss one that does.
+
+     Two reads because there are two collections and nothing joins them —
+     `work` for the Selected Works ring and `disciplineProject` for the
+     catalogue under What we do. See sanity/schemas/index.ts. */
   try {
     const slugs = await getWorkSlugs();
     for (const slug of slugs) {
@@ -65,6 +82,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch {
     // A CMS that is unreachable at build time should cost the site its project
     // URLs, not its sitemap.
+  }
+
+  try {
+    for (const { discipline, slug } of await getDisciplineProjectParams()) {
+      entries.push({
+        url: `${base}/services/${discipline}/${slug}`,
+        lastModified: now,
+        changeFrequency: "monthly",
+        priority: 0.7,
+      });
+    }
+  } catch {
+    // Same trade as above.
   }
 
   return entries;

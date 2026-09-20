@@ -30,8 +30,8 @@ import { CONTENT_TAGS } from "@/sanity/lib/tags";
  *     URL       https://<your-domain>/api/revalidate
  *     Dataset   production
  *     Trigger   Create, Update, Delete
- *     Filter    _type in ["work","heroSlide","testimonial","client",
- *                         "accolade","siteImages"]
+ *     Filter    _type in ["work","disciplineProject","heroSlide",
+ *                         "testimonial","client","accolade","siteImages"]
  *     Projection  {"_type": _type}
  *     Secret    the same value as SANITY_REVALIDATE_SECRET
  */

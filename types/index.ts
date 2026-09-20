@@ -196,6 +196,35 @@ export interface Testimonial {
 export interface Work {
   id: string;
   category: string;
+  /**
+   * Which of the three pages under What we do lists this project.
+   *
+   * Set on every `disciplineProject` and on NO `work` — the ring is its own
+   * collection and has no taxonomy, because there is only one ring. Optional
+   * here because one interface serves both: the two document types are
+   * deliberately separate content (see sanity/schemas/index.ts) but they
+   * share a field set and render through the same component, so they share a
+   * render shape. One shape, two sources.
+   *
+   * It is the id from `lib/disciplines.ts` — `"architecture"`,
+   * `"commercial-interiors"` or `"boutique-interiors"` — and it is also the
+   * first segment of the project's URL, which is why a stray value is a
+   * project with no page rather than a project on the wrong page.
+   *
+   * ── Why this is not `category` ──────────────────────────────────────────
+   *
+   * `category` is COPY. It is printed above the project name, it is written
+   * per commission, and the studio uses it to say the most useful specific
+   * thing about that job — "Hospitality", "Private Residence", "Food Court".
+   * Two projects in the same discipline routinely carry different categories,
+   * which is correct and is the point of the field.
+   *
+   * This is a TAXONOMY: three values, nothing prints it, and it decides which
+   * page the project is on. Serving both jobs from one field would mean
+   * either flattening the categories into three repeated labels or matching
+   * pages on free text, where "Hospitality" belongs to no page at all.
+   */
+  discipline?: string;
   title: string;
   location?: string;
   area?: string;

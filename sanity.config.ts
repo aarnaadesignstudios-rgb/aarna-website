@@ -34,8 +34,9 @@ import { schemaTypes } from "./sanity/schemas";
 /**
  * ── Two shapes of content, shown as two shapes of navigation ─────────────
  *
- * The lists (projects, hero images, testimonials, clients, awards) are
- * collections and behave like collections. "Site photographs" is a SINGLETON — there is exactly one
+ * The lists (selected works, the three What-we-do sections, hero images,
+ * testimonials, clients, awards) are collections and behave like
+ * collections. "Site photographs" is a SINGLETON — there is exactly one
  * founder and one contact backdrop, forever — so it is pinned open as a single
  * editable page.
  *
@@ -47,7 +48,78 @@ const structure: StructureResolver = (S) =>
   S.list()
     .title("Aarnaa Design Studios")
     .items([
-      S.documentTypeListItem("work").title("Projects"),
+      /**
+       * ── The ring, and it is the whole of its collection ──────────────
+       *
+       * Every `work` document is on the home page. No filter, no tick — see
+       * the note at the top of sanity/schemas/work.ts. This list is
+       * therefore both "the Selected Works documents" and "what the front
+       * page shows", which is what makes it impossible to put a catalogue
+       * project on the ring by accident.
+       */
+      S.documentTypeListItem("work").title("Selected Works"),
+
+      /**
+       * ── What we do — the catalogue, in three sections ────────────────
+       *
+       * A DIFFERENT document type from the one above, with no link to it.
+       * Publishing here changes nothing on the home page and publishing
+       * there changes nothing on these pages; a commission that belongs in
+       * both is entered in both. That is the separation the studio asked
+       * for, and two types is the only shape where it cannot leak.
+       *
+       * One list per page at /services/<discipline>, so "the architecture
+       * section" is a place an editor can actually go. Each creates through
+       * a template that sets `discipline` on the way in, so nobody has to
+       * know the field is what makes the list work — without it an editor
+       * creates a project inside Architecture, saves, and watches it vanish
+       * from the list they created it in.
+       *
+       * The values here are the ids in lib/disciplines.ts and the options on
+       * the schema's `discipline` field. All three have to agree; nothing
+       * can check that across the Studio boundary, so `npm run sanity:check`
+       * reports the counts and names any stray.
+       */
+      S.listItem()
+        .title("What we do")
+        .id("what-we-do")
+        .child(
+          S.list()
+            .title("What we do")
+            .items([
+              ...(
+                [
+                  ["architecture", "Architecture"],
+                  ["commercial-interiors", "Commercial Interiors"],
+                  ["boutique-interiors", "Boutique Interiors"],
+                ] as const
+              ).map(([value, title]) =>
+                S.listItem()
+                  .title(title)
+                  .id(value)
+                  .child(
+                    S.documentTypeList("disciplineProject")
+                      .title(title)
+                      .filter(
+                        '_type == "disciplineProject" && discipline == $discipline'
+                      )
+                      .params({ discipline: value })
+                      .initialValueTemplates([
+                        S.initialValueTemplateItem("project-by-discipline", {
+                          discipline: value,
+                        }),
+                      ])
+                  )
+              ),
+              S.divider(),
+              /* The flat list, last: it is where a project with a stray or
+                 missing discipline can still be found and fixed. */
+              S.documentTypeListItem("disciplineProject").title(
+                "All — every discipline"
+              ),
+            ])
+        ),
+
       S.documentTypeListItem("heroSlide").title("Hero images"),
       S.documentTypeListItem("testimonial").title("Testimonials"),
       /* The two credit bands on the home page. Separate lists because they are
@@ -71,7 +143,28 @@ export default defineConfig({
   basePath: "/studio",
   projectId,
   dataset,
-  schema: { types: schemaTypes },
+  schema: {
+    types: schemaTypes,
+    /**
+     * The template each What-we-do section creates through, so a project
+     * made inside "Architecture" arrives with `discipline` already set.
+     *
+     * Sanity's default template for a type takes no parameters, which is why
+     * this exists as a named one rather than being expressed in the structure
+     * alone — `initialValueTemplateItem` can only reference a template that
+     * has been declared here.
+     */
+    templates: (prev) => [
+      ...prev,
+      {
+        id: "project-by-discipline",
+        title: "Project in this discipline",
+        schemaType: "disciplineProject",
+        parameters: [{ name: "discipline", type: "string" }],
+        value: ({ discipline }: { discipline: string }) => ({ discipline }),
+      },
+    ],
+  },
   plugins: [
     structureTool({ structure }),
     /**

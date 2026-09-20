@@ -33,6 +33,7 @@
  */
 export const CONTENT_TAGS = [
   "work",
+  "disciplineProject",
   "heroSlide",
   "testimonial",
   "client",

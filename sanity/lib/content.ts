@@ -5,6 +5,7 @@ import { groq } from "next-sanity";
 import {
   ACCOLADES,
   CLIENTS,
+  DISCIPLINE_PROJECTS,
   HERO_SLIDES,
   SITE_IMAGES,
   TESTIMONIALS,
@@ -99,6 +100,7 @@ type WorkDoc = {
   id: string;
   title: string;
   category: string;
+  discipline?: string;
   description?: string;
   location?: string;
   area?: string;
@@ -126,6 +128,62 @@ const WIDTHS = [
   "min(56vw, 700px)",
 ] as const;
 
+/**
+ * A project document → the `Work` the site renders.
+ *
+ * ── Shared by BOTH project collections ───────────────────────────────────
+ *
+ * `work` and `disciplineProject` are separate document types on purpose (see
+ * ../schemas/index.ts) and they share a field set, so they share this. Two
+ * copies of the mapping would drift the first time a field was added, and the
+ * symptom would be a field that works on one kind of project page and is
+ * silently blank on the other.
+ */
+function toWork(doc: WorkDoc, i: number): Work {
+  const photo = resolvePhoto(doc.photo, doc.title);
+  return {
+    id: doc.id,
+    title: doc.title,
+    category: doc.category,
+    discipline: doc.discipline,
+    description: doc.description ?? "",
+    location: doc.location,
+    area: doc.area,
+    year: doc.year,
+    image: photo?.src ?? "",
+    objectPosition: photo?.objectPosition,
+    width: WIDTHS[i % WIDTHS.length] ?? WIDTHS[0],
+  };
+}
+
+/** A sibling row from a list query → the pager's `WorkLink`. */
+function linkFromDoc(
+  w: { id: string; title: string; category: string; photo?: Photo } | undefined
+): WorkLink | undefined {
+  if (!w) return undefined;
+  const p = resolvePhoto(w.photo, w.title);
+  return {
+    id: w.id,
+    title: w.title,
+    category: w.category,
+    image: p?.src ?? "",
+    objectPosition: p?.objectPosition,
+  };
+}
+
+/** A committed `Work` → the pager's `WorkLink`, for the constants path. */
+function workLink(w: Work | undefined): WorkLink | undefined {
+  return (
+    w && {
+      id: w.id,
+      title: w.title,
+      category: w.category,
+      image: w.image,
+      objectPosition: w.objectPosition,
+    }
+  );
+}
+
 export async function getWorks(): Promise<Work[]> {
   if (!client) return WORKS;
 
@@ -142,21 +200,7 @@ export async function getWorks(): Promise<Work[]> {
 
     if (!docs?.length) return WORKS;
 
-    return docs.map((doc, i) => {
-      const photo = resolvePhoto(doc.photo, doc.title);
-      return {
-        id: doc.id,
-        title: doc.title,
-        category: doc.category,
-        description: doc.description ?? "",
-        location: doc.location,
-        area: doc.area,
-        year: doc.year,
-        image: photo?.src ?? "",
-        objectPosition: photo?.objectPosition,
-        width: WIDTHS[i % WIDTHS.length] ?? WIDTHS[0],
-      };
-    });
+    return docs.map(toWork);
   } catch {
     // A photograph is never worth taking the page down for.
     return WORKS;
@@ -316,11 +360,9 @@ export async function getWorkSlugs(): Promise<string[]> {
 function detailFromConstants(slug: string): WorkDetail | null {
   const i = WORKS.findIndex((w) => w.id === slug);
   if (i === -1) return null;
-  const link = (w: Work | undefined): WorkLink | undefined =>
-    w && { id: w.id, title: w.title, category: w.category, image: w.image, objectPosition: w.objectPosition };
   return {
     ...WORKS[i]!,
-    siblings: { prev: link(WORKS[i - 1]), next: link(WORKS[i + 1]) },
+    siblings: { prev: workLink(WORKS[i - 1]), next: workLink(WORKS[i + 1]) },
   };
 }
 
@@ -356,26 +398,35 @@ export async function getWork(slug: string): Promise<WorkDetail | null> {
     // ring is showing too, so the link the visitor followed still resolves.
     if (!doc) return all?.length ? null : detailFromConstants(slug);
 
-    const cover = resolvePhoto(doc.photo, doc.title);
     const i = (all ?? []).findIndex((w) => w.id === doc.id);
-    const link = (w: (typeof all)[number] | undefined): WorkLink | undefined => {
-      if (!w) return undefined;
-      const p = resolvePhoto(w.photo, w.title);
-      return { id: w.id, title: w.title, category: w.category, image: p?.src ?? "", objectPosition: p?.objectPosition };
-    };
 
     return {
-      id: doc.id,
-      title: doc.title,
-      category: doc.category,
-      description: doc.description ?? "",
-      location: doc.location,
-      area: doc.area,
-      year: doc.year,
-      image: cover?.src ?? "",
-      objectPosition: cover?.objectPosition,
-      width: WIDTHS[0],
-      body: doc.body,
+      ...toDetail(doc),
+      siblings:
+        i === -1
+          ? {}
+          : { prev: linkFromDoc(all[i - 1]), next: linkFromDoc(all[i + 1]) },
+    };
+  } catch {
+    return detailFromConstants(slug);
+  }
+}
+
+/**
+ * A project document → the `WorkDetail` a project page renders.
+ *
+ * Shared by both collections, for the reason `toWork` is — see the note
+ * there. `siblings` is NOT set here: it is the one part that differs, because
+ * a project's neighbours are the neighbours within its own collection.
+ */
+function toDetail(doc: DetailDoc): WorkDetail {
+  const cover = resolvePhoto(doc.photo, doc.title);
+  return {
+    ...toWork(doc, 0),
+    image: cover?.src ?? "",
+    objectPosition: cover?.objectPosition,
+    width: WIDTHS[0],
+    body: doc.body,
       /* ── The drawings ────────────────────────────────────────────────
          `resolvePhoto` is doing one job here rather than two: it produces the
          CDN url. The `objectPosition` it also computes is dropped, because
@@ -412,13 +463,192 @@ export async function getWork(slug: string): Promise<WorkDetail | null> {
           wide: g.wide === true,
         }];
       }),
-      siblings: i === -1 ? {} : { prev: link(all[i - 1]), next: link(all[i + 1]) },
-    };
+      siblings: {},
+  };
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   The catalogue under What we do — a SEPARATE collection
+   ────────────────────────────────────────────────────────────────────────
+
+   `disciplineProject` documents are not `work` documents and nothing joins
+   them: the ring above reads one type, these pages read the other, and a
+   commission the studio wants in both places is published twice. See the
+   note at the top of ../schemas/index.ts for why the studio chose that over
+   one list with a flag on it.
+
+   So everything below is a near-mirror of the reads above rather than a
+   filter over them. What IS shared is the projection and the mappers — the
+   two document types share their field set (../schemas/projectFields.ts), so
+   a second copy of either would drift the first time a field was added. */
+
+const DISCIPLINE_LIST_QUERY = groq`*[_type == "disciplineProject" && discipline == $discipline]
+  | order(order asc, _createdAt asc) { ${WORK_FIELDS}, discipline }`;
+
+const DISCIPLINE_ANY_QUERY = groq`count(*[_type == "disciplineProject"])`;
+
+const disciplineTag = {
+  next: {
+    tags: ["disciplineProject" satisfies ContentTag],
+    revalidate: REVALIDATE_SECONDS,
+  },
+};
+
+/** The committed stand-ins for one discipline. */
+function disciplineFromConstants(discipline: string): Work[] {
+  return DISCIPLINE_PROJECTS.filter((p) => p.discipline === discipline);
+}
+
+/**
+ * One discipline's commissions, for the 2-up grid at /services/<discipline>.
+ *
+ * ── "Empty" means two different things and they are not the same answer ──
+ *
+ * A discipline with no projects in a dataset that HAS projects is a real
+ * empty: the studio has published boutique work and no architecture yet, and
+ * the page should say so. A discipline with no projects in a dataset where
+ * the whole collection is empty is the pre-launch state every read in this
+ * file is built around, and there the committed list is the right answer.
+ *
+ * Telling them apart costs one `count()`, and only on the path where the
+ * filtered query came back empty — so the normal case is still one round
+ * trip. Getting it wrong the other way would mean invented placeholder
+ * commissions reappearing under a heading months after the studio had
+ * filled in the other two disciplines.
+ */
+export async function getDisciplineProjects(
+  discipline: string
+): Promise<Work[]> {
+  if (!client) return disciplineFromConstants(discipline);
+
+  try {
+    const docs = await client.fetch<WorkDoc[]>(
+      DISCIPLINE_LIST_QUERY,
+      { discipline },
+      disciplineTag
+    );
+    if (docs?.length) return docs.map(toWork);
+
+    const published = await client.fetch<number>(
+      DISCIPLINE_ANY_QUERY,
+      {},
+      disciplineTag
+    );
+    return published > 0 ? [] : disciplineFromConstants(discipline);
   } catch {
-    return detailFromConstants(slug);
+    return disciplineFromConstants(discipline);
   }
 }
 
+/**
+ * Every (discipline, slug) pair — for the nested route's
+ * `generateStaticParams` and for the sitemap, so neither can name a page
+ * the other does not build.
+ */
+export async function getDisciplineProjectParams(): Promise<
+  { discipline: string; slug: string }[]
+> {
+  const committed = DISCIPLINE_PROJECTS.flatMap((p) =>
+    p.discipline ? [{ discipline: p.discipline, slug: p.id }] : []
+  );
+  if (!client) return committed;
+
+  try {
+    const rows = await client.fetch<{ discipline?: string; slug?: string }[]>(
+      groq`*[_type == "disciplineProject" && defined(discipline)] {
+        discipline, "slug": coalesce(slug.current, _id)
+      }`,
+      {},
+      disciplineTag
+    );
+    const real = (rows ?? []).flatMap((r) =>
+      r.discipline && r.slug ? [{ discipline: r.discipline, slug: r.slug }] : []
+    );
+    return real.length ? real : committed;
+  } catch {
+    return committed;
+  }
+}
+
+const DISCIPLINE_DETAIL_QUERY = groq`*[_type == "disciplineProject"
+  && discipline == $discipline
+  && coalesce(slug.current, _id) == $slug][0] { ${DETAIL_FIELDS}, discipline }`;
+
+const DISCIPLINE_SIBLINGS_QUERY = groq`*[_type == "disciplineProject" && discipline == $discipline]
+  | order(order asc, _createdAt asc) {
+    "id": coalesce(slug.current, _id), title, category, photo
+  }`;
+
+/** A discipline project's detail record, from the committed stand-ins. */
+function disciplineDetailFromConstants(
+  discipline: string,
+  slug: string
+): WorkDetail | null {
+  const list = disciplineFromConstants(discipline);
+  const i = list.findIndex((w) => w.id === slug);
+  if (i === -1) return null;
+  return {
+    ...list[i]!,
+    siblings: { prev: workLink(list[i - 1]), next: workLink(list[i + 1]) },
+  };
+}
+
+/**
+ * One project in the catalogue, for /services/<discipline>/<slug>.
+ *
+ * ── The slug is scoped to the discipline, and that buys two things ───────
+ *
+ * Both the lookup and the neighbours are filtered on `discipline`. It keeps
+ * the pager inside the section a visitor is reading — "Next →" from the last
+ * architecture project must not hand them a boutique interior — and it means
+ * two projects in different disciplines can share a slug without colliding,
+ * because the URL carries both segments.
+ *
+ * Null is a real answer and the route turns it into a 404. Unlike the list
+ * reads, "we could not find it" must not fall back to something else: the
+ * something else would be a different commission under the URL of the one
+ * that was asked for.
+ */
+export async function getDisciplineProject(
+  discipline: string,
+  slug: string
+): Promise<WorkDetail | null> {
+  if (!client) return disciplineDetailFromConstants(discipline, slug);
+
+  try {
+    const [doc, all] = await Promise.all([
+      client.fetch<DetailDoc | null>(
+        DISCIPLINE_DETAIL_QUERY,
+        { discipline, slug },
+        disciplineTag
+      ),
+      client.fetch<{ id: string; title: string; category: string; photo?: Photo }[]>(
+        DISCIPLINE_SIBLINGS_QUERY,
+        { discipline },
+        disciplineTag
+      ),
+    ]);
+
+    /* Nothing published in this discipline yet: fall through to the committed
+       list, which is also what the grid is showing, so the link a visitor
+       just followed resolves instead of 404ing. */
+    if (!doc) {
+      return all?.length ? null : disciplineDetailFromConstants(discipline, slug);
+    }
+
+    const i = (all ?? []).findIndex((w) => w.id === doc.id);
+    return {
+      ...toDetail(doc),
+      siblings:
+        i === -1
+          ? {}
+          : { prev: linkFromDoc(all[i - 1]), next: linkFromDoc(all[i + 1]) },
+    };
+  } catch {
+    return disciplineDetailFromConstants(discipline, slug);
+  }
+}
 /* ────────────────────────────────────────────────────────────────────────
    Testimonials
    ──────────────────────────────────────────────────────────────────────── */

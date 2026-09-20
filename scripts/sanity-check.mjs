@@ -130,13 +130,41 @@ if (token) console.log(`  ${PASS}  read token set ${dim("(draft previews availab
 // ── 3. Can we actually reach it? ─────────────────────────────────────────
 const TYPES = [
   "work",
+  "disciplineProject",
   "heroSlide",
   "testimonial",
   "client",
   "accolade",
   "siteImages",
 ];
-const query = `{${TYPES.map((t) => `"${t}": count(*[_type == "${t}"])`).join(",")}}`;
+/**
+ * The three discipline pages at /services/<id>.
+ *
+ * These MUST match the ids in lib/disciplines.ts and the `list` options on the
+ * `discipline` field in sanity/schemas/disciplineProject.ts. Nothing can check that across
+ * the three files — the Studio stores a plain string and TypeScript never sees
+ * it — so this counts what is published under each, and, more importantly,
+ * what is published under none of them.
+ *
+ * A `disciplineProject` with no discipline has no page at all — the field is
+ * required in the Studio, so a count above zero means a document written
+ * through the API or one that predates the constraint.
+ */
+const DISCIPLINES = [
+  ["architecture", "Architecture"],
+  ["commercial-interiors", "Commercial Interiors"],
+  ["boutique-interiors", "Boutique Interiors"],
+];
+
+const query =
+  `{${TYPES.map((t) => `"${t}": count(*[_type == "${t}"])`).join(",")},` +
+  `${DISCIPLINES.map(
+    ([id]) => `"d_${id}": count(*[_type == "disciplineProject" && discipline == "${id}"])`
+  ).join(",")},` +
+  `"d_none": count(*[_type == "disciplineProject" && !defined(discipline)]),` +
+  
+  `"d_stray": *[_type == "disciplineProject" && defined(discipline) && !(discipline in [` +
+  `${DISCIPLINES.map(([id]) => `"${id}"`).join(",")}])]{"t": title, "d": discipline}}`;
 const url =
   `https://${projectId}.apicdn.sanity.io/v${apiVersion}/data/query/${dataset}` +
   `?query=${encodeURIComponent(query)}`;
@@ -195,7 +223,12 @@ try {
   // constants/content.ts at the studio's request, so there is no schema to
   // publish into and nothing for this to report. See sanity/schemas/index.ts.
   const TYPES_INFO = {
-    work: { label: "Projects", wired: true, where: "Selected Works" },
+    work: { label: "Selected Works", wired: true, where: "The home page ring" },
+    disciplineProject: {
+      label: "What we do",
+      wired: true,
+      where: "The discipline pages",
+    },
     heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
     testimonial: { label: "Testimonials", wired: true, where: "Testimonials" },
     client: { label: "Clients", wired: true, where: "Clients band" },
@@ -255,6 +288,90 @@ try {
           "        shape as getWorks/getHeroSlides, plus a row in this table.\n"
       )
     );
+  }
+
+  /* ── The three discipline pages ──────────────────────────────────────
+     A second table, not a column on the one above, because it reports on
+     something different: that one says whether a TYPE is wired, this one
+     says whether the projects inside it are reachable from the pages built
+     to list them. Only printed when there are projects to say it about. */
+  /* ── The ring ────────────────────────────────────────────────────────
+     `work` IS the ring — every document in that collection is on the home
+     page, with no flag in between (see sanity/schemas/work.ts). So the only
+     thing worth saying about it is how long it has got: the ring is a pinned
+     horizontal run a visitor gets through in one gesture, and past about
+     eight panels chapter 02 stops reading as a selection. */
+  {
+    const ring = result?.work ?? 0;
+    console.log(bold("\n  Selected Works ring\n"));
+    if (ring === 0) {
+      console.log(`  ${WARN}  nothing published — the ring shows constants/content.ts`);
+    } else if (ring > 8) {
+      console.log(`  ${WARN}  ${ring} projects on the home page`);
+      console.log(
+        dim(
+          "\n        Past about eight the ring reads as a catalogue rather\n" +
+            "        than a selection. The catalogue is what the What we do\n" +
+            "        sections are for — move the overflow into one of those\n" +
+            "        (they are a separate document type, so it is a re-entry,\n" +
+            "        not a move).\n"
+        )
+      );
+    } else {
+      console.log(`  ${PASS}  ${ring} project${ring === 1 ? "" : "s"} on the home page`);
+    }
+  }
+
+  /* Unconditional, unlike the ring above: these three pages exist whether or
+     not anything is published into them, and "all three empty" is the single
+     most useful line this script can print for a studio that has just added
+     the section and is wondering why the pages are bare. */
+  {
+    console.log(bold("\n  What we do — the discipline pages\n"));
+
+    for (const [id, label] of DISCIPLINES) {
+      const n = result?.[`d_${id}`] ?? 0;
+      const route = `/services/${id}`.padEnd(32);
+      console.log(
+        n > 0
+          ? `  ${PASS}  ${route}${dim(`${n} × ${label.toLowerCase()}`)}`
+          : `  ${WARN}  ${route}${dim("empty — renders its no-work-yet state")}`
+      );
+    }
+
+    /* A value that is not one of the three. Only reachable by renaming an id
+       in one file and not the others, which is the mistake this catches. */
+    const stray = result?.d_stray ?? [];
+    if (stray.length) {
+      console.log(
+        `\n  ${r("!")}  ${bold("Projects with a discipline no page serves")}\n`
+      );
+      for (const { t, d } of stray) console.log(`      ${t} ${dim(`— "${d}"`)}`);
+      console.log(
+        dim(
+          "\n        The value has to be one of the three above. Check the\n" +
+            "        `discipline` options in sanity/schemas/work.ts against\n" +
+            "        the ids in lib/disciplines.ts — a rename in one and not\n" +
+            "        the other lands exactly here.\n"
+        )
+      );
+    }
+
+    /* The common case, and the one this section exists for: a project that
+       is live everywhere except the discipline pages. */
+    const none = result?.d_none ?? 0;
+    if (none > 0) {
+      console.log(
+        `\n  ${WARN}  ${none} project${none === 1 ? "" : "s"} with no discipline set`
+      );
+      console.log(
+        dim(
+          "\n        They are on the home page ring and they each have their\n" +
+            "        own page — they are just not listed under any discipline.\n" +
+            "        Open Projects → All projects in the Studio and set one.\n"
+        )
+      );
+    }
   }
 
   if (total === 0) {

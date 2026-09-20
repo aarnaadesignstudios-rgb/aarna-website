@@ -61,8 +61,16 @@ const SelectedWorks = dynamic(() => import("@/components/sections/SelectedWorks"
  *
  * <SelectedWorks /> is a client component — it owns the ring's GSAP timeline —
  * so it cannot fetch. The projects are read here and handed down as a prop,
- * which is also why `getWorks()` can be `server-only`: nothing in the browser
+ * which is also why the readers can be `server-only`: nothing in the browser
  * bundle ever touches a Sanity client.
+ *
+ * ── `getWorks()` is ONLY the ring now ───────────────────────────────────
+ *
+ * It reads the `work` collection, and that collection is the ring: five or
+ * six commissions, nothing else in it. The rest of the studio's work is a
+ * separate document type published into separate Studio sections and listed
+ * at /services/<discipline> — see sanity/schemas/index.ts. Nothing here can
+ * put a catalogue project on the front page, which is the point.
  *
  * With no Sanity project configured this returns the constants and the page is
  * byte-for-byte what it was. See sanity/lib/content.ts.

@@ -21,6 +21,8 @@ import {
 import { FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { SiGmail } from "react-icons/si";
 
+import { pathForDiscipline } from "@/lib/disciplines";
+
 import { SITE, whatsappLink } from "./site";
 
 import type {
@@ -327,6 +329,19 @@ export const SERVICES: Service[] = [
        matters beyond provenance: a stock interior and a studio interior next to
        each other on one track read as two different practices. */
     image: "/images/services/architecture.jpg",
+    /* ── The three disciplines that have a body of work behind them ───────
+       Architecture, Commercial Interiors and Boutique Interiors are the three
+       services a COMMISSION can belong to, so each one now leads to a page
+       listing its projects — see lib/disciplines.ts for why only these three,
+       and app/(site)/services/[discipline]/page.tsx for the page.
+
+       The href is built rather than typed. The card's link and the route that
+       serves it are the same id, and two hand-written copies of "/services/
+       architecture" is how one of them ends up a 404 after a rename. */
+    link: {
+      label: "See architecture projects",
+      href: pathForDiscipline("architecture"),
+    },
   },
   {
     id: "commercial-interiors",
@@ -334,6 +349,10 @@ export const SERVICES: Service[] = [
     title: "Commercial Interiors",
     body: "Workspaces, restaurants, cafés, food courts, hotels, resorts, retail and hospitality spaces designed around people, brand, function and experience.",
     image: "/images/services/commercial-interiors.jpg",
+    link: {
+      label: "See commercial projects",
+      href: pathForDiscipline("commercial-interiors"),
+    },
   },
   {
     id: "boutique-interiors",
@@ -341,6 +360,10 @@ export const SERVICES: Service[] = [
     title: "Boutique Interiors",
     body: "Bespoke interiors for villas, bungalows, residences and resorts, crafted with character, materiality and attention to detail.",
     image: "/images/services/boutique-interiors.jpg",
+    link: {
+      label: "See boutique projects",
+      href: pathForDiscipline("boutique-interiors"),
+    },
   },
   /* ── The second card that names a person ───────────────────────────────
      Like Architectural Photography, this one credits someone by name, and a
@@ -608,6 +631,25 @@ export const TESTIMONIALS: Testimonial[] = [
  *       and year. Widths are intentionally uneven so the row never reads as a
  *       carousel — keep that when the real crops arrive.
  */
+/**
+ * The Selected Works ring — chapter 02, and the whole of that collection.
+ *
+ * ── Five, and it is meant to stay about five ─────────────────────────────
+ *
+ * This list IS the home page's gallery. There is no flag and no filter: a
+ * project is here or it is not on the ring. The rest of the studio's work
+ * lives in DISCIPLINE_PROJECTS below, which is a separate collection with
+ * separate pages, and the two do not know about each other.
+ *
+ * The ring is a pinned horizontal run a visitor gets through in one gesture.
+ * Past about eight panels it stops reading as a selection, which is the whole
+ * argument of the chapter it opens.
+ *
+ * ── These are the studio's real commissions ──────────────────────────────
+ *
+ * Unlike DISCIPLINE_PROJECTS, nothing here is invented. Four carry the
+ * studio's own photography; Kyukotoh is still on a stock frame.
+ */
 export const WORKS: Work[] = [
   {
     id: "awc",
@@ -636,15 +678,6 @@ export const WORKS: Work[] = [
     width: "min(66vw, 860px)",
   },
   {
-    id: "hero-vadodra",
-    category: "Commercial Interiors",
-    title: "Hero Vadodra",
-    description: "",
-    image:
-      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1600&q=85",
-    width: "min(46vw, 560px)",
-  },
-  {
     id: "kyukotoh",
     category: "Hospitality",
     title: "Kyukotoh Gurugram",
@@ -652,15 +685,6 @@ export const WORKS: Work[] = [
     image:
       "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1800&q=85",
     width: "min(60vw, 780px)",
-  },
-  {
-    id: "polo-elevator",
-    category: "Commercial Interiors",
-    title: "Polo Elevator",
-    description: "",
-    image:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=85",
-    width: "min(44vw, 540px)",
   },
   {
     id: "sobha-villa",
@@ -671,9 +695,60 @@ export const WORKS: Work[] = [
     image: "/images/hero/shobharesidency.jpg",
     width: "min(58vw, 740px)",
   },
+];
+
+/**
+ * The catalogue under What we do — a SEPARATE collection from WORKS.
+ *
+ * ── Why these are not just "the unfeatured projects" ─────────────────────
+ *
+ * They are a different Sanity document type (`disciplineProject`), they have
+ * their own Studio sections, and they live at their own URLs under
+ * /services/<discipline>. Nothing joins them to WORKS — no shared id, no
+ * flag, no filter — which is exactly what the studio asked for: the ring and
+ * the catalogue are two separate things, and a commission that belongs in
+ * both is entered twice.
+ *
+ * `discipline` is what decides which of the three pages lists a project. It
+ * must be one of the ids in lib/disciplines.ts. `category` is the printed
+ * label above the name and is free text, so the two do not have to match —
+ * "Private Residence" under Architecture is correct.
+ *
+ * ── Four of these are PLACEHOLDERS — REPLACE BEFORE LAUNCH ───────────────
+ *
+ * The four architecture entries are invented: the names, the locations and
+ * the photographs. The studio has supplied no architecture photography, so
+ * without them /services/architecture renders its no-work-yet state, which
+ * is a fair picture of the content and a useless one for judging the layout.
+ * They are marked below and they must not ship.
+ *
+ * The other four are real commissions that are not on the ring.
+ */
+export const DISCIPLINE_PROJECTS: Work[] = [
+  {
+    id: "hero-vadodra",
+    category: "Commercial Interiors",
+    discipline: "commercial-interiors",
+    title: "Hero Vadodra",
+    description: "",
+    image:
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1600&q=85",
+    width: "min(46vw, 560px)",
+  },
+  {
+    id: "polo-elevator",
+    category: "Commercial Interiors",
+    discipline: "commercial-interiors",
+    title: "Polo Elevator",
+    description: "",
+    image:
+      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=1600&q=85",
+    width: "min(44vw, 540px)",
+  },
   {
     id: "westerlies-residence",
     category: "Boutique Interiors",
+    discipline: "boutique-interiors",
     title: "Westerlies Residence",
     description: "Café theme.",
     image:
@@ -683,11 +758,52 @@ export const WORKS: Work[] = [
   {
     id: "satish-residence",
     category: "Boutique Interiors",
+    discipline: "boutique-interiors",
     title: "Satish Residence",
     description: "The muted palette.",
     image:
       "https://images.unsplash.com/photo-1524230572899-a752b3835840?w=1800&q=85",
     width: "min(56vw, 700px)",
+  },
+  {
+    id: "the-courtyard-house",
+    category: "Residential Architecture",
+    discipline: "architecture",
+    title: "The Courtyard House",
+    description: "Four volumes around a planted court.",
+    image:
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=85",
+    width: "min(66vw, 860px)",
+  },
+  {
+    id: "meridian-offices",
+    category: "Commercial Architecture",
+    discipline: "architecture",
+    title: "Meridian Offices",
+    description: "A deep-plan floorplate opened to a north light.",
+    image:
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=85",
+    width: "min(46vw, 560px)",
+  },
+  {
+    id: "ridgeline-farmhouse",
+    category: "Residential Architecture",
+    discipline: "architecture",
+    title: "Ridgeline Farmhouse",
+    description: "A long, low house set against the slope.",
+    image:
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?w=1600&q=85",
+    width: "min(60vw, 780px)",
+  },
+  {
+    id: "stonefield-clubhouse",
+    category: "Institutional Architecture",
+    discipline: "architecture",
+    title: "Stonefield Clubhouse",
+    description: "Shared rooms under one continuous roof.",
+    image:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=85",
+    width: "min(44vw, 540px)",
   },
 ];
 

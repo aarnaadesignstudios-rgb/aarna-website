@@ -2,6 +2,7 @@ import type { SchemaTypeDefinition } from "sanity";
 
 import { heroSlide } from "./heroSlide";
 import { work } from "./work";
+import { disciplineProject } from "./disciplineProject";
 import { testimonial } from "./testimonial";
 import { client } from "./client";
 import { accolade } from "./accolade";
@@ -35,6 +36,32 @@ import { siteImages } from "./siteImages";
  * and, since the client wall is the one piece of COPY that arrives after a
  * launch rather than with it, the testimonials.
  *
+ * ── TWO project types, and they are not a mistake ────────────────────────
+ *
+ * `work` and `disciplineProject` hold the same kind of thing through the same
+ * field set, and they are separate on purpose, at the studio's instruction.
+ *
+ *   · `work` is the Selected Works ring. Publishing one puts it on the home
+ *     page; there is no other way onto the ring and no way to publish one
+ *     without that happening.
+ *   · `disciplineProject` is the body of work, listed at
+ *     /services/<discipline> under What we do.
+ *
+ * Nothing joins them — no reference, no shared flag, no filter. A commission
+ * the studio wants in both places is entered twice.
+ *
+ * The first design was one type with a "show on the home page" tick, which is
+ * the tidier content model and the wrong one here. It made the front page a
+ * property of every project in the catalogue, so the ring filled with
+ * architecture the moment a tick was missed, and it forced one write-up to
+ * serve two jobs that want different things — the ring wants a name and a
+ * hero frame, a catalogue page wants drawings and a spec. The studio asked
+ * for them kept apart and accepted re-entering the details; two types is what
+ * that means, and it is the only shape where the two cannot leak.
+ *
+ * The FIELDS are still shared (./projectFields.ts) — the separation is in the
+ * content, the Studio sections and the URLs, not in the form.
+ *
  * ── The two credit bands are here for the same reason ────────────────────
  *
  * `client` and `accolade` feed the two <CreditBand /> strips on the home page.
@@ -58,6 +85,7 @@ import { siteImages } from "./siteImages";
  */
 export const schemaTypes: SchemaTypeDefinition[] = [
   work,
+  disciplineProject,
   heroSlide,
   testimonial,
   client,
