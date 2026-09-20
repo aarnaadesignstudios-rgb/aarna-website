@@ -132,6 +132,8 @@ const TYPES = [
   "work",
   "heroSlide",
   "testimonial",
+  "client",
+  "accolade",
   "siteImages",
 ];
 const query = `{${TYPES.map((t) => `"${t}": count(*[_type == "${t}"])`).join(",")}}`;
@@ -196,6 +198,8 @@ try {
     work: { label: "Projects", wired: true, where: "Selected Works" },
     heroSlide: { label: "Hero images", wired: true, where: "Hero + intro" },
     testimonial: { label: "Testimonials", wired: true, where: "Testimonials" },
+    client: { label: "Clients", wired: true, where: "Clients band" },
+    accolade: { label: "Awards & press", wired: true, where: "Awards band" },
     siteImages: {
       label: "Site photographs",
       wired: true,

@@ -3,6 +3,8 @@ import type { SchemaTypeDefinition } from "sanity";
 import { heroSlide } from "./heroSlide";
 import { work } from "./work";
 import { testimonial } from "./testimonial";
+import { client } from "./client";
+import { accolade } from "./accolade";
 import { siteImages } from "./siteImages";
 
 /**
@@ -32,10 +34,33 @@ import { siteImages } from "./siteImages";
  * What IS here is the photography, which is the thing that actually changes —
  * and, since the client wall is the one piece of COPY that arrives after a
  * launch rather than with it, the testimonials.
+ *
+ * ── The two credit bands are here for the same reason ────────────────────
+ *
+ * `client` and `accolade` feed the two <CreditBand /> strips on the home page.
+ * They pass the test the services failed: neither one is load-bearing. The
+ * band is a marquee that measures its own track and derives its speed from it,
+ * so a ninth client makes the lap longer and changes nothing else — there is
+ * no tile count to pack, no progress readout dividing by the length, and no
+ * fixed face for the copy to overflow. A name is a name.
+ *
+ * They are also the content on the site that changes MOST often and matters
+ * most when it is stale: a studio that has just won something should not need
+ * a developer to say so. And the committed lists behind them are the only
+ * invented content in constants/content.ts, which makes replacing them from
+ * the Studio the first thing anyone does here.
+ *
+ * TWO types rather than one with a "which band" field, deliberately. The two
+ * lists are ordered independently — reordering the client wall must not
+ * reshuffle the awards — and the publish webhook can then drop exactly one of
+ * the two. They converge later, on `Credit`, which is the point at which they
+ * genuinely are the same shape. See types/index.ts.
  */
 export const schemaTypes: SchemaTypeDefinition[] = [
   work,
   heroSlide,
   testimonial,
+  client,
+  accolade,
   siteImages,
 ];

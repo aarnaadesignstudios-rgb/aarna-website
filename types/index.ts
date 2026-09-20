@@ -34,6 +34,46 @@ export interface Stat {
   label: string;
 }
 
+/**
+ * One entry on a credit band — a client's logo, or the name of an award.
+ *
+ * ── Why clients and awards are ONE shape and not two ─────────────────────
+ *
+ * The two bands are visibly the same object: a full-bleed strip carrying a
+ * slow row of marks that say "other people vouch for this practice". They
+ * differ in ground colour and in what each entry is called, and in nothing
+ * else — so a second interface would have been the first one with a field
+ * renamed, and <CreditBand /> would have needed a branch per band to read it.
+ *
+ * What is NOT shared is the SOURCE. `client` and `accolade` are separate
+ * document types in the Studio, so a studio ordering its client wall never
+ * reorders its awards, and the publish webhook drops exactly one of the two.
+ * They converge here, at the point where they stop being different things.
+ *
+ * ── Two fields, and that is the whole design ─────────────────────────────
+ *
+ * There is no subtitle, no issuer, no year. The band renders the LOGO when
+ * there is one and the NAME when there is not, one line either way, and that
+ * single rule is what makes the two strips read as one component: the client
+ * band is a wall of lockups because clients have lockups, and the awards band
+ * is a line of names — "Indian Express Awards" — because awards are known by
+ * their names. Nothing in the component decides that; the content does.
+ *
+ * An earlier version carried a `detail` line under each name (the issuer and
+ * the year, in the small uppercase face). It made every entry two lines tall
+ * in a 120px band, which turned a quiet credit strip into a dense table and
+ * was the specific thing that stopped the band reading as part of this site.
+ */
+export interface Credit {
+  id: string;
+  /** The name as it should be printed. Used as the wordmark when there is no
+   *  logo, and as the logo's alt text when there is. */
+  name: string;
+  /** Optional lockup, fitted into a fixed slot so a tall mark and a wide one
+   *  occupy the same optical width. */
+  logo?: string;
+}
+
 /** One of the studio's disciplines. */
 export interface Service {
   id: string;

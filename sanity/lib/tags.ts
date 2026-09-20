@@ -35,6 +35,8 @@ export const CONTENT_TAGS = [
   "work",
   "heroSlide",
   "testimonial",
+  "client",
+  "accolade",
   "siteImages",
 ] as const;
 

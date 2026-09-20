@@ -25,6 +25,7 @@ import { SITE, whatsappLink } from "./site";
 
 import type {
   Consultation,
+  Credit,
   Faq,
   Feature,
   HeroSlide,
@@ -237,6 +238,71 @@ export const STATS: Stat[] = [
   { id: "area", value: "2 Lakh", label: "Sq. ft. designed" },
   { id: "reach", value: "Pan India", label: "Projects across" },
   { id: "returning", value: "96%", label: "Repeat & referred" },
+];
+
+/* ─────────────────────────────────────────────────────────────────────────
+   The two credit bands — PLACEHOLDER CONTENT, REPLACE BEFORE LAUNCH
+   ─────────────────────────────────────────────────────────────────────────
+
+   Everything else in this file is the studio's real content. These two lists
+   are not: the companies and awards below are invented, and the eight logos
+   are drawn by scripts/make-placeholder-logos.mjs. They are here so the bands
+   can be composed, measured and reviewed against the rest of the page before
+   the studio has supplied theirs.
+
+   Do not let them reach production. They are claims about who has hired the
+   practice and who has recognised it, which is exactly the kind of copy that
+   is damaging rather than merely wrong if it ships untouched.
+
+   ── They are also the empty state, which is why they are not `[]` ────────
+
+   Both bands read from Sanity and fall back here, the same three-way contract
+   every other read in sanity/lib/content.ts has: unconfigured, empty, or
+   unreachable all land on these lists. An empty array would make <CreditBand />
+   render nothing, and "the band has silently disappeared" is a worse thing for
+   whoever is setting the CMS up to debug than "the band is showing the wrong
+   names". The first real `client` document published replaces all of these at
+   once — see `getClients()`.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Clients, on the white band above Selected Works. A wall of logos.
+ *
+ * `name` is set here even though nothing prints it: it is the logo's ALT
+ * text, and it is what the entry falls back to as a wordmark if the file goes
+ * missing. A logo with no name behind it is an unlabelled picture to a screen
+ * reader, which is the one way a logo wall can be completely illegible.
+ */
+export const CLIENTS: Credit[] = [
+  { id: "meridian", name: "Meridian Group", logo: "/images/clients/meridian-group.svg" },
+  { id: "verdance", name: "Verdance Hotels", logo: "/images/clients/verdance-hotels.svg" },
+  { id: "northbridge", name: "Northbridge Developers", logo: "/images/clients/northbridge-developers.svg" },
+  { id: "saanjh", name: "Saanjh Foundation", logo: "/images/clients/saanjh-foundation.svg" },
+  { id: "casa-lumina", name: "Casa Lumina", logo: "/images/clients/casa-lumina.svg" },
+  { id: "indus-retail", name: "Indus Retail", logo: "/images/clients/indus-retail.svg" },
+  { id: "tanvi-health", name: "Tanvi Healthcare", logo: "/images/clients/tanvi-healthcare.svg" },
+  { id: "ashwin-realty", name: "Ashwin Realty", logo: "/images/clients/ashwin-realty.svg" },
+];
+
+/**
+ * Awards and press, on the emerald band above How we work. Names only.
+ *
+ * No logos, and that is the normal case here rather than a gap: an award is
+ * known by its name in a way a company is not, and the seals that do exist
+ * are dark-on-white artwork that would disappear on brand emerald. The band
+ * sets these in the serif, one line each, which is the same treatment the
+ * client band gives a client who has not sent a lockup.
+ *
+ * Keep them SHORT. They do not wrap — a name much past thirty characters is
+ * simply a very wide entry that dominates the strip as it passes.
+ */
+export const ACCOLADES: Credit[] = [
+  { id: "indian-express", name: "Indian Express Awards" },
+  { id: "iid-excellence", name: "Design Excellence Awards" },
+  { id: "architect-year", name: "Architect of the Year" },
+  { id: "elle-deco", name: "Elle Decor Design Awards" },
+  { id: "good-homes", name: "Good Homes Awards" },
+  { id: "ficci-interior", name: "FICCI Interior Awards" },
 ];
 
 /**

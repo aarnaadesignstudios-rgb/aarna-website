@@ -22,9 +22,12 @@ import Spine from "@/components/layout/Spine";
 import Hero from "@/components/sections/Hero";
 import Practice from "@/components/sections/Practice";
 import Services from "@/components/sections/Services";
+import CreditBand from "@/components/sections/CreditBand";
 import Process from "@/components/sections/Process";
 import Contact from "@/components/sections/Contact";
 import {
+  getAccolades,
+  getClients,
   getHeroSlides,
   getSiteImages,
   getTestimonials,
@@ -70,7 +73,7 @@ export default async function HomeDocument() {
    * of four round trips to the Content Lake for no reason — no query's input
    * depends on another's result.
    *
-   * Four and not one combined query, deliberately: each read is tagged with its
+   * Six and not one combined query, deliberately: each read is tagged with its
    * own document type, which is what lets the publish webhook drop exactly the
    * projects when a project changes and leave the hero and the quotes cached.
    * See app/api/revalidate/route.ts.
@@ -79,12 +82,15 @@ export default async function HomeDocument() {
    * note on its own file, and on what is deliberately absent from
    * sanity/schemas/index.ts.
    */
-  const [works, slides, testimonials, siteImages] = await Promise.all([
-    getWorks(),
-    getHeroSlides(),
-    getTestimonials(),
-    getSiteImages(),
-  ]);
+  const [works, slides, testimonials, siteImages, clients, accolades] =
+    await Promise.all([
+      getWorks(),
+      getHeroSlides(),
+      getTestimonials(),
+      getSiteImages(),
+      getClients(),
+      getAccolades(),
+    ]);
 
   return (
     <>
@@ -124,8 +130,37 @@ export default async function HomeDocument() {
       <main>
         <Hero slides={slides} />
         <Practice />
+
+        {/* ── Two credit bands, and they are NOT chapters ─────────────────
+            Neither takes a sheet number, and that is the whole reason they
+            work here. The document runs 01–06 with no gaps (see above), and a
+            band of other people's names is not a seventh thing the studio
+            does — it is corroboration for the chapter it introduces. So each
+            one sits OUTSIDE the numbering, in the seam between two sheets,
+            the way <StatsStrip /> sits inside <Practice /> without being a
+            chapter of its own.
+
+            Where they are is the argument for them. This one lands on the
+            white side of the boundary into Selected Works, so the last thing
+            read before the work itself is who commissioned it — a wall of
+            logos, no copy. See components/sections/CreditBand.tsx for why the
+            ground is white and not `paper`, and why the captions here are one
+            word each. */}
+        <CreditBand items={clients} label="Clients" />
+
         <SelectedWorks works={works} />
         <Testimonials items={testimonials} />
+
+        {/* And this one closes the run of proof — quotes, then awards, then
+            "How we work". A visitor who has just read six clients saying the
+            practice is good meets the outside world agreeing, and only then is
+            asked to care about the method. Names rather than seals, because an
+            award is known by its name and its artwork is drawn for white paper.
+            Emerald, so it reads as the title plate on the chapter it butts onto
+            rather than as a third ground — see the note on the tone in
+            CreditBand.tsx. */}
+        <CreditBand items={accolades} label="Awards" tone="emerald" />
+
         <Process />
         {/* <Founder /> lived here and is on /about now. */}
         <Services />

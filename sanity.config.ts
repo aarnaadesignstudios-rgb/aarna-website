@@ -34,8 +34,8 @@ import { schemaTypes } from "./sanity/schemas";
 /**
  * ── Two shapes of content, shown as two shapes of navigation ─────────────
  *
- * The lists (projects, hero images, testimonials) are collections and behave
- * like collections. "Site photographs" is a SINGLETON — there is exactly one
+ * The lists (projects, hero images, testimonials, clients, awards) are
+ * collections and behave like collections. "Site photographs" is a SINGLETON — there is exactly one
  * founder and one contact backdrop, forever — so it is pinned open as a single
  * editable page.
  *
@@ -50,6 +50,10 @@ const structure: StructureResolver = (S) =>
       S.documentTypeListItem("work").title("Projects"),
       S.documentTypeListItem("heroSlide").title("Hero images"),
       S.documentTypeListItem("testimonial").title("Testimonials"),
+      /* The two credit bands on the home page. Separate lists because they are
+         separate orderings — see sanity/schemas/index.ts. */
+      S.documentTypeListItem("client").title("Clients"),
+      S.documentTypeListItem("accolade").title("Awards & press"),
       S.divider(),
       S.listItem()
         .title("Site photographs")

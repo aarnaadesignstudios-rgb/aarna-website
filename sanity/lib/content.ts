@@ -3,12 +3,15 @@ import "server-only";
 import { groq } from "next-sanity";
 
 import {
+  ACCOLADES,
+  CLIENTS,
   HERO_SLIDES,
   SITE_IMAGES,
   TESTIMONIALS,
   WORKS,
 } from "@/constants";
 import type {
+  Credit,
   HeroSlide,
   SiteImages,
   Testimonial,
@@ -471,6 +474,116 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     return quotes.length ? quotes : TESTIMONIALS;
   } catch {
     return TESTIMONIALS;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   The two credit bands
+   ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Both bands read the same two fields, so they share a query body and a
+ * mapper. They do NOT share a document type or a cache tag — see the note in
+ * ../schemas/index.ts on why those stay apart.
+ */
+const CREDIT_FIELDS = groq`
+  "id": coalesce(slug.current, _id),
+  title,
+  logo
+`;
+
+type CreditDoc = {
+  id: string;
+  title?: string;
+  logo?: Photo;
+};
+
+/**
+ * One credit band's worth of documents, mapped and filtered.
+ *
+ * ── An entry with no NAME is dropped ─────────────────────────────────────
+ *
+ * `title` is required in the Studio, so a published document has one. A DRAFT
+ * does not, and a half-typed document is the normal state of one someone is
+ * still working on. The band would render it regardless — a hairline with
+ * nothing in front of it — and because short lists are repeated to fill the
+ * track, that blank slot comes past twice a lap.
+ *
+ * The LOGO is not filtered on, and must not be: an entry with no usable logo
+ * is a valid entry that sets as a wordmark instead — which is the normal case
+ * for the whole awards band. That is the reason the field is optional.
+ * `resolvePhoto` returns null for a document whose asset has been removed as
+ * well as for one that never had it, and both land in the same, correct place.
+ *
+ * Its `alt` is dropped rather than carried. <CreditBand /> labels a logo with
+ * the entry's NAME, which is the only honest alt text for a lockup — an
+ * uploader writing "logo" or "Screenshot 2024" into the alt field would make
+ * the band worse for a screen reader than having no field at all.
+ */
+function toCredits(docs: CreditDoc[] | null | undefined): Credit[] {
+  return (docs ?? []).flatMap((doc) => {
+    const name = doc.title?.trim();
+    if (!name) return [];
+    const logo = resolvePhoto(doc.logo, name);
+    return [{ id: doc.id, name, logo: logo?.src }];
+  });
+}
+
+const CLIENTS_QUERY = groq`*[_type == "client"] | order(order asc, _createdAt asc) { ${CREDIT_FIELDS} }`;
+const ACCOLADES_QUERY = groq`*[_type == "accolade"] | order(order asc, _createdAt asc) { ${CREDIT_FIELDS} }`;
+
+/**
+ * The client wall, on the white band above Selected Works.
+ *
+ * Same three-way fallback as everything else here: unconfigured, empty, or
+ * nothing usable all land on the committed list — which for this one is
+ * INVENTED placeholder content, flagged as such in constants/content.ts. That
+ * is a deliberate choice over falling back to `[]`: an empty array makes
+ * <CreditBand /> render nothing, and a band that has silently vanished is a
+ * far worse thing for whoever is setting the CMS up to diagnose than a band
+ * showing names they recognise as the stand-ins. The first `client` document
+ * published replaces all of them at once.
+ */
+export async function getClients(): Promise<Credit[]> {
+  if (!client) return CLIENTS;
+
+  try {
+    const docs = await client.fetch<CreditDoc[]>(
+      CLIENTS_QUERY,
+      {},
+      { next: { tags: ["client" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
+    );
+
+    if (!docs?.length) return CLIENTS;
+    const credits = toCredits(docs);
+    return credits.length ? credits : CLIENTS;
+  } catch {
+    return CLIENTS;
+  }
+}
+
+/**
+ * Awards and press, on the emerald band above How we work.
+ *
+ * Identical contract to `getClients()` above, against its own type and its own
+ * cache tag — so publishing an award drops the awards and leaves the client
+ * wall, the projects and the quotes cached.
+ */
+export async function getAccolades(): Promise<Credit[]> {
+  if (!client) return ACCOLADES;
+
+  try {
+    const docs = await client.fetch<CreditDoc[]>(
+      ACCOLADES_QUERY,
+      {},
+      { next: { tags: ["accolade" satisfies ContentTag], revalidate: REVALIDATE_SECONDS } }
+    );
+
+    if (!docs?.length) return ACCOLADES;
+    const credits = toCredits(docs);
+    return credits.length ? credits : ACCOLADES;
+  } catch {
+    return ACCOLADES;
   }
 }
 
